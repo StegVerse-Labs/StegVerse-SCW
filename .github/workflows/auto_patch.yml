@@ -1,12 +1,7 @@
-name: AutoPatch Workflows (dispatch + summary + perms)
+name: Autopatch StegVerse repos
 
 on:
-  workflow_dispatch:
-    inputs:
-      apply:
-        description: "Write changes to workflows"
-        required: false
-        default: "true"
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -14,226 +9,98 @@ permissions:
 jobs:
   autopatch:
     runs-on: ubuntu-latest
+
+    env:
+      # Fine-grained PAT with access to all target repos
+      GH_TOKEN: ${{ secrets.PAT_WORKFLOW }}
+
     steps:
-      - name: Checkout
+      - name: Checkout StegVerse-SCW
         uses: actions/checkout@v4
-        with:
-          clean: true
-          fetch-depth: 1
 
-      - name: Ensure Python tooling
+      - name: Install GitHub CLI (if needed)
         run: |
-          python3 -V
-          python3 -m pip install --upgrade pip
-          pip install ruamel.yaml
-
-      - name: Seed patch script (scripts/patch_workflows.py)
-        shell: bash
-        run: |
-          mkdir -p scripts self_healing_out
-          cat > scripts/patch_workflows.py << 'PY'
-#!/usr/bin/env python3
-import json, sys
-from pathlib import Path
-from copy import deepcopy
-from ruamel.yaml import YAML
-
-ROOT = Path(__file__).resolve().parents[1]
-WF_DIR = ROOT / ".github" / "workflows"
-OUT_DIR = ROOT / "self_healing_out"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-yaml = YAML()
-yaml.preserve_quotes = True
-yaml.width = 100000
-
-def load_yaml(p):
-    with p.open("r", encoding="utf-8") as f:
-        return yaml.load(f)
-
-def dump_yaml(data, p):
-    with p.open("w", encoding="utf-8") as f:
-        yaml.dump(data, f)
-
-def ensure_workflow_dispatch(on_block):
-    """
-    on: can be:
-      - dict with keys
-      - string (rare)
-      - list (rare)
-    We normalize to dict and ensure 'workflow_dispatch' exists.
-    """
-    if on_block is None:
-        return {"workflow_dispatch": {}}, True
-
-    # If it's a string or list, wrap into dict
-    if isinstance(on_block, str):
-        return {"workflow_dispatch": {}, on_block: {}}, True
-    if isinstance(on_block, list):
-        d = {"workflow_dispatch": {}}
-        for k in on_block:
-            d[k] = {}
-        return d, True
-
-    # dict case
-    changed = False
-    if "workflow_dispatch" not in on_block:
-        on_block["workflow_dispatch"] = {}
-        changed = True
-    return on_block, changed
-
-def ensure_permissions_at_top(doc):
-    """
-    If a top-level permissions block is missing, add a minimal safe default.
-    We don't overwrite if present.
-    """
-    changed = False
-    if "permissions" not in doc:
-        doc["permissions"] = {"contents": "write"}
-        changed = True
-    return changed
-
-def collect_artifact_names(steps):
-    names = []
-    if not isinstance(steps, list):
-        return names
-    for s in steps:
-        # detect actions/upload-artifact@...
-        uses = s.get("uses") if isinstance(s, dict) else None
-        if isinstance(uses, str) and "actions/upload-artifact@" in uses:
-            with_blk = s.get("with", {})
-            name = with_blk.get("name")
-            if isinstance(name, str) and name.strip():
-                names.append(name.strip())
-    return names
-
-def has_summary_step(steps):
-    if not isinstance(steps, list):
-        return False
-    for s in steps:
-        if isinstance(s, dict) and s.get("name", "").lower().startswith("add artifact summary"):
-            return True
-    return False
-
-def append_summary_step(steps, artifact_names):
-    # Add a summary step that prints links/names.
-    body_lines = [
-        'echo "## Artifact Outputs" >> $GITHUB_STEP_SUMMARY',
-    ]
-    if artifact_names:
-        for nm in artifact_names:
-            # Plain bullet list; the artifact panel is the canonical place to download
-            body_lines.append(f'echo "- {nm}" >> $GITHUB_STEP_SUMMARY')
-    else:
-        body_lines.append('echo "- (No artifacts uploaded by this job)" >> $GITHUB_STEP_SUMMARY')
-
-    steps.append({
-        "name": "Add artifact summary",
-        "if": "always()",
-        "run": "\n".join(body_lines)
-    })
-
-def patch_file(p):
-    original = load_yaml(p)
-    doc = deepcopy(original)
-    changed = False
-    notes = []
-
-    # 1) ensure on.workflow_dispatch
-    on_block = doc.get("on")
-    new_on, ch = ensure_workflow_dispatch(on_block)
-    if ch:
-        doc["on"] = new_on
-        changed = True
-        notes.append("added workflow_dispatch")
-
-    # 2) ensure minimal top-level permissions
-    if ensure_permissions_at_top(doc):
-        changed = True
-        notes.append("added top-level permissions: contents: write")
-
-    # 3) add a per-job summary step enumerating uploaded artifacts
-    jobs = doc.get("jobs", {})
-    if isinstance(jobs, dict):
-        for job_id, job in jobs.items():
-            st = job.get("steps")
-            if not st:
-                continue
-            arts = collect_artifact_names(st)
-            if not has_summary_step(st):
-                append_summary_step(st, arts)
-                changed = True
-                notes.append(f"job:{job_id} add artifact summary")
-
-    return doc, changed, notes
-
-def main():
-    patched = []
-    skipped = []
-    errors = []
-    for y in sorted(WF_DIR.glob("*.y*ml")):
-        try:
-            new_doc, changed, notes = patch_file(y)
-            if changed:
-                dump_yaml(new_doc, y)
-                patched.append({"file": y.as_posix(), "changes": notes})
-            else:
-                skipped.append(y.as_posix())
-        except Exception as e:
-            errors.append({"file": y.as_posix(), "error": str(e)})
-
-    report = {
-        "patched": patched,
-        "skipped": skipped,
-        "errors": errors
-    }
-    (OUT_DIR / "AUTOPATCH_REPORT.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
-    md = ["# AutoPatch Report", ""]
-    md.append(f"- Patched: **{len(patched)}**")
-    md.append(f"- Skipped: **{len(skipped)}**")
-    md.append(f"- Errors: **{len(errors)}**")
-    md.append("")
-    if patched:
-        md.append("## Patched files")
-        for item in patched:
-            md.append(f"- `{item['file']}` — {', '.join(item['changes'])}")
-        md.append("")
-    if errors:
-        md.append("## Errors")
-        for e in errors:
-            md.append(f"- `{e['file']}` — {e['error']}")
-    (OUT_DIR / "AUTOPATCH_REPORT.md").write_text("\n".join(md) + "\n", encoding="utf-8")
-    print(json.dumps(report, indent=2))
-
-if __name__ == "__main__":
-    main()
-PY
-
-      - name: Run patcher
-        env:
-          APPLY: ${{ github.event.inputs.apply }}
-        run: |
-          set -e
-          python3 scripts/patch_workflows.py
-          # stage changes if any
-          git add .github/workflows || true
-          if git diff --cached --quiet; then
-            echo "No workflow changes to commit."
+          set -euo pipefail
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "Installing GitHub CLI..."
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg |
+              sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" |
+              sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt-get update -y
+            sudo apt-get install -y gh
           else
-            git config user.name "autopatch-bot"
-            git config user.email "bot@stegverse.local"
-            git commit -m "autopatch: ensure workflow_dispatch + summary + minimal perms"
-            if [ "${APPLY}" = "true" ]; then
-              git push origin HEAD:main || true
-            else
-              echo "Dry run; not pushing."
-            fi
+            echo "GitHub CLI already installed."
           fi
 
-      - name: Upload autopatch report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: autopatch_report
-          path: self_healing_out/AUTOPATCH_REPORT.*
-          if-no-files-found: warn
+      - name: Run autopatch across StegVerse repos
+        run: |
+          set -euo pipefail
+
+          echo "=== StegVerse Autopatch ==="
+
+          mkdir -p work
+
+          echo "Cloning TVC (source of truth)..."
+          # 🔴 SINGLE authoritative clone — no second folder
+          gh repo clone StegVerse-Labs/TVC work/TVC
+
+          TEMPLATE_DIR="work/TVC/data"
+          TV_CONFIG="${TEMPLATE_DIR}/tv_config.json"
+          STEGTVC_CONFIG="${TEMPLATE_DIR}/stegtvc_config.json"
+
+          echo "Verifying template files exist..."
+          if [[ ! -f "${TV_CONFIG}" ]]; then
+            echo "❌ Missing template: ${TV_CONFIG}"
+            exit 1
+          fi
+          if [[ ! -f "${STEGTVC_CONFIG}" ]]; then
+            echo "❌ Missing template: ${STEGTVC_CONFIG}"
+            exit 1
+          fi
+
+          echo "Template files found:"
+          ls -l "${TEMPLATE_DIR}"
+
+          # 📝 Repos to patch – adjust this list as needed
+          TARGET_REPOS=(
+            "StegVerse-Labs/TVC"
+            "StegVerse/TV"
+            "StegVerse/hybrid-collab-bridge"
+          )
+
+          for REPO in "${TARGET_REPOS[@]}"; do
+            echo ""
+            echo "=== Patching ${REPO} ==="
+
+            SAFE_NAME="${REPO//\//_}"          # e.g. StegVerse-Labs_TVC
+            CLONE_DIR="work/${SAFE_NAME}"
+
+            echo "Cloning ${REPO} into ${CLONE_DIR}..."
+            gh repo clone "${REPO}" "${CLONE_DIR}"
+
+            mkdir -p "${CLONE_DIR}/data"
+
+            echo "Copying StegTVC config into ${REPO}..."
+            cp "${TV_CONFIG}" "${CLONE_DIR}/data/tv_config.json"
+            cp "${STEGTVC_CONFIG}" "${CLONE_DIR}/data/stegtvc_config.json"
+
+            cd "${CLONE_DIR}"
+
+            if git status --porcelain | grep -q .; then
+              echo "Changes detected – committing..."
+              git config user.name "StegVerse-Autopatch"
+              git config user.email "autopatch@stegverse.local"
+              git add data/tv_config.json data/stegtvc_config.json
+              git commit -m "Autopatch: sync StegTVC config"
+              git push origin HEAD
+            else
+              echo "No changes to commit for ${REPO}."
+            fi
+
+            cd - >/dev/null
+          done
+
+          echo ""
+          echo "✅ Autopatch run completed."
