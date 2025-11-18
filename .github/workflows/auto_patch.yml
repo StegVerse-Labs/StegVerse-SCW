@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
 
     # ⬇️ This is the key: use PAT_WORKFLOW for all git/gh activity
-    env:
-      GH_TOKEN: ${{ secrets.PAT_WORKFLOW }}
-      GITHUB_TOKEN: ${{ secrets.PAT_WORKFLOW }}
+env:
+  GH_TOKEN: ${{ secrets.PAT_WORKFLOW }}
+  GITHUB_TOKEN: ${{ secrets.PAT_WORKFLOW }}
 
     steps:
       - name: Checkout StegVerse-SCW
