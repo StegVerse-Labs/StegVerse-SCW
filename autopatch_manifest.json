@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "description": "StegVerse AutoPatch manifest for StegTVC / TV config files",
+  "source_repo": "StegVerse-Labs/TVC",
+
+  "templates": [
+    {
+      "id": "stegtvc_config",
+      "path": "data/stegtvc_config.json",
+      "description": "StegTVC routing + provider configuration (JSON) used as source of truth"
+    },
+    {
+      "id": "tv_config",
+      "path": "data/tv_config.json",
+      "description": "Token Vault (TV) model/provider config shared across StegVerse repos"
+    }
+  ],
+
+  "targets": [
+    {
+      "repo": "StegVerse-Labs/TVC",
+      "apply": [
+        "stegtvc_config",
+        "tv_config"
+      ],
+      "notes": "Keep TVC's own data directory in sync with its source-of-truth configs"
+    },
+    {
+      "repo": "StegVerse-Labs/TV",
+      "apply": [
+        "stegtvc_config",
+        "tv_config"
+      ],
+      "notes": "TV module consumes the same configs for AI model/provider resolution"
+    },
+    {
+      "repo": "StegVerse-Labs/hybrid-collab-bridge",
+      "apply": [
+        "stegtvc_config",
+        "tv_config"
+      ],
+      "notes": "Hybrid-Collab-Bridge uses StegTVC for routing its AI entities"
+    },
+    {
+      "repo": "StegVerse/StegVerse-SCW",
+      "apply": [
+        "stegtvc_config",
+        "tv_config"
+      ],
+      "notes": "SCW keeps a local copy for validation/tests and as a backup template"
+    }
+  ]
+}
