@@ -1,0 +1,122 @@
+name: StegTV Connectivity Autopatch
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  autopatch:
+    runs-on: ubuntu-latest
+
+    env:
+      # Uses the PAT you just created & stored as a secret
+      GH_TOKEN: ${{ secrets.GH_STEGVERSE_PAT }}
+
+    steps:
+      - name: Checkout StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitHub CLI
+        run: |
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "GitHub CLI not found, installing..."
+            type -p apt-get && sudo apt-get update && sudo apt-get install -y gh || true
+          fi
+
+      - name: Run autopatch across StegVerse repos
+        run: |
+          set -euo pipefail
+
+          # ----------------------------------------------------------------
+          # 0. Setup
+          # ----------------------------------------------------------------
+          REPOS=(
+            "StegVerse/TVC"
+            "StegVerse/hybrid-collab-bridge"
+            "StegVerse/TV"
+            "StegVerse/StegVerse-SCW"
+          )
+
+          mkdir -p work
+          mkdir -p reports
+
+          REPORT="reports/stegtv_autopatch_report.md"
+
+          echo "# StegTV Connectivity Autopatch Report" > "$REPORT"
+          echo "" >> "$REPORT"
+          echo "- Run: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "$REPORT"
+          echo "" >> "$REPORT"
+
+          echo "Cloning TVC (source of truth)..."
+          gh repo clone StegVerse/TVC work/TVC -- --depth 1
+
+          SRC_TVC="work/TVC"
+
+          # Sanity check for source files
+          test -f "$SRC_TVC/data/tv_config.json"
+          test -f "$SRC_TVC/app/resolver.py"
+          test -f "$SRC_TVC/app/stegtvc_client.py" || true
+
+          # ----------------------------------------------------------------
+          # 1. Loop over target repositories
+          # ----------------------------------------------------------------
+          for REPO in "${REPOS[@]}"; do
+            SAFE_NAME=$(echo "$REPO" | tr '/.' '__')
+            echo "## $REPO" >> "$REPORT"
+
+            echo "Cloning $REPO..."
+            if ! gh repo clone "$REPO" "work/$SAFE_NAME" -- --depth 1; then
+              echo "- ❌ Clone failed" >> "$REPORT"
+              echo "" >> "$REPORT"
+              continue
+            fi
+
+            cd "work/$SAFE_NAME"
+
+            mkdir -p .github app data
+
+            # Copy files from TVC
+            cp "$SRC_TVC/data/tv_config.json" data/tv_config.json
+            cp "$SRC_TVC/app/resolver.py" app/resolver.py
+
+            # Prefer stegtvc_client.py if it exists in TVC, otherwise skip
+            if [ -f "$SRC_TVC/app/stegtvc_client.py" ]; then
+              cp "$SRC_TVC/app/stegtvc_client.py" .github/stegtvc_client.py
+            fi
+
+            if [ -n "$(git status --porcelain)" ]; then
+              git config user.name "StegVerse-Autopatch"
+              git config user.email "autopatch@stegverse.local"
+              git add .github app data
+              git commit -m "Autopatch: sync StegTVC connectivity files"
+              git push origin HEAD
+              RESULT="✅ Updated & pushed."
+            else
+              RESULT="ℹ️ No changes; already up to date."
+            fi
+
+            cd ../../
+
+            echo "- $RESULT" >> "$REPORT"
+            echo "" >> "$REPORT"
+          done
+
+          # ----------------------------------------------------------------
+          # 2. Commit report back into StegVerse-SCW
+          # ----------------------------------------------------------------
+          cd "$GITHUB_WORKSPACE"
+
+          git config user.name "StegVerse-Autopatch"
+          git config user.email "autopatch@stegverse.local"
+
+          if [ -n "$(git status --porcelain reports/stegtv_autopatch_report.md 2>/dev/null || echo '')" ]; then
+            git add reports/stegtv_autopatch_report.md
+            git commit -m "Autopatch report: StegTV connectivity"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No report changes to commit."
+          fi
