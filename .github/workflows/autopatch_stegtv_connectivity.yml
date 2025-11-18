@@ -35,10 +35,10 @@ jobs:
           # 0. Setup
           # ----------------------------------------------------------------
           REPOS=(
-            "StegVerse/TVC"
-            "StegVerse/hybrid-collab-bridge"
-            "StegVerse/TV"
-            "StegVerse/StegVerse-SCW"
+            "StegVerse-Labs/TVC"
+            "StegVerse-Labs/hybrid-collab-bridge"
+            "StegVerse-Labs/TV"
+            "StegVerse-Labs/StegVerse-SCW"
           )
 
           mkdir -p work
@@ -52,7 +52,7 @@ jobs:
           echo "" >> "$REPORT"
 
           echo "Cloning TVC (source of truth)..."
-          gh repo clone StegVerse/TVC work/TVC -- --depth 1
+          gh repo clone StegVerse-Labs/TVC work/TVC -- --depth 1
 
           SRC_TVC="work/TVC"
 
