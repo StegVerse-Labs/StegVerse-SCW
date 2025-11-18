@@ -1,155 +1,37 @@
-name: StegVerse Autopatch (TVC configs)
+name: autopatch
 
 on:
   workflow_dispatch: {}
+  # (optional) keep or remove the schedule if you already had one
+  # schedule:
+  #   - cron: "0 9 * * *"
 
 permissions:
   contents: write
-
-env:
-  ORG: StegVerse-Labs
-  TEMPLATE_REPO: TVC
-  # Repos we want to patch. You can add/remove names from this list.
-  TARGET_REPOS: |
-    TVC
-    TV
-    FREE-DOM
-    hybrid-collab-bridge
-    StegVerse-SCW
+  issues: write
+  actions: write
 
 jobs:
   autopatch:
     runs-on: ubuntu-latest
+
+    # ⬇️ This is the key: use PAT_WORKFLOW for all git/gh activity
     env:
-      # Personal access token you already created for workflows
       GH_TOKEN: ${{ secrets.PAT_WORKFLOW }}
+      GITHUB_TOKEN: ${{ secrets.PAT_WORKFLOW }}
 
     steps:
       - name: Checkout StegVerse-SCW
         uses: actions/checkout@v4
 
       - name: Install GitHub CLI
-        run: |
-          set -euo pipefail
-          if ! command -v gh >/dev/null 2>&1; then
-            echo "Installing GitHub CLI..."
-            type sudo >/dev/null 2>&1 || (echo "sudo not available"; exit 1)
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-              | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-            sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-              | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
-            sudo apt-get update -y
-            sudo apt-get install -y gh
-          fi
-          gh --version
+        uses: cli/cli-action@v2
+        with:
+          version: latest
 
       - name: Run autopatch across StegVerse repos
         run: |
           set -euo pipefail
-
           echo "=== StegVerse Autopatch ==="
-
-          mkdir -p work
-          cd work
-
-          echo "Cloning TVC (source of truth)..."
-          gh repo clone "$ORG/$TEMPLATE_REPO" TVC -- --depth 1
-
-          TEMPLATE_DIR="TVC/data"
-          REQUIRED_FILES=("stegtvc_config.json" "tv_config.json")
-          # filenames we consider *illegal* (typos / bad names)
-          TYPO_FILES=("stegvtc_config.json")
-
-          echo
-          echo "Verifying template files exist..."
-          ls -l "$TEMPLATE_DIR" || { echo "❌ Missing $TEMPLATE_DIR"; exit 1; }
-
-          for f in "${REQUIRED_FILES[@]}"; do
-            if [[ ! -f "$TEMPLATE_DIR/$f" ]]; then
-              echo "❌ Required template file missing: $TEMPLATE_DIR/$f"
-              exit 1
-            fi
-          done
-
-          for f in "${TYPO_FILES[@]}"; do
-            if [[ -f "$TEMPLATE_DIR/$f" ]]; then
-              echo "❌ Forbidden typo filename present in template repo: $TEMPLATE_DIR/$f"
-              echo "   Please delete or rename it before running autopatch."
-              exit 1
-            fi
-          done
-
-          echo "Template files found:"
-          ls -l "$TEMPLATE_DIR"
-
-          echo
-          echo "=== Patching target repos ==="
-
-          # Loop through TARGET_REPOS env (one repo name per line)
-          while read -r REPO; do
-            [[ -z "$REPO" ]] && continue
-
-            echo
-            echo ">>> Repo: $ORG/$REPO"
-
-            # Skip template repo – it is the source of truth
-            if [[ "$REPO" == "$TEMPLATE_REPO" ]]; then
-              echo "Skipping $ORG/$REPO (template repo, already canonical)."
-              continue
-            fi
-
-            CLONE_DIR="${ORG}_${REPO}"
-            echo "Cloning into '$CLONE_DIR'..."
-            if ! gh repo clone "$ORG/$REPO" "$CLONE_DIR" -- --depth 1; then
-              echo "⚠️  Skipping $ORG/$REPO (clone failed – repo might not exist or you lack access)."
-              continue
-            fi
-
-            cd "$CLONE_DIR"
-
-            # Decide where configs should live in the target repo
-            TARGET_DIR=""
-            if [[ -d "TVC/data" ]]; then
-              TARGET_DIR="TVC/data"
-            elif [[ -d "data" ]]; then
-              TARGET_DIR="data"
-            else
-              echo "⚠️  No 'TVC/data' or 'data' directory in $ORG/$REPO – skipping."
-              cd ..
-              continue
-            fi
-
-            echo "Using target directory: $TARGET_DIR"
-
-            # 1) Naming verifier – detect typo filenames
-            for typo in "${TYPO_FILES[@]}"; do
-              if find "$TARGET_DIR" -maxdepth 1 -type f -name "$typo" | grep -q .; then
-                echo "❌ Found typo filename in $ORG/$REPO:$TARGET_DIR -> $typo"
-                echo "   This file will NOT be used. Please rename it to 'stegtvc_config.json' if needed."
-              fi
-            done
-
-            # 2) Copy canonical configs into target repo
-            for f in "${REQUIRED_FILES[@]}"; do
-              echo "Copying $f into $ORG/$REPO:$TARGET_DIR"
-              cp "../$TEMPLATE_DIR/$f" "$TARGET_DIR/$f"
-            done
-
-            # 3) Commit + push only if there were changes
-            if [[ -n "$(git status --porcelain)" ]]; then
-              git config user.name "StegVerse Autopatch"
-              git config user.email "autopatch@stegverse.local"
-              git add "$TARGET_DIR"
-              git commit -m "chore: sync StegTVC config files from TVC"
-              git push origin HEAD:main
-              echo "✅ Changes pushed for $ORG/$REPO"
-            else
-              echo "No changes to commit for $ORG/$REPO"
-            fi
-
-            cd ..
-          done <<< "$TARGET_REPOS"
-
-          echo
-          echo "=== Autopatch finished ==="
+          python scripts/autopatch_runner.py
+        working-directory: .
