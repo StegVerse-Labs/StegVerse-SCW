@@ -7,6 +7,9 @@ on:
         description: "Optional label for this autopatch run (e.g. workflows-sync, tv-sync)"
         required: false
         default: "manual"
+  # Optional: automatic daily sync (08:30 UTC ≈ 02:30 Central)
+  schedule:
+    - cron: "30 8 * * *"
 
 permissions:
   contents: write
@@ -20,7 +23,7 @@ jobs:
       # Prefer the classic PAT in PAT_WORKFLOW, fall back to GH_STEGVERSE_PAT
       PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
       GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
-      AUTOPATCH_TASK: ${{ github.event.inputs.task }}
+      AUTOPATCH_TASK: ${{ github.event.inputs.task || 'scheduled' }}
 
     steps:
       - name: Check out StegVerse-SCW
@@ -71,7 +74,7 @@ jobs:
           echo "=== StegVerse Multi-Repo Autopatch ==="
           python scripts/stegverse_autopatch.py \
             --manifest scripts/stegverse_autopatch_manifest.json \
-            --task "${AUTOPATCH_TASK:-manual}"
+            --task "${AUTOPATCH_TASK:-scheduled}"
 
       - name: Commit multi-repo autopatch report
         run: |
