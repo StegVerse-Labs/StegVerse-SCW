@@ -1,37 +1,75 @@
-name: autopatch
+name: StegVerse Autopatch
 
 on:
   workflow_dispatch: {}
-  # (optional) keep or remove the schedule if you already had one
+  # Optional: enable a daily run
   # schedule:
-  #   - cron: "0 9 * * *"
+  #   - cron: "15 9 * * *"
 
 permissions:
   contents: write
-  issues: write
   actions: write
+  issues: write
 
 jobs:
   autopatch:
     runs-on: ubuntu-latest
 
-    # ⬇️ This is the key: use PAT_WORKFLOW for all git/gh activity
-env:
-  GH_TOKEN: ${{ secrets.PAT_WORKFLOW }}
-  GITHUB_TOKEN: ${{ secrets.PAT_WORKFLOW }}
+    env:
+      # Prefer PAT_WORKFLOW, fall back to GH_STEGVERSE_PAT if needed
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
 
     steps:
-      - name: Checkout StegVerse-SCW
+      - name: Check out StegVerse-SCW
         uses: actions/checkout@v4
-
-      - name: Install GitHub CLI
-        uses: cli/cli-action@v2
         with:
-          version: latest
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+
+          # Mask token in logs
+          echo "::add-mask::${TOKEN}"
+
+          # Make token available to Python as GITHUB_TOKEN too
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "STE G_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Autopatch Bot"
+          git config --global user.email "autopatch-bot@users.noreply.github.com"
+
+          # Force all https://github.com/... URLs to use the PAT
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install autopatch deps
+        run: |
+          set -euo pipefail
+          pip install -r scripts/requirements-yaml.txt
 
       - name: Run autopatch across StegVerse repos
         run: |
           set -euo pipefail
           echo "=== StegVerse Autopatch ==="
-          python scripts/autopatch_runner.py
-        working-directory: .
+          python scripts/auto_patch.py \
+            --manifest scripts/autopatch_catalog.json
+        env:
+          # The Python script can use any of these
+          PAT_WORKFLOW: ${{ env.PAT_WORKFLOW }}
+          GH_STEGVERSE_PAT: ${{ env.GH_STEGVERSE_PAT }}
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
