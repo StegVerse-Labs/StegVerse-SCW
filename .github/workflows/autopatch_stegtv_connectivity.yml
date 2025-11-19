@@ -27,9 +27,13 @@ jobs:
             type -p apt-get && sudo apt-get update && sudo apt-get install -y gh || true
           fi
 
-      - name: Run autopatch across StegVerse repos
+            - name: Run autopatch across StegVerse repos
         run: |
           set -euo pipefail
+
+          echo "=== StegTV Connectivity Autopatch START ==="
+          echo "Using GH_TOKEN: ${GH_TOKEN:+[set]}"  # won't show the value, just whether it's present
+          echo
 
           # ----------------------------------------------------------------
           # 0. Setup
@@ -52,11 +56,20 @@ jobs:
           echo "" >> "$REPORT"
 
           echo "Cloning TVC (source of truth)..."
-          gh repo clone StegVerse-Labs/TVC work/TVC -- --depth 1
+          if ! gh repo clone StegVerse-Labs/TVC work/TVC -- --depth 1; then
+            echo "❌ Failed to clone StegVerse-Labs/TVC – aborting run."
+            exit 1
+          fi
+          echo "✅ TVC cloned."
+          echo
 
           SRC_TVC="work/TVC"
 
           # Sanity check for source files
+          echo "Checking required source files in TVC..."
+          ls -l "$SRC_TVC/data" || true
+          ls -l "$SRC_TVC/app" || true
+
           test -f "$SRC_TVC/data/tv_config.json"
           test -f "$SRC_TVC/app/resolver.py"
           test -f "$SRC_TVC/app/stegtvc_client.py" || true
@@ -66,37 +79,52 @@ jobs:
           # ----------------------------------------------------------------
           for REPO in "${REPOS[@]}"; do
             SAFE_NAME=$(echo "$REPO" | tr '/.' '__')
+
+            echo
+            echo "======================================="
+            echo " Processing repo: $REPO"
+            echo " Local dir     : work/$SAFE_NAME"
+            echo "======================================="
             echo "## $REPO" >> "$REPORT"
 
             echo "Cloning $REPO..."
             if ! gh repo clone "$REPO" "work/$SAFE_NAME" -- --depth 1; then
+              echo "❌ Clone failed for $REPO"
               echo "- ❌ Clone failed" >> "$REPORT"
               echo "" >> "$REPORT"
               continue
             fi
+            echo "✅ Clone OK for $REPO"
 
             cd "work/$SAFE_NAME"
 
+            echo "Ensuring .github, app, data directories exist..."
             mkdir -p .github app data
 
-            # Copy files from TVC
+            echo "Copying connectivity files from TVC into $REPO..."
             cp "$SRC_TVC/data/tv_config.json" data/tv_config.json
             cp "$SRC_TVC/app/resolver.py" app/resolver.py
 
-            # Prefer stegtvc_client.py if it exists in TVC, otherwise skip
             if [ -f "$SRC_TVC/app/stegtvc_client.py" ]; then
+              echo "Found stegtvc_client.py in TVC; copying into .github/"
               cp "$SRC_TVC/app/stegtvc_client.py" .github/stegtvc_client.py
+            else
+              echo "No stegtvc_client.py in TVC; skipping copy."
             fi
 
+            echo "Checking for changes in $REPO..."
             if [ -n "$(git status --porcelain)" ]; then
+              echo "Changes detected; committing and pushing..."
               git config user.name "StegVerse-Autopatch"
               git config user.email "autopatch@stegverse.local"
               git add .github app data
               git commit -m "Autopatch: sync StegTVC connectivity files"
               git push origin HEAD
               RESULT="✅ Updated & pushed."
+              echo "✅ Push succeeded for $REPO"
             else
               RESULT="ℹ️ No changes; already up to date."
+              echo "ℹ️ No changes to commit for $REPO"
             fi
 
             cd ../../
@@ -113,10 +141,16 @@ jobs:
           git config user.name "StegVerse-Autopatch"
           git config user.email "autopatch@stegverse.local"
 
+          echo "Checking if report changed..."
           if [ -n "$(git status --porcelain reports/stegtv_autopatch_report.md 2>/dev/null || echo '')" ]; then
+            echo "Committing updated report..."
             git add reports/stegtv_autopatch_report.md
             git commit -m "Autopatch report: StegTV connectivity"
             git push origin "${GITHUB_REF_NAME:-main}"
+            echo "✅ Report committed to StegVerse-SCW."
           else
             echo "No report changes to commit."
           fi
+
+          echo
+          echo "=== StegTV Connectivity Autopatch COMPLETE ==="
