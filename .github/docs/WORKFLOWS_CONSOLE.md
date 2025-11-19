@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2025-11-19 13:58 UTC**_
+_Last updated: **2025-11-19 14:39 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **78**
-- ❌ Broken: **39**
-- Total: **117**
+- ➖ No dispatch: **79**
+- ❌ Broken: **40**
+- Total: **119**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -20,6 +20,7 @@ _Last updated: **2025-11-19 13:58 UTC**_
 | `autopatch-repotree-and-supercheck.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-repotree-and-supercheck.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-repotree-and-supercheck.yml) · [File](.github/workflows/autopatch-repotree-and-supercheck.yml) |
 | `autopatch-wire-ops-table-links.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-ops-table-links.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-ops-table-links.yml) · [File](.github/workflows/autopatch-wire-ops-table-links.yml) |
 | `autopatch-wire-quick-controls.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-quick-controls.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-quick-controls.yml) · [File](.github/workflows/autopatch-wire-quick-controls.yml) |
+| `autopatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch.yml) · [File](.github/workflows/autopatch.yml) |
 | `autopatch_apply.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_apply.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_apply.yml) · [File](.github/workflows/autopatch_apply.yml) |
 | `autopatch_deferred.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_deferred.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_deferred.yml) · [File](.github/workflows/autopatch_deferred.yml) |
 | `autopatch_dryrun.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_dryrun.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_dryrun.yml) · [File](.github/workflows/autopatch_dryrun.yml) |
@@ -123,6 +124,7 @@ _Last updated: **2025-11-19 13:58 UTC**_
 | `workflows-sanity-check.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflows-sanity-check.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflows-sanity-check.yml) · [File](.github/workflows/workflows-sanity-check.yml) |
 | `workflows-second-aid.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflows-second-aid.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflows-second-aid.yml) · [File](.github/workflows/workflows-second-aid.yml) |
 | `workflows-status-badges.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflows-status-badges.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflows-status-badges.yml) · [File](.github/workflows/workflows-status-badges.yml) |
+| `workow-status-badges.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workow-status-badges.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workow-status-badges.yml) · [File](.github/workflows/workow-status-badges.yml) |
 | `yaml-bulk-autofix.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/yaml-bulk-autofix.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/yaml-bulk-autofix.yml) · [File](.github/workflows/yaml-bulk-autofix.yml) |
 | `yaml_corrector.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/yaml_corrector.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/yaml_corrector.yml) · [File](.github/workflows/yaml_corrector.yml) |
 | `yaml_corrector_v2.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/yaml_corrector_v2.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/yaml_corrector_v2.yml) · [File](.github/workflows/yaml_corrector_v2.yml) |
