@@ -1,24 +1,43 @@
-name: kick-autopatch
+name: Kick StegVerse Autopatch
 
 on:
   workflow_dispatch: {}
-
-permissions:
-  contents: write
+  # Optional quick-kick from pushes, etc.
+  # push:
+  #   branches: [ "main" ]
 
 jobs:
   kick:
     runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Touch sentinel file
+      - name: Resolve token
         run: |
-          mkdir -p .github/trigger/autopatch
-          echo "kick $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > ".github/trigger/autopatch/ping-${{ github.run_id }}"
-      - name: Commit & push
+          set -euo pipefail
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: PAT_WORKFLOW (or GH_STEGVERSE_PAT) is required."
+            exit 1
+          fi
+          echo "::add-mask::${TOKEN}"
+          echo "TOKEN=${TOKEN}" >> "$GITHUB_ENV"
+
+      - name: Dispatch target workflow
         run: |
-          git config user.name "StegVerse Bot"
-          git config user.email "bot@stegverse.org"
-          git add .github/trigger/autopatch/
-          git commit -m "chore(kick): trigger autopatch from workflow ${{ github.run_id }}"
-          git push origin HEAD:main
+          set -euo pipefail
+
+          REPO="StegVerse-Labs/StegVerse-SCW"
+          WORKFLOW_FILE="auto_patch.yml"
+          REF="main"
+
+          echo "Dispatching ${WORKFLOW_FILE} on ${REPO}@${REF}"
+
+          curl -sS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${TOKEN}" \
+            https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_FILE}/dispatches \
+            -d "{\"ref\":\"${REF}\"}"
