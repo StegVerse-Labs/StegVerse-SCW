@@ -1,4 +1,4 @@
- name: StegVerse Multi-Repo Autopatch
+ name: StegVerse Multi-Repo Autopatch (Legacy)
 
 #on:
 #  workflow_dispatch: {}
