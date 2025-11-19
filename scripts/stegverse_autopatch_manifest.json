@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "description": "StegVerse-wide shared workflow sync",
+  "default_files": [
+    ".github/workflows/autopatch.yml",
+    ".github/workflows/workflows-status-badges.yml"
+  ],
+  "targets": [
+    {
+      "repo": "StegVerse-Labs/TVC"
+    },
+    {
+      "repo": "StegVerse-Labs/hybrid-collab-bridge"
+    },
+    {
+      "repo": "StegVerse-Labs/TV"
+    },
+    {
+      "repo": "StegVerse-Labs/StegVerse-SCW"
+    }
+  ]
+}
