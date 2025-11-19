@@ -2,42 +2,28 @@ name: Kick StegVerse Autopatch
 
 on:
   workflow_dispatch: {}
-  # Optional quick-kick from pushes, etc.
-  # push:
-  #   branches: [ "main" ]
 
 jobs:
   kick:
     runs-on: ubuntu-latest
-
-    env:
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
-      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
-
     steps:
       - name: Resolve token
+        id: token
         run: |
-          set -euo pipefail
-          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
-          if [ -z "${TOKEN}" ]; then
-            echo "ERROR: PAT_WORKFLOW (or GH_STEGVERSE_PAT) is required."
+          if [ -n "${{ secrets.GH_STEGVERSE_PAT }}" ]; then
+            echo "token=${{ secrets.GH_STEGVERSE_PAT }}" >> $GITHUB_OUTPUT
+          else
+            echo "ERROR: Missing GH_STEGVERSE_PAT secret"
             exit 1
           fi
-          echo "::add-mask::${TOKEN}"
-          echo "TOKEN=${TOKEN}" >> "$GITHUB_ENV"
 
       - name: Dispatch target workflow
         run: |
           set -euo pipefail
+          echo "Dispatching auto_patch.yml on StegVerse-Labs/StegVerse-SCW@main"
 
-          REPO="StegVerse-Labs/StegVerse-SCW"
-          WORKFLOW_FILE="auto_patch.yml"
-          REF="main"
-
-          echo "Dispatching ${WORKFLOW_FILE} on ${REPO}@${REF}"
-
-          curl -sS -X POST \
+          curl -X POST \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token ${TOKEN}" \
-            https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_FILE}/dispatches \
-            -d "{\"ref\":\"${REF}\"}"
+            -H "Authorization: token ${{ steps.token.outputs.token }}" \
+            https://api.github.com/repos/StegVerse-Labs/StegVerse-SCW/actions/workflows/auto_patch.yml/dispatches \
+            -d '{"ref":"main"}'
