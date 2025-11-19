@@ -1,0 +1,63 @@
+name: StegVerse Multi-Repo Autopatch
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  multi-autopatch:
+    runs-on: ubuntu-latest
+
+    env:
+      # Prefer classic PAT if present, otherwise fall back
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+
+          echo "::add-mask::${TOKEN}"
+
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Multi-Autopatch Bot"
+          git config --global user.email "autopatch-bot@users.noreply.github.com"
+
+          # Route all https GitHub URLs through the PAT
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies for multi-autopatch
+        run: |
+          set -euo pipefail
+          # We only need PyYAML here
+          pip install pyyaml
+
+      - name: Run StegVerse multi-repo autopatch
+        run: |
+          set -euo pipefail
+          python scripts/stegverse_multi_autopatch.py
