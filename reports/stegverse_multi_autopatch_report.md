@@ -1,18 +1,18 @@
 # StegVerse Multi-Repo Autopatch Report
 
-- Run: 2025-11-19 13:47:02 UTC
-- Run ID: `19503497503`
+- Run: 2025-11-19 14:36:01 UTC
+- Run ID: `19505017396`
 - Task: `manual`
 
 ## Summary
 - Total repos: **4**
-- Updated: **0**
-- No changes: **0**
+- Updated: **3**
+- No changes: **1**
 - Clone failed: **0**
-- Errors: **4**
+- Errors: **0**
 
 ## Per-repo results
-- ⚠️ `StegVerse-Labs/TVC` — error — exception: Source file not found: .github/workflows/autopatch.yml
-- ⚠️ `StegVerse-Labs/hybrid-collab-bridge` — error — exception: Source file not found: .github/workflows/autopatch.yml
-- ⚠️ `StegVerse-Labs/TV` — error — exception: Source file not found: .github/workflows/autopatch.yml
-- ⚠️ `StegVerse-Labs/StegVerse-SCW` — error — exception: Source file not found: .github/workflows/autopatch.yml
+- ✅ `StegVerse-Labs/TVC` — updated — Updated & pushed.
+- ✅ `StegVerse-Labs/hybrid-collab-bridge` — updated — Updated & pushed.
+- ✅ `StegVerse-Labs/TV` — updated — Updated & pushed.
+- ℹ️ `StegVerse-Labs/StegVerse-SCW` — no_changes — Already up to date.
