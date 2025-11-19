@@ -1,24 +1,24 @@
-name: StegVerse Multi-Repo Autopatch
+ name: StegVerse Multi-Repo Autopatch
 
-on:
-  workflow_dispatch: {}
+#on:
+#  workflow_dispatch: {}
 
-permissions:
-  contents: write
-  actions: write
+#permissions:
+#  contents: write
+#  actions: write
 
-jobs:
-  multi-autopatch:
-    runs-on: ubuntu-latest
+ jobs:
+   multi-autopatch:
+     runs-on: ubuntu-latest
 
-    env:
+     env:
       # Prefer classic PAT if present, otherwise fall back
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
-      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+       PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+       GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
 
-    steps:
-      - name: Check out StegVerse-SCW
-        uses: actions/checkout@v4
+     steps:
+       - name: Check out StegVerse-SCW
+         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
