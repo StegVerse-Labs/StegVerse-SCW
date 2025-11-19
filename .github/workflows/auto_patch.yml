@@ -43,7 +43,7 @@ jobs:
           # Make token available to Python as GITHUB_TOKEN too
           {
             echo "GITHUB_TOKEN=${TOKEN}"
-            echo "STE G_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
           } >> "$GITHUB_ENV"
 
           git config --global user.name  "StegVerse Autopatch Bot"
@@ -69,7 +69,7 @@ jobs:
           python scripts/auto_patch.py \
             --manifest scripts/autopatch_catalog.json
         env:
-          # The Python script can use any of these
           PAT_WORKFLOW: ${{ env.PAT_WORKFLOW }}
           GH_STEGVERSE_PAT: ${{ env.GH_STEGVERSE_PAT }}
           GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          STEG_TOKEN: ${{ env.STEG_TOKEN }}
