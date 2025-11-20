@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StegVerse Entity",
+  "type": "object",
+  "required": ["id", "name", "role", "enabled", "repos", "tasks"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "role": { "type": "string" },
+    "enabled": { "type": "boolean" },
+    "repos": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tasks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "memory_file": { "type": "string" },
+    "permissions_profile": { "type": "string" }
+  }
+}
