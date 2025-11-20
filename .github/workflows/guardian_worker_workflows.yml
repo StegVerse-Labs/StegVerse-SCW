@@ -1,22 +1,23 @@
-name: StegVerse Guardian Worker - Workflows
+name: StegVerse Guardian Worker – Workflows
 
 on:
-  # Manual trigger
+  # Manual trigger from the Actions UI
   workflow_dispatch: {}
-  # Optional daily run once things look stable
+  # Optional: enable a daily run once you’re happy with it
   # schedule:
-  #   - cron: "20 9 * * *"
+  #   - cron: "30 8 * * *"
 
 permissions:
   contents: write
-  actions: write
+  actions: read
 
 jobs:
   guardian_workflows:
     runs-on: ubuntu-latest
 
     env:
-      # All three are allowed; we’ll prefer fine-grained if present
+      # Prefer the classic PAT that is already known to work (like Autopatch),
+      # then fall back to the fine-grained PATs.
       PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
       GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
       PAT_WORKFLOW_FG: ${{ secrets.PAT_WORKFLOW_FG }}
@@ -26,38 +27,39 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # IMPORTANT: do NOT persist the default GITHUB_TOKEN credentials,
-          # so our git config + PAT is the only auth used.
-          persist-credentials: false
 
       - name: Resolve token & configure git
         run: |
           set -euo pipefail
 
-          # Prefer fine-grained, then classic, then backup
-          TOKEN="${PAT_WORKFLOW_FG:-${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}}"
+          # Prefer the classic PAT (same pattern as Autopatch)
+          TOKEN="${PAT_WORKFLOW:-}"
+          if [ -z "${TOKEN}" ]; then
+            TOKEN="${GH_STEGVERSE_PAT:-}"
+          fi
+          if [ -z "${TOKEN}" ]; then
+            TOKEN="${PAT_WORKFLOW_FG:-}"
+          fi
 
           if [ -z "${TOKEN}" ]; then
-            echo "ERROR: No PAT found in PAT_WORKFLOW_FG, PAT_WORKFLOW, or GH_STEGVERSE_PAT."
+            echo "ERROR: No usable PAT found (PAT_WORKFLOW / GH_STEGVERSE_PAT / PAT_WORKFLOW_FG)."
             exit 1
           fi
 
           echo "::add-mask::${TOKEN}"
 
-          # Make the PAT visible to any tooling that inspects env vars
           {
             echo "GITHUB_TOKEN=${TOKEN}"
             echo "GH_TOKEN=${TOKEN}"
             echo "STEG_TOKEN=${TOKEN}"
           } >> "$GITHUB_ENV"
 
+          # Use your GitHub noreply identity (option B)
           git config --global user.name  "StegVerse Guardian Worker"
-          git config --global user.email "guardian-worker@stegverse.local"
+          git config --global user.email "StegVerse@users.noreply.github.com"
 
-          # Force all https://github.com/... to use the PAT
-          git config --global \
-            url."https://x-access-token:${TOKEN}@github.com/".insteadOf \
-            "https://github.com/"
+          # Force ALL GitHub https traffic to use the PAT instead of the default GITHUB_TOKEN
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -73,35 +75,36 @@ jobs:
       - name: Run Workflow Health Guardian (ASL-1, reports only)
         run: |
           set -euo pipefail
-          echo "=== Workflow Health Guardian (ASL-1) ==="
+          echo "=== StegVerse Guardian Worker: Workflow Health ==="
           python scripts/genesis/guardian_worker_workflows_health.py
 
-      - name: Run Workflow Hygiene Guardian (ASL-2, auto-fix)
+      - name: Run Workflow Hygiene Guardian (ASL-2, auto-fix dispatch)
         run: |
           set -euo pipefail
-          echo "=== Workflow Hygiene Guardian (ASL-2) ==="
+          echo "=== StegVerse Guardian Worker: Workflow Hygiene ==="
           python scripts/genesis/guardian_worker_workflows_hygiene.py
 
       - name: Show workflow diffs (if any)
         run: |
           set -euo pipefail
-          echo "=== git status ==="
+          echo "=== Git status after guardian workers ==="
           git status
           echo ""
-          echo "=== git diff (if any) ==="
-          git diff || true
+          echo "=== Diffs under .github/workflows and scripts/reports/guardians ==="
+          git diff -- .github/workflows scripts/reports/guardians || true
 
       - name: Commit guardian changes (workflows + reports)
         run: |
           set -euo pipefail
 
           git config user.name  "StegVerse Guardian Worker"
-          git config user.email "guardian-worker@stegverse.local"
+          git config user.email "StegVerse@users.noreply.github.com"
 
-          if [ -n "$(git status --porcelain '.github/workflows' 'scripts/reports/guardians' 'reports/guardians' 2>/dev/null || echo '')" ]; then
+          CHANGES="$(git status --porcelain '.github/workflows' 'scripts/reports/guardians' 2>/dev/null || echo '')"
+
+          if [ -n "${CHANGES}" ]; then
             echo "Detected guardian changes; committing..."
-            git add .github/workflows || true
-            git add scripts/reports/guardians reports/guardians 2>/dev/null || true
+            git add .github/workflows scripts/reports/guardians
             git commit -m "Guardian Worker: workflows health & hygiene"
             git push origin "${GITHUB_REF_NAME:-main}"
           else
