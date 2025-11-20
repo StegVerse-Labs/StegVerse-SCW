@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "description": "StegVerse Phase 2 AI entity registry",
+  "entities": [
+    {
+      "id": "stegverse-ai-001",
+      "name": "StegVerse Genesis Worker",
+      "role": "genesis_worker",
+      "enabled": true,
+      "repos": [
+        "StegVerse-Labs/StegVerse-SCW"
+      ],
+      "tasks": [
+        "economic_snapshot",
+        "repo_hygiene",
+        "status_digest"
+      ],
+      "memory_file": "memory/entities/stegverse-ai-001.md",
+      "permissions_profile": "default_worker"
+    }
+  ]
+}
