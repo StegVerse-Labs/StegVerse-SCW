@@ -1,0 +1,46 @@
+name: Financial Daily Rollup
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "30 8 * * *"  # daily @ 08:30 UTC, after integrity + snapshot
+
+permissions:
+  contents: write
+
+jobs:
+  financial_rollup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build financial daily rollup
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Financial Daily Rollup (Genesis v0.1) ==="
+          python scripts/genesis/financial_daily_rollup.py
+
+      - name: Commit financial rollup
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Autopatch Bot"
+          git config user.email "autopatch-bot@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain 'scripts/reports/financial' 2>/dev/null || echo '')" ]; then
+            echo "Detected financial rollup changes; committing..."
+            git add scripts/reports/financial
+            git commit -m "Update financial daily rollup (automated)"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No financial rollup changes to commit."
+          fi
