@@ -1,0 +1,50 @@
+name: Genesis Economic Snapshot
+
+on:
+  # Manual run
+  workflow_dispatch: {}
+  # Later: turn this on once you're happy
+  # schedule:
+  #   - cron: "30 6 * * *"   # 06:30 UTC daily
+
+permissions:
+  contents: write
+
+jobs:
+  economic_snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Economic Snapshot
+        run: |
+          set -euo pipefail
+          python ledger/steg_wallet_view.py
+
+      - name: Commit economic snapshot
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Economic Bot"
+          git config user.email "econ-bot@users.noreply.github.com"
+
+          CHANGES="$(git status --porcelain 'ledger/telemetry/financial' 'ledger/events' || true)"
+
+          if [ -n "$CHANGES" ]; then
+            echo "Detected ledger changes:"
+            echo "$CHANGES"
+            git add ledger/telemetry/financial ledger/events || true
+            git commit -m "Economic snapshot: wallet & ledger update"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else:
+            echo "No economic changes to commit."
+          fi
