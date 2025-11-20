@@ -1,98 +1,93 @@
 #!/usr/bin/env python3
 """
-Genesis: Log a single revenue event into the ledger.
+Genesis: log_revenue_event
 
-This is intentionally simple and append-only. It does NOT move real money.
-It just records an event line in JSONL so the ledger + snapshots can reason
-about revenue streams over time.
+Creates a single revenue event file under:
+
+  ledger/events/YYYY-MM-DD/<event_id>.json
+
+Inputs (env vars):
+
+  STEG_AMOUNT   (float string, required)
+  STEG_CURRENCY (e.g. "USD", default "USD")
+  STEG_KIND     (e.g. "invoice", default "invoice")
+  STEG_MEMO     (string, optional)
+  STEG_SOURCE   (string, default "manual")
+  STEG_STREAM   (string, default "stegcore")
+  STEG_DRY_RUN  ("true"/"false", default "false")
+
+Prints the event JSON to stdout and path where it was written.
 """
 
-import argparse
-import datetime as _dt
 import json
+import os
 import uuid
-from decimal import Decimal, InvalidOperation
+from datetime import datetime, timezone
 from pathlib import Path
 
-# Auto-discover repo root by walking upward until .git or ledger/ is found
-def find_repo_root(start: Path) -> Path:
-    p = start
-    for _ in range(10):
-        if (p / ".git").exists() or (p / "ledger").exists():
-            return p
-        p = p.parent
-    raise RuntimeError("Could not locate repository root")
-
-ROOT = find_repo_root(Path(__file__).resolve())
-EVENTS_DIR = ROOT / "ledger" / "events"
-EVENTS_FILE = EVENTS_DIR / "revenue_events.jsonl"
+ROOT = Path(__file__).resolve().parents[1]
+LEDGER_EVENTS_ROOT = ROOT / "ledger" / "events"
 
 
-def parse_amount(raw: str) -> float:
-    try:
-        return float(Decimal(raw))
-    except (InvalidOperation, ValueError) as e:
-        raise SystemExit(f"Invalid amount '{raw}': {e}")
+def env(name: str, default: str = "") -> str:
+    v = os.getenv(name)
+    return v if v is not None and v != "" else default
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--amount", required=True, help="Amount in currency units (e.g. 25.00)")
-    ap.add_argument("--currency", default="USD", help="Currency code, default USD")
-    ap.add_argument(
-        "--kind",
-        default="invoice",
-        help="Event kind: invoice|subscription|donation|grant|other",
-    )
-    ap.add_argument(
-        "--stream",
-        default="core",
-        help="Revenue stream label (e.g. stegcore, consulting, grants)",
-    )
-    ap.add_argument(
-        "--status",
-        default="expected",
-        help="Status: expected|pending|settled|failed|refunded",
-    )
-    ap.add_argument(
-        "--source",
-        default="manual",
-        help="Origin of this event (manual|stripe|coinbase|internal|other)",
-    )
-    ap.add_argument(
-        "--memo",
-        default="",
-        help="Free-form note, e.g. 'Pilot customer X subscription, month 1'",
-    )
-    args = ap.parse_args()
+    # Inputs
+    amount_raw = env("STEG_AMOUNT", "0")
+    try:
+        amount = float(amount_raw)
+    except ValueError:
+        raise SystemExit(f"Invalid STEG_AMOUNT: {amount_raw!r}")
 
-    amount = parse_amount(args.amount)
+    currency = env("STEG_CURRENCY", "USD")
+    kind = env("STEG_KIND", "invoice")
+    memo = env("STEG_MEMO", "").strip() or "No memo"
+    source = env("STEG_SOURCE", "manual")
+    stream = env("STEG_STREAM", "stegcore")
+    dry_run = env("STEG_DRY_RUN", "false").lower() == "true"
 
-    EVENTS_DIR.mkdir(parents=True, exist_ok=True)
+    now = datetime.now(timezone.utc)
+    ts = now.isoformat().replace("+00:00", "Z")
+    day = now.date().isoformat()
+    event_id = str(uuid.uuid4())
 
-    ts = _dt.datetime.utcnow().isoformat() + "Z"
     event = {
-        "id": str(uuid.uuid4()),
+        "id": event_id,
         "ts": ts,
-        "kind": args.kind,
-        "stream": args.stream,
-        "source": args.source,
-        "status": args.status,
         "amount": amount,
-        "currency": args.currency.upper(),
-        "memo": args.memo,
+        "currency": currency,
+        "kind": kind,
+        "memo": memo,
         "meta": {
-            "schema": "stegverse.revenue.v1",
             "created_by": "genesis.log_revenue_event",
+            "schema": "stegverse.revenue.v1",
         },
+        "source": source,
+        "status": "expected",
+        "stream": stream,
     }
 
-    with EVENTS_FILE.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(event, sort_keys=True) + "\n")
+    rel_dir = Path("ledger") / "events" / day
+    rel_path = rel_dir / f"{event_id}.json"
+    abs_dir = LEDGER_EVENTS_ROOT / day
+    abs_dir.mkdir(parents=True, exist_ok=True)
+    abs_path = abs_dir / f"{event_id}.json"
 
-    print("=== StegVerse Revenue Event ===")
-    print(json.dumps(event, indent=2, sort_keys=True))
-    print(f"Wrote to: {EVENTS_FILE}")
+    print("=== StegVerse Revenue Event (Genesis) ===")
+    print(json.dumps(event, indent=2))
+    print()
+    print(f"dry_run: {dry_run}")
+    print(f"target_file: {rel_path}")
+
+    if dry_run:
+        print("[log_revenue_event] Dry run; not writing file.")
+        return
+
+    abs_path.write_text(json.dumps(event, indent=2), encoding="utf-8")
+    print(f"[log_revenue_event] Wrote {abs_path}")
 
 
 if __name__ == "__main__":
