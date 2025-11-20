@@ -1,0 +1,91 @@
+name: StegTV Connectivity Autopatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Optional label for this connectivity run"
+        required: false
+        default: "manual"
+  # Optional: automatic daily connectivity sync (08:45 UTC ≈ 02:45 Central)
+  schedule:
+    - cron: "45 8 * * *"
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  stegtvc-connectivity:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+      CONNECTIVITY_TASK: ${{ github.event.inputs.task || 'scheduled' }}
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+
+          # Mask token in logs
+          echo "::add-mask::${TOKEN}"
+
+          # Make PAT available to anything that needs it
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Autopatch Bot"
+          git config --global user.email "autopatch-bot@users.noreply.github.com"
+
+          # Force all https://github.com/... URLs to use the PAT
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install connectivity deps
+        run: |
+          set -euo pipefail
+          pip install pyyaml || true
+
+      - name: Run StegTVC connectivity autopatch
+        run: |
+          set -euo pipefail
+          echo "=== StegTVC Connectivity Autopatch ==="
+          python scripts/stegtvc_connectivity_autopatch.py \
+            --manifest scripts/stegtvc_connectivity_manifest.json \
+            --task "${CONNECTIVITY_TASK:-scheduled}"
+
+      - name: Commit connectivity report
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Autopatch Bot"
+          git config user.email "autopatch-bot@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain reports/stegtvc_connectivity_autopatch_report.md 2>/dev/null || echo '')" ]; then
+            git add reports/stegtvc_connectivity_autopatch_report.md
+            git commit -m "Autopatch report: StegTV connectivity sync"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No connectivity report changes to commit."
+          fi
