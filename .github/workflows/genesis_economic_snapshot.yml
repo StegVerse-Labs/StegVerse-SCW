@@ -33,21 +33,32 @@ jobs:
           export PYTHONPATH="$GITHUB_WORKSPACE:${PYTHONPATH:-}"
           python -m ledger.steg_wallet_view
 
-      - name: Commit economic snapshot
+            - name: Commit economic snapshot
         run: |
           set -euo pipefail
 
-          git config user.name  "StegVerse Economic Bot"
-          git config user.email "econ-bot@users.noreply.github.com"
+          SNAP_FILE=$(ls ledger/telemetry/financial/wallet_snapshot_*.md | tail -n1 || true)
 
-          CHANGES="$(git status --porcelain 'ledger/telemetry/financial' 'ledger/events' || true)"
-
-          if [ -n "$CHANGES" ]; then
-            echo "Detected ledger changes:"
-            echo "$CHANGES"
-            git add ledger/telemetry/financial ledger/events || true
-            git commit -m "Economic snapshot: wallet & ledger update"
-            git push origin "${GITHUB_REF_NAME:-main}"
-          else:
-            echo "No economic changes to commit."
+          if [ -z "$SNAP_FILE" ]; then
+            echo "No snapshot file found; skipping commit."
+            exit 0
           fi
+
+          echo "Detected snapshot: $SNAP_FILE"
+
+          git add "$SNAP_FILE" || true
+
+          # Do NOT add phantom directories
+          # Do NOT add pycache
+          git status --porcelain
+
+          if git diff --cached --quiet; then
+            echo "No staged changes; nothing to commit."
+            exit 0
+          fi
+
+          git config user.name  "StegVerse Autopatch Bot"
+          git config user.email "autopatch-bot@users.noreply.github.com"
+
+          git commit -m "Economic snapshot: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          git push origin "${GITHUB_REF_NAME:-main}"
