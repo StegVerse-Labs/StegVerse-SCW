@@ -11,7 +11,7 @@ Also writes a markdown snapshot under:
 import datetime
 from pathlib import Path
 
-from .steg_ledger_core import load_events, compute_balances, ROOT
+from ledger.steg_ledger_core import load_events, compute_balances, ROOT
 
 SNAP_DIR = ROOT / "ledger" / "telemetry" / "financial"
 
