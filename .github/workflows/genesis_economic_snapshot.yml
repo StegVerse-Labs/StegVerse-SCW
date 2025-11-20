@@ -33,7 +33,7 @@ jobs:
           export PYTHONPATH="$GITHUB_WORKSPACE:${PYTHONPATH:-}"
           python -m ledger.steg_wallet_view
 
-            - name: Commit economic snapshot
+      - name: Commit economic snapshot
         run: |
           set -euo pipefail
 
