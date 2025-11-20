@@ -1,0 +1,84 @@
+name: StegVerse Guardians
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Optional label for this guardian run"
+        required: false
+        default: "manual"
+  # Daily scheduled run (08:20 UTC)
+  schedule:
+    - cron: "20 8 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  guardians:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+
+          echo "::add-mask::${TOKEN}"
+
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Guardians Bot"
+          git config --global user.email "guardians-bot@stegverse.local"
+
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install guardian deps
+        run: |
+          set -euo pipefail
+          pip install pyyaml
+
+      - name: Run StegVerse Guardian Runner
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Guardians ==="
+          python scripts/entities/guardian_runner.py
+
+      - name: Commit guardian reports (optional)
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Guardians Bot"
+          git config user.email "guardians-bot@stegverse.local"
+
+          if [ -n "$(git status --porcelain 'reports/guardians' 2>/dev/null || echo '')" ]; then
+            git add reports/guardians
+            git commit -m "Guardian reports update"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No guardian report changes to commit."
+          fi
