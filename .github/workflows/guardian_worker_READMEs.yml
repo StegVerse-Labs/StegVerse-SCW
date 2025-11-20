@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Reuse your PATs
+      # Reuse your PATs (for future cross-repo work or if needed later)
       PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
       GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
 
@@ -33,22 +33,23 @@ jobs:
           TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
 
           if [ -z "${TOKEN}" ]; then
-            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
-            exit 1
+            echo "WARNING: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            echo "This worker can still run locally in StegVerse-SCW but will not push cross-repo."
           fi
 
-          echo "::add-mask::${TOKEN}"
+          if [ -n "${TOKEN}" ]; then
+            echo "::add-mask::${TOKEN}"
 
-          {
-            echo "GITHUB_TOKEN=${TOKEN}"
-            echo "GH_TOKEN=${TOKEN}"
-            echo "STEG_TOKEN=${TOKEN}"
-          } >> "$GITHUB_ENV"
+            {
+              echo "GITHUB_TOKEN=${TOKEN}"
+              echo "GH_TOKEN=${TOKEN}"
+              echo "STEG_TOKEN=${TOKEN}"
+            } >> "$GITHUB_ENV"
 
-          git config --global user.name  "StegVerse Guardian Worker"
-          git config --global user.email "guardian-worker@stegverse.local"
-
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+            git config --global user.name  "StegVerse Guardian Worker"
+            git config --global user.email "guardian-worker@stegverse.local"
+            git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -59,7 +60,8 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          pip install requests
+          # PyYAML is required by guardian_worker_readmes.py
+          pip install pyyaml requests
 
       - name: Run Guardian README Worker
         run: |
