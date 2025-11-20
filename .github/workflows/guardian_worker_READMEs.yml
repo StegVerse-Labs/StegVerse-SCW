@@ -76,10 +76,14 @@ jobs:
           git config user.name  "StegVerse Guardian Worker"
           git config user.email "guardian-worker@stegverse.local"
 
-          # Limit to README files, so we don't accidentally stage other changes
-          if [ -n "$(git status --porcelain '**/README.md' 2>/dev/null || echo '')" ]; then
-            echo "Detected new/changed README files; committing..."
-            git add **/README.md
+          # Detect README changes (tracked + untracked)
+          if git status --porcelain | grep -E 'README.md$'; then
+            echo "Detected README changes; committing..."
+
+            # Stage all README.md files, including untracked
+            git ls-files --others --exclude-standard | grep 'README.md$' | xargs -r git add
+            git ls-files --modified | grep 'README.md$' | xargs -r git add
+
             git commit -m "Guardian Worker: generate missing README docs"
             git push origin "${GITHUB_REF_NAME:-main}"
           else
