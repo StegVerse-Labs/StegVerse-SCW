@@ -1,0 +1,101 @@
+name: StegVerse Org Cleanup Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      check_pat:
+        description: "Also test GH_STEGVERSE_AI_TOKEN against GitHub API (true/false)"
+        required: false
+        default: "true"
+
+jobs:
+  org-cleanup:
+    runs-on: ubuntu-latest
+
+    env:
+      EXPECTED_ORG: "StegVerse-Lab"
+      PAT: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
+      CHECK_PAT: ${{ github.event.inputs.check_pat }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print basic repo info
+        run: |
+          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "EXPECTED_ORG:      $EXPECTED_ORG"
+
+      - name: Verify repo owner/org
+        run: |
+          owner="${GITHUB_REPOSITORY%%/*}"
+          repo="${GITHUB_REPOSITORY##*/}"
+          echo "Detected owner: $owner"
+          echo "Detected repo:  $repo"
+
+          if [ "$owner" != "$EXPECTED_ORG" ]; then
+            echo "❌ Repo is not under expected org."
+            echo "   Expected: $EXPECTED_ORG"
+            echo "   Actual:   $owner"
+            exit 1
+          else
+            echo "✅ Repo is under expected org: $EXPECTED_ORG"
+          fi
+
+      - name: Scan for old StegVerse org references
+        run: |
+          echo "Scanning for references to old org 'StegVerse'..."
+          # Limit to common text/code file types
+          matches=$(grep -RIn --exclude-dir=".git" --include="*.yml" --include="*.yaml" --include="*.md" --include="*.py" --include="*.ts" --include="*.js" "StegVerse/" . || true)
+          if [ -z "$matches" ]; then
+            echo "✅ No 'StegVerse/' references found in common files."
+          else
+            echo "❌ Found references to old org 'StegVerse/' in the following locations:"
+            echo "$matches"
+            echo
+            echo "➡ For each above, replace 'StegVerse/' with 'StegVerse-Lab/' where appropriate."
+          fi
+
+      - name: Check for PAT secret presence
+        run: |
+          if [ -z "$PAT" ]; then
+            echo "❌ Secret GH_STEGVERSE_AI_TOKEN is NOT set for this repo (or is empty)."
+            echo "   Go to Settings → Secrets and variables → Actions and add GH_STEGVERSE_AI_TOKEN."
+          else
+            echo "✅ GH_STEGVERSE_AI_TOKEN appears to be set (value is masked)."
+          fi
+
+      - name: Optionally test PAT against GitHub API
+        if: env.CHECK_PAT == 'true'
+        run: |
+          if [ -z "$PAT" ]; then
+            echo "Skipping PAT API check because PAT is not set."
+            exit 0
+          fi
+
+          echo "Calling GitHub API /user with PAT..."
+          status=$(curl -s -o /tmp/resp.txt -w "%{http_code}" \
+            -H "Authorization: token $PAT" \
+            https://api.github.com/user)
+
+          echo "HTTP status: $status"
+          echo "Response (truncated):"
+          head -c 400 /tmp/resp.txt || true
+          echo
+
+          if [ "$status" = "200" ]; then
+            echo "✅ PAT is valid and can authenticate to GitHub."
+          elif [ "$status" = "401" ]; then
+            echo "❌ 401 Unauthorized: PAT is invalid or expired, or pasted incorrectly."
+            exit 1
+          elif [ "$status" = "403" ]; then
+            echo "❌ 403 Forbidden: PAT is valid but blocked from this resource."
+            echo "   Likely causes:"
+            echo "   - Missing scopes (need at least 'repo' + 'workflow')."
+            echo "   - Fine-grained PAT not granted access to this repo/org."
+            echo "   - SSO not authorized for StegVerse-Lab."
+            exit 1
+          else
+            echo "⚠️ Unexpected status: $status (see raw response above)."
+            exit 1
+          fi
