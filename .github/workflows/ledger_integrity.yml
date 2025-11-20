@@ -1,0 +1,46 @@
+name: Ledger Integrity Check
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "20 8 * * *"  # daily @ 08:20 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  ledger_integrity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Ledger Integrity Guardian
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Ledger Integrity (Genesis v0.1) ==="
+          python -m ledger.ledger_integrity
+
+      - name: Commit ledger integrity report
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Autopatch Bot"
+          git config user.email "autopatch-bot@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain 'scripts/reports/ledger' 2>/dev/null || echo '')" ]; then
+            echo "Detected ledger integrity report changes; committing..."
+            git add scripts/reports/ledger
+            git commit -m "Update ledger integrity report (automated)"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No ledger integrity changes to commit."
+          fi
