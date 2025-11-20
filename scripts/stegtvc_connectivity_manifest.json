@@ -2,6 +2,31 @@
   "version": 1,
   "description": "StegTVC connectivity files sync (config + resolver + client)",
   "source_repo": "StegVerse-Labs/TVC",
+
+  "source_paths": {
+    "stegtv_config.json": "data/tv_config.json",
+    "resolver.py": "app/resolver.py",
+    "stegtvc_resolver.py": ".github/stegtvc_client.py"
+  },
+
+  "targets": [
+    {
+      "repo": "StegVerse-Labs/TVC"
+    },
+    {
+      "repo": "StegVerse-Labs/hybrid-collab-bridge"
+    },
+    {
+      "repo": "StegVerse-Labs/TV"
+    },
+    {
+      "repo": "StegVerse-Labs/StegVerse-SCW"
+    }
+  ]
+}{
+  "version": 1,
+  "description": "StegTVC connectivity files sync (config + resolver + client)",
+  "source_repo": "StegVerse-Labs/TVC",
   "source_paths": {
     "data/tv_config.json": "data/tv_config.json",
     "app/resolver.py": "app/resolver.py",
