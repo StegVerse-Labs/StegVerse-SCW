@@ -1,0 +1,115 @@
+name: Log Revenue Event (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      amount:
+        description: "Amount in currency units (e.g. 25.00)"
+        required: true
+      currency:
+        description: "Currency code"
+        required: false
+        default: "USD"
+      kind:
+        description: "invoice | subscription | donation | grant | other"
+        required: false
+        default: "invoice"
+      stream:
+        description: "Revenue stream (e.g. stegcore, consulting, grants)"
+        required: false
+        default: "stegcore"
+      status:
+        description: "expected | pending | settled | failed | refunded"
+        required: false
+        default: "expected"
+      source:
+        description: "Origin: manual | stripe | coinbase | internal | other"
+        required: false
+        default: "manual"
+      memo:
+        description: "Short note for this event"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  log-revenue:
+    runs-on: ubuntu-latest
+
+    env:
+      # Prefer PAT_WORKFLOW (classic with repo+workflow), fall back to GH_STEGVERSE_PAT
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+
+          echo "::add-mask::${TOKEN}"
+
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Revenue Bot"
+          git config --global user.email "revenue-bot@users.noreply.github.com"
+
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install minimal deps
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+
+      - name: Log revenue event
+        run: |
+          set -euo pipefail
+          python scripts/genesis/log_revenue_event.py \
+            --amount "${{ github.event.inputs.amount }}" \
+            --currency "${{ github.event.inputs.currency }}" \
+            --kind "${{ github.event.inputs.kind }}" \
+            --stream "${{ github.event.inputs.stream }}" \
+            --status "${{ github.event.inputs.status }}" \
+            --source "${{ github.event.inputs.source }}" \
+            --memo "${{ github.event.inputs.memo }}"
+
+      - name: Commit revenue event
+        run: |
+          set -euo pipefail
+
+          # Stage only the revenue events file
+          if ls ledger/events/revenue_events.jsonl >/dev/null 2>&1; then
+            git add ledger/events/revenue_events.jsonl
+          fi
+
+          if git diff --cached --quiet; then
+            echo "No staged changes; nothing to commit."
+            exit 0
+          fi
+
+          git config user.name  "StegVerse Revenue Bot"
+          git config user.email "revenue-bot@users.noreply.github.com"
+
+          git commit -m "Log revenue event: ${{ github.event.inputs.stream }} ${{ github.event.inputs.amount }} ${{ github.event.inputs.currency }}"
+          git push origin "${GITHUB_REF_NAME:-main}"
