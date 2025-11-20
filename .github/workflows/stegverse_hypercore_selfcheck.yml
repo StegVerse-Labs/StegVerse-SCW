@@ -1,0 +1,26 @@
+name: StegVerse HyperCore Self-Check
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  hypercore-selfcheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run HyperCore Self-Check
+        run: |
+          python scripts/stegverse_hypercore_selfcheck.py
