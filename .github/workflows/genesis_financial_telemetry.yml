@@ -1,0 +1,56 @@
+name: Genesis Financial Telemetry
+
+on:
+  # Manual run
+  workflow_dispatch: {}
+  # Optional: enable a daily run (06:15 UTC) – uncomment when ready
+  # schedule:
+  #   - cron: "15 6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  financial_telemetry:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Financial Telemetry (Genesis)
+        env:
+          # You can tweak these later or load from repo vars/secrets
+          STEG_SOFT_CAP: "250"
+          STEG_HARD_CAP: "275"
+          STEG_CURRENT_SPEND: "0"
+        run: |
+          set -euo pipefail
+          python scripts/genesis/financial_telemetry.py
+
+      - name: Commit financial telemetry report
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Financial Telemetry Bot"
+          git config user.email "finance-bot@users.noreply.github.com"
+
+          # Only look at the financial ledger area
+          CHANGES="$(git status --porcelain 'ledger/telemetry/financial' || true)"
+
+          if [ -n "$CHANGES" ]; then
+            echo "Detected ledger changes:"
+            echo "$CHANGES"
+            git add ledger/telemetry/financial
+            git commit -m "Financial telemetry: daily ledger update"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No telemetry changes to commit."
+          fi
