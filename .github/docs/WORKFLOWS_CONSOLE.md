@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2025-11-20 07:59 UTC**_
+_Last updated: **2025-11-20 08:51 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **87**
+- ➖ No dispatch: **88**
 - ❌ Broken: **40**
-- Total: **127**
+- Total: **128**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -60,6 +60,7 @@ _Last updated: **2025-11-20 07:59 UTC**_
 | `kick-autopatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-autopatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-autopatch.yml) · [File](.github/workflows/kick-autopatch.yml) |
 | `kick-seed-steg-config.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-seed-steg-config.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-seed-steg-config.yml) · [File](.github/workflows/kick-seed-steg-config.yml) |
 | `kick-yaml-bulk-autofix.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-yaml-bulk-autofix.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-yaml-bulk-autofix.yml) · [File](.github/workflows/kick-yaml-bulk-autofix.yml) |
+| `log_revenue.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/log_revenue.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/log_revenue.yml) · [File](.github/workflows/log_revenue.yml) |
 | `multi-autopatch.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/multi-autopatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/multi-autopatch.yml) · [File](.github/workflows/multi-autopatch.yml) |
 | `neutralize_secrets_if.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/neutralize_secrets_if.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/neutralize_secrets_if.yml) · [File](.github/workflows/neutralize_secrets_if.yml) |
 | `nightly_snapshot.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/nightly_snapshot.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/nightly_snapshot.yml) · [File](.github/workflows/nightly_snapshot.yml) |
