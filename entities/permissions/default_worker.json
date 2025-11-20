@@ -1,0 +1,15 @@
+{
+  "id": "default_worker",
+  "description": "Baseline Phase 2 permissions for StegVerse AI workers.",
+  "allowed_actions": [
+    "read_repo",
+    "write_reports",
+    "run_local_scripts",
+    "call_github_models"
+  ],
+  "forbidden_actions": [
+    "rotate_secrets",
+    "delete_repos",
+    "change_org_settings"
+  ]
+}
