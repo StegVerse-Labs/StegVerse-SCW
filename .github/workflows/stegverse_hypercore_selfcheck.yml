@@ -24,3 +24,8 @@ jobs:
       - name: Run HyperCore Self-Check
         run: |
           python scripts/stegverse_hypercore_selfcheck.py
+
+            - name: Attach financial snapshot to HyperCore doc
+        run: |
+          set -euo pipefail
+          python scripts/genesis/hypercore_financial_bridge.py
