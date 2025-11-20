@@ -62,6 +62,23 @@ jobs:
           set -euo pipefail
           pip install -r scripts/requirements-yaml.txt
 
+      - name: Install autopatch deps
+        run: |
+          set -euo pipefail
+          pip install -r scripts/requirements-yaml.txt
+
+      - name: Fix ledger event paths (self-heal)
+        run: |
+          set -euo pipefail
+          python scripts/ops/fix_ledger_paths.py
+
+      - name: Run autopatch across StegVerse repos
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Autopatch ==="
+          python scripts/auto_patch.py \
+            --manifest scripts/autopatch_catalog.json
+            
       - name: Run autopatch across StegVerse repos
         run: |
           set -euo pipefail
