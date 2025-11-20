@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      EXPECTED_ORG: "StegVerse-Lab"
+      EXPECTED_ORG: "StegVerse-Labs"
       PAT: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
       CHECK_PAT: ${{ github.event.inputs.check_pat }}
 
