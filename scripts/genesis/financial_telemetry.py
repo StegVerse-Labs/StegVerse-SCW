@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """
-StegVerse Genesis - Financial Telemetry v0.2
+StegVerse Genesis - Financial Telemetry v0.3 (BIG)
 
 - Reads soft/hard caps and current spend from environment (with safe defaults)
 - Computes percentages and simple status
-- Writes a daily markdown report into:
+- Writes TWO artifacts:
 
-    ledger/telemetry/financial/daily_YYYY-MM-DD.md
+  1) Markdown ledger entry:
+     ledger/telemetry/financial/daily_YYYY-MM-DD.md
+
+  2) JSON mirror for machine use:
+     ledger/telemetry/financial/daily_YYYY-MM-DD.json
 
 - Prints a JSON summary to stdout for quick inspection in Actions logs.
 """
@@ -67,15 +71,7 @@ def evaluate_status(cfg: dict) -> dict:
     }
 
 
-def write_daily_markdown(summary: dict) -> Path:
-    LEDGER_ROOT.mkdir(parents=True, exist_ok=True)
-
-    today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
-    ts_iso = datetime.datetime.utcnow().isoformat() + "Z"
-
-    fname = f"daily_{today}.md"
-    out_path = LEDGER_ROOT / fname
-
+def write_markdown(summary: dict, ts_iso: str, day: str, base: Path) -> Path:
     lines = [
         "# StegVerse Financial Telemetry",
         "",
@@ -94,19 +90,36 @@ def write_daily_markdown(summary: dict) -> Path:
         f"- State: **{summary['status']}**",
         f"- Notes: {summary['notes']}",
     ]
+    md_path = base / f"daily_{day}.md"
+    md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return md_path
 
-    out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return out_path
+
+def write_json(summary: dict, ts_iso: str, day: str, base: Path) -> Path:
+    payload = dict(summary)
+    payload["generated_at"] = ts_iso
+    json_path = base / f"daily_{day}.json"
+    json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return json_path
 
 
 def main() -> None:
+    LEDGER_ROOT.mkdir(parents=True, exist_ok=True)
+
     cfg = load_config()
     summary = evaluate_status(cfg)
-    out_path = write_daily_markdown(summary)
 
-    print("=== StegVerse Financial Telemetry v0.2 (Genesis) ===")
+    now = datetime.datetime.utcnow()
+    day = now.strftime("%Y-%m-%d")
+    ts_iso = now.isoformat() + "Z"
+
+    md_path = write_markdown(summary, ts_iso, day, LEDGER_ROOT)
+    json_path = write_json(summary, ts_iso, day, LEDGER_ROOT)
+
+    print("=== StegVerse Financial Telemetry v0.3 (Genesis) ===")
     print(json.dumps(summary, indent=2))
-    print(f"[financial_telemetry] Wrote report: {out_path}")
+    print(f"[financial_telemetry] Wrote markdown: {md_path}")
+    print(f"[financial_telemetry] Wrote json:     {json_path}")
     print("=== Financial Telemetry completed ===")
 
 
