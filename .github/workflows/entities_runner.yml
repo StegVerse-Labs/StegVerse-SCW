@@ -1,0 +1,97 @@
+name: StegVerse AI Entities (Phase 2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      entity_id:
+        description: "Entity ID to run (default: stegverse-ai-001)"
+        required: false
+      tasks:
+        description: "Optional space-separated task list override"
+        required: false
+  schedule:
+    # Once per day; you can adjust this later
+    - cron: "5 7 * * *"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  run-entity:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+
+          echo "::add-mask::${TOKEN}"
+
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Entity Bot"
+          git config --global user.email "entity-bot@stegverse.local"
+
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies for entities
+        run: |
+          set -euo pipefail
+          pip install pyyaml
+
+      - name: Run entity
+        run: |
+          set -euo pipefail
+
+          ENTITY_ID="${{ github.event.inputs.entity_id || 'stegverse-ai-001' }}"
+
+          echo "Running entity: ${ENTITY_ID}"
+
+          if [ -n "${{ github.event.inputs.tasks }}" ]; then
+            python scripts/entities/run_entity.py \
+              --entity "${ENTITY_ID}" \
+              --tasks ${{ github.event.inputs.tasks }}
+          else
+            python scripts/entities/run_entity.py \
+              --entity "${ENTITY_ID}"
+          fi
+
+      - name: Commit entity reports (if any)
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Entity Bot"
+          git config user.email "entity-bot@stegverse.local"
+
+          if [ -n "$(git status --porcelain 'reports/entities' 'memory/entities' 2>/dev/null || echo '')" ]; then
+            git add reports/entities memory/entities
+            git commit -m "Entity run reports (Phase 2)"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No entity report changes to commit."
+          fi
