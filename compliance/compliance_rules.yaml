@@ -1,0 +1,34 @@
+version: 1
+description: "StegVerse Compliance Engine v1.0 (declarative rules)"
+
+privacy:
+  gdpr_like:
+    enabled: true
+    notes: "Right to erasure, data export, minimal retention."
+  ccpa_like:
+    enabled: true
+    notes: "Transparency for data use; opt-out of sale."
+
+finance:
+  kyc_aml:
+    enabled: true
+    notes: "Identity checks for certain transaction thresholds."
+  suspicious_activity_thresholds:
+    enabled: true
+    daily_limit_usd: 10000
+    notes: "Transactions above this should receive extra scrutiny."
+
+ai_behavior:
+  disallow:
+    - "targeted harassment"
+    - "explicit instructions for fraud"
+    - "unsafe medical or legal guidance outside allowed scope"
+  require_explanation:
+    enabled: true
+    notes: "High-impact AI decisions must log rationale to Continuity."
+
+logging:
+  continuity_required:
+    - "any transaction over 10 USD equivalent"
+    - "any AI-initiated financial action"
+    - "any change to compliance rules"
