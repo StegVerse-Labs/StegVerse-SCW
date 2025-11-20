@@ -1,0 +1,29 @@
+version: 1
+generated_by: "StegVerse Genesis"
+description: "Registry of StegVerse guardian tasks and priorities."
+
+tasks:
+  - id: workflow_health
+    name: "Workflow Health Check"
+    description: "Scan .github/workflows for basic problems and record a summary."
+    priority: 10
+    enabled: true
+
+  - id: readme_refresh
+    name: "README Refresh Scanner"
+    description: "Find missing/weak README files and list them for future AI workers."
+    priority: 8
+    enabled: true
+
+  # Reserved for future use (Phase 3+)
+  - id: dependency_doctor
+    name: "Dependency Doctor (placeholder)"
+    description: "Inspect Python deps and workflows for obvious issues (future)."
+    priority: 7
+    enabled: false
+
+  - id: site_readme_refresh
+    name: "Site README Refresh (placeholder)"
+    description: "Cross-repo docs task for StegVerse/site (future)."
+    priority: 5
+    enabled: false
