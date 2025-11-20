@@ -38,7 +38,7 @@ jobs:
             echo "   Expected: $EXPECTED_ORG"
             echo "   Actual:   $owner"
             exit 1
-          else
+          else:
             echo "✅ Repo is under expected org: $EXPECTED_ORG"
           fi
 
@@ -53,7 +53,7 @@ jobs:
             echo "❌ Found references to old org 'StegVerse/' in the following locations:"
             echo "$matches"
             echo
-            echo "➡ For each above, replace 'StegVerse/' with 'StegVerse-Lab/' where appropriate."
+            echo "➡ For each above, replace 'StegVerse/' with 'StegVerse-Labs/' where appropriate."
           fi
 
       - name: Check for PAT secret presence
@@ -61,7 +61,7 @@ jobs:
           if [ -z "$PAT" ]; then
             echo "❌ Secret GH_STEGVERSE_AI_TOKEN is NOT set for this repo (or is empty)."
             echo "   Go to Settings → Secrets and variables → Actions and add GH_STEGVERSE_AI_TOKEN."
-          else
+          else:
             echo "✅ GH_STEGVERSE_AI_TOKEN appears to be set (value is masked)."
           fi
 
@@ -93,9 +93,9 @@ jobs:
             echo "   Likely causes:"
             echo "   - Missing scopes (need at least 'repo' + 'workflow')."
             echo "   - Fine-grained PAT not granted access to this repo/org."
-            echo "   - SSO not authorized for StegVerse-Lab."
+            echo "   - SSO not authorized for StegVerse-Labs."
             exit 1
-          else
+          else:
             echo "⚠️ Unexpected status: $status (see raw response above)."
             exit 1
           fi
