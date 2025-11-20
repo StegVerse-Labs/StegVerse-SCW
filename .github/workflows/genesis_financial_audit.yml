@@ -1,0 +1,32 @@
+name: Genesis – Financial Telemetry
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  financial_telemetry:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps for telemetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Run Financial Telemetry (Genesis v0.1)
+        run: |
+          set -euo pipefail
+          python scripts/genesis/financial_telemetry.py
