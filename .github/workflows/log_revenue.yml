@@ -1,0 +1,85 @@
+name: Log Revenue Event
+
+on:
+  workflow_dispatch:
+    inputs:
+      amount:
+        description: "Amount (e.g. 10.01)"
+        required: true
+        default: "10.01"
+      currency:
+        description: "Currency code"
+        required: true
+        default: "USD"
+      kind:
+        description: "Kind (invoice, subscription, etc.)"
+        required: true
+        default: "invoice"
+      memo:
+        description: "Memo / note"
+        required: false
+        default: "Manual test entry"
+      source:
+        description: "Source tag"
+        required: false
+        default: "manual"
+      stream:
+        description: "Revenue stream tag"
+        required: false
+        default: "stegcore"
+      dry_run:
+        description: "If true, do not write/commit – just preview"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  log_revenue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Log revenue event
+        run: |
+          set -euo pipefail
+          python scripts/genesis/log_revenue_event.py
+        env:
+          STEG_AMOUNT:   ${{ github.event.inputs.amount }}
+          STEG_CURRENCY: ${{ github.event.inputs.currency }}
+          STEG_KIND:     ${{ github.event.inputs.kind }}
+          STEG_MEMO:     ${{ github.event.inputs.memo }}
+          STEG_SOURCE:   ${{ github.event.inputs.source }}
+          STEG_STREAM:   ${{ github.event.inputs.stream }}
+          STEG_DRY_RUN:  ${{ github.event.inputs.dry_run }}
+
+      - name: Commit revenue event
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+
+          echo "Detected ledger changes (pre-commit):"
+          git status --short ledger || true
+
+          CHANGES=$(git status --porcelain ledger | wc -l | tr -d ' ')
+          if [ "$CHANGES" = "0" ]; then
+            echo "No ledger changes to commit."
+            exit 0
+          fi
+
+          git config user.name  "StegVerse Autopatch Bot"
+          git config user.email "autopatch-bot@users.noreply.github.com"
+
+          git add ledger
+          git commit -m "Log revenue event (workflow)"
+          git push
