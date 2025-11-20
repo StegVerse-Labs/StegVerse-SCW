@@ -1,0 +1,33 @@
+name: StegVerse Guardian Worker – Workflows
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  workflows_hygiene:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps (PyYAML)
+        run: |
+          set -euo pipefail
+          pip install pyyaml
+
+      - name: Run Workflow Hygiene Worker (ASL-2)
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Guardian Worker – Workflows (ASL-2) ==="
+          python scripts/genesis/guardian_worker_workflows.py
