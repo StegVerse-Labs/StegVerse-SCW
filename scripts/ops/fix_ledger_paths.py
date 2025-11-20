@@ -1,148 +1,69 @@
 #!/usr/bin/env python3
 """
-fix_ledger_paths.py
-
-StegVerse-SCW ledger self-healing helper.
-
-Goals:
-- Ensure we use the canonical per-event layout:
-    ledger/events/YYYY-MM-DD/<event_id>.json
-- Migrate any stray / legacy files:
-    - scripts/ledger/events/*.jsonl  (old JSONL log)
-    - scripts/ledger/events/*.json   (misplaced JSON events)
-    - ledger/events/revenue_events.jsonl  (old single-file log)
-
-Notes:
-- Safe to run repeatedly (idempotent).
-- Never deletes source files; it copies / moves + leaves the original
-  and prints a warning so we can clean up later.
+Self-healing rule:
+Normalize all ledger event files into ledger/events/YYYY-MM-DD/.
+Fix incorrectly placed *.json or *.jsonl event files.
+Detect stray event files and relocate them safely.
 """
 
 import json
-import os
 from pathlib import Path
 from datetime import datetime
+import shutil
 
-ROOT = Path(__file__).resolve().parents[1]
-LEDGER_ROOT = ROOT / "ledger"
-CANON_EVENTS = LEDGER_ROOT / "events"
+ROOT = Path(__file__).resolve().parents[2]
+LEDGER = ROOT / "ledger"
+EVENTS = LEDGER / "events"
+EVENTS.mkdir(parents=True, exist_ok=True)
 
-# Legacy locations we want to scan
-LEGACY_PATHS = [
-    ROOT / "scripts" / "ledger" / "events",
-    LEDGER_ROOT / "events",  # for old jsonl in root
-]
-
-def ensure_dir(p: Path) -> None:
-    p.mkdir(parents=True, exist_ok=True)
-
-def parse_ts(ts: str) -> str:
+def extract_date_from_event(path: Path) -> str:
     """
-    Return date string YYYY-MM-DD from a timestamp.
-    Falls back to 'unknown' if parsing fails.
+    Returns YYYY-MM-DD safely based on event timestamp inside file.
+    Falls back to today's date if file unreadable.
     """
     try:
-        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-        return dt.date().isoformat()
+        data = json.loads(path.read_text())
+        ts = data.get("ts") or data.get("timestamp")
+        if ts:
+            dt = datetime.fromisoformat(ts.replace("Z",""))
+            return dt.strftime("%Y-%m-%d")
     except Exception:
-        return "unknown"
+        pass
 
-def migrate_jsonl_file(src: Path) -> int:
-    """
-    Read a JSONL file and emit one canonical JSON file per event.
-    Returns number of events migrated.
-    """
-    if not src.exists():
-        return 0
+    # fallback
+    return datetime.utcnow().strftime("%Y-%m-%d")
 
-    print(f"[fix_ledger_paths] Migrating JSONL events from {src}")
-    count = 0
-    with src.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                event = json.loads(line)
-            except Exception as e:
-                print(f"[fix_ledger_paths]  ! Skipping bad line: {e}")
-                continue
+def main():
+    moved = []
 
-            event_id = str(event.get("id") or f"event_{count}")
-            ts = str(event.get("ts") or "")
-            day = parse_ts(ts)
-            target_dir = CANON_EVENTS / day
-            ensure_dir(target_dir)
-            target = target_dir / f"{event_id}.json"
+    # 1. Search for ANY stray event files outside the proper structure
+    for ext in ("*.json", "*.jsonl"):
+        for f in LEDGER.rglob(ext):
+            if "events/" in str(f.parent):
+                continue  # already in correct structure
 
-            # Do not overwrite existing files
-            if target.exists():
-                print(f"[fix_ledger_paths]  - {target} already exists, skipping")
-                continue
+            # Determine correct folder
+            date_folder = extract_date_from_event(f)
+            target_dir = EVENTS / date_folder
+            target_dir.mkdir(parents=True, exist_ok=True)
 
-            target.write_text(json.dumps(event, indent=2), encoding="utf-8")
-            print(f"[fix_ledger_paths]  + wrote {target}")
-            count += 1
+            # Move file
+            new_path = target_dir / f.name
+            shutil.move(str(f), str(new_path))
+            moved.append((str(f), str(new_path)))
 
-    print(f"[fix_ledger_paths] Migrated {count} events from {src}")
-    return count
+    # 2. Write report
+    report_path = ROOT / "scripts" / "reports" / "fix_ledger_paths.md"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
 
-def migrate_loose_json(src_dir: Path) -> int:
-    """
-    Migrate any loose *.json event files from a legacy directory into
-    the canonical layout, inferring day from ts if possible.
-    """
-    if not src_dir.exists():
-        return 0
-
-    print(f"[fix_ledger_paths] Scanning loose JSON events in {src_dir}")
-    count = 0
-    for p in src_dir.glob("*.json"):
-        try:
-            data = json.loads(p.read_text(encoding="utf-8"))
-        except Exception as e:
-            print(f"[fix_ledger_paths]  ! Skipping {p}: {e}")
-            continue
-
-        event_id = str(data.get("id") or p.stem)
-        ts = str(data.get("ts") or "")
-        day = parse_ts(ts)
-        target_dir = CANON_EVENTS / day
-        ensure_dir(target_dir)
-        target = target_dir / f"{event_id}.json"
-
-        if target.exists():
-            print(f"[fix_ledger_paths]  - {target} already exists, skipping")
-            continue
-
-        target.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        print(f"[fix_ledger_paths]  + wrote {target}")
-        count += 1
-
-    print(f"[fix_ledger_paths] Migrated {count} loose JSON events from {src_dir}")
-    return count
-
-def main() -> None:
-    ensure_dir(CANON_EVENTS)
-
-    total = 0
-
-    # 1) JSONL logs
-    jsonl_candidates = [
-        ROOT / "scripts" / "ledger" / "events" / "revenue_events.jsonl",
-        LEDGER_ROOT / "events" / "revenue_events.jsonl",
-    ]
-    for p in jsonl_candidates:
-        total += migrate_jsonl_file(p)
-
-    # 2) Loose JSON files in legacy dirs
-    for legacy_root in LEGACY_PATHS:
-        total += migrate_loose_json(legacy_root)
-
-    if total == 0:
-        print("[fix_ledger_paths] No legacy ledger events found. Nothing to migrate.")
-    else:
-        print(f"[fix_ledger_paths] Completed migration of {total} events.")
+    with report_path.open("w") as r:
+        r.write("# Ledger Path Normalization Report\n\n")
+        if not moved:
+            r.write("No stray event files found.\n")
+        else:
+            r.write("Moved files:\n")
+            for old, new in moved:
+                r.write(f"- `{old}` → `{new}`\n")
 
 if __name__ == "__main__":
     main()
