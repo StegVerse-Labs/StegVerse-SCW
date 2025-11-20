@@ -1,16 +1,11 @@
 name: StegVerse Guardians
 
 on:
-  # Manual trigger
-  workflow_dispatch:
-    inputs:
-      task:
-        description: "Optional label for this guardian run"
-        required: false
-        default: "manual"
-  # Daily scheduled run (08:20 UTC)
-  schedule:
-    - cron: "20 8 * * *"
+  # Manual trigger from the Actions UI
+  workflow_dispatch: {}
+  # Optional: daily scheduled run at 08:20 UTC
+  # schedule:
+  #   - cron: "20 8 * * *"
 
 permissions:
   contents: write
@@ -19,38 +14,11 @@ jobs:
   guardians:
     runs-on: ubuntu-latest
 
-    env:
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
-      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
-
     steps:
       - name: Check out StegVerse-SCW
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Resolve token & configure git
-        run: |
-          set -euo pipefail
-
-          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
-
-          if [ -z "${TOKEN}" ]; then
-            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
-            exit 1
-          fi
-
-          echo "::add-mask::${TOKEN}"
-
-          {
-            echo "GITHUB_TOKEN=${TOKEN}"
-            echo "GH_TOKEN=${TOKEN}"
-          } >> "$GITHUB_ENV"
-
-          git config --global user.name  "StegVerse Guardians Bot"
-          git config --global user.email "guardians-bot@stegverse.local"
-
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -60,24 +28,33 @@ jobs:
       - name: Install guardian deps
         run: |
           set -euo pipefail
+          python -m pip install --upgrade pip
           pip install pyyaml
 
-      - name: Run StegVerse Guardian Runner
+      - name: Run Guardian Runner (scan)
         run: |
           set -euo pipefail
-          echo "=== StegVerse Guardians ==="
-          python scripts/entities/guardian_runner.py
+          echo "=== StegVerse Guardian Runner ==="
+          python scripts/genesis/guardian_runner.py
 
-      - name: Commit guardian reports (optional)
+      - name: Run Guardian Actions (plan)
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Guardian Actions ==="
+          python scripts/genesis/guardian_actions.py
+
+      - name: Commit guardian reports
         run: |
           set -euo pipefail
 
-          git config user.name  "StegVerse Guardians Bot"
-          git config user.email "guardians-bot@stegverse.local"
+          git config user.name  "StegVerse Guardian Bot"
+          git config user.email "guardian-bot@stegverse.local"
 
+          # Only touch guardian reports
           if [ -n "$(git status --porcelain 'reports/guardians' 2>/dev/null || echo '')" ]; then
+            echo "Detected guardian report changes; committing..."
             git add reports/guardians
-            git commit -m "Guardian reports update"
+            git commit -m "Update guardian reports (automated)"
             git push origin "${GITHUB_REF_NAME:-main}"
           else
             echo "No guardian report changes to commit."
