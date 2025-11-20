@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   guardians:
@@ -29,7 +30,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          pip install pyyaml
+          pip install pyyaml requests
 
       - name: Run Guardian Runner (scan)
         run: |
@@ -43,6 +44,14 @@ jobs:
           echo "=== StegVerse Guardian Actions ==="
           python scripts/genesis/guardian_actions.py
 
+      - name: Sync Guardian Issues with GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Guardian Issues ==="
+          python scripts/genesis/guardian_issues.py
+
       - name: Commit guardian reports
         run: |
           set -euo pipefail
@@ -50,11 +59,10 @@ jobs:
           git config user.name  "StegVerse Guardian Bot"
           git config user.email "guardian-bot@stegverse.local"
 
-          # Only touch guardian reports
           if [ -n "$(git status --porcelain 'reports/guardians' 2>/dev/null || echo '')" ]; then
             echo "Detected guardian report changes; committing..."
             git add reports/guardians
-            git commit -m "Update guardian reports (automated)"
+            git commit -m "Update guardian reports & issues index (automated)"
             git push origin "${GITHUB_REF_NAME:-main}"
           else
             echo "No guardian report changes to commit."
