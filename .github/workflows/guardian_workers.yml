@@ -1,0 +1,85 @@
+name: StegVerse Guardian Workers
+
+on:
+  # Manual trigger so you can run it whenever you want
+  workflow_dispatch: {}
+  # Optional: enable scheduled runs once guardians are stable
+  # schedule:
+  #   - cron: "30 8 * * *"
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  guardian_workers:
+    runs-on: ubuntu-latest
+
+    env:
+      # Reuse your PATs
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+
+          echo "::add-mask::${TOKEN}"
+
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Guardian Worker"
+          git config --global user.email "guardian-worker@stegverse.local"
+
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install worker dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run Guardian README Worker
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Guardian README Worker ==="
+          python scripts/genesis/guardian_worker_readmes.py
+
+      - name: Commit generated READMEs (if any)
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Guardian Worker"
+          git config user.email "guardian-worker@stegverse.local"
+
+          # Limit to README files, so we don't accidentally stage other changes
+          if [ -n "$(git status --porcelain '**/README.md' 2>/dev/null || echo '')" ]; then
+            echo "Detected new/changed README files; committing..."
+            git add **/README.md
+            git commit -m "Guardian Worker: generate missing README docs"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No README changes to commit."
+          fi
