@@ -1,0 +1,48 @@
+name: Economic Snapshot
+
+on:
+  # Run manually when you want
+  workflow_dispatch: {}
+  # And optionally once per day (08:10 UTC)
+  schedule:
+    - cron: "10 8 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  economic_snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Economic Snapshot
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Economic Snapshot ==="
+          python -m ledger.steg_wallet_view
+
+      - name: Commit economic snapshot
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Autopatch Bot"
+          git config user.email "autopatch-bot@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain 'ledger/telemetry/financial' 2>/dev/null || echo '')" ]; then
+            echo "Detected wallet telemetry changes; committing..."
+            git add ledger/telemetry/financial
+            git commit -m "Update StegVerse wallet snapshot (automated)"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No snapshot changes to commit."
+          fi
