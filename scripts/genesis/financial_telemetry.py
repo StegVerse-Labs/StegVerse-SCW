@@ -1,137 +1,113 @@
 #!/usr/bin/env python3
 """
-Financial Telemetry Engine v0.1 (Genesis, dry-run)
+StegVerse Genesis - Financial Telemetry v0.2
 
-What it does now:
-- Reads financial_limits.yaml
-- Reads/initializes business ledger
-- Uses simple placeholders for 'current_spend'
-- Calculates % of soft/hard cap
-- Writes a human-readable summary report
+- Reads soft/hard caps and current spend from environment (with safe defaults)
+- Computes percentages and simple status
+- Writes a daily markdown report into:
 
-IMPORTANT:
-- No external billing APIs yet (GitHub/OpenAI/etc.).
-- Values are placeholders until wired to real data sources.
+    ledger/telemetry/financial/daily_YYYY-MM-DD.md
+
+- Prints a JSON summary to stdout for quick inspection in Actions logs.
 """
 
+import datetime
 import json
-from datetime import datetime
+import os
 from pathlib import Path
-from typing import Dict, Any
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_DIR = ROOT / "config"
-LEDGERS_ROOT = ROOT / "stegverse-ledgers"
-REPORTS_DIR = ROOT / "reports" / "financial"
-
-FIN_LIMITS_CONFIG = CONFIG_DIR / "financial_limits.yaml"
+LEDGER_ROOT = ROOT / "ledger" / "telemetry" / "financial"
 
 
-def load_yaml(path: Path) -> Dict[str, Any]:
-    import yaml
-    if not path.exists():
-        return {}
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+def load_config() -> dict:
+    """Load telemetry config from environment with safe defaults."""
+    soft_cap = float(os.getenv("STEG_SOFT_CAP", "250"))
+    hard_cap = float(os.getenv("STEG_HARD_CAP", "275"))
+    current_spend = float(os.getenv("STEG_CURRENT_SPEND", "0"))
 
+    # Guard against weird values
+    soft_cap = max(0.0, soft_cap)
+    hard_cap = max(soft_cap, hard_cap)  # hard cap should never be below soft cap
+    current_spend = max(0.0, current_spend)
 
-def load_json(path: Path) -> Dict[str, Any]:
-    if not path.exists():
-        return {}
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def ensure_dirs():
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    (LEDGERS_ROOT / "business").mkdir(parents=True, exist_ok=True)
-
-
-def get_business_ledger(fin_cfg: Dict[str, Any]) -> Path:
-    ledgers_cfg = fin_cfg.get("ledgers", {})
-    business_cfg = ledgers_cfg.get("business", {})
-    filename = Path(business_cfg.get("path", "ledger.json")).name
-    return LEDGERS_ROOT / "business" / filename
-
-
-def compute_placeholder_spend(biz_data: Dict[str, Any]) -> float:
-    """
-    For now, we just scan entries and sum an 'amount' field if present.
-    Later this will be replaced by real integrations or autopatch annotations.
-    """
-    total = 0.0
-    for e in biz_data.get("entries", []):
-        try:
-            total += float(e.get("amount", 0.0))
-        except Exception:
-            continue
-    return total
-
-
-def write_daily_report(summary: Dict[str, Any]):
-    ts = datetime.utcnow().strftime("%Y-%m-%d")
-    path = REPORTS_DIR / f"daily_{ts}.md"
-
-    lines = [
-        "# StegVerse Financial Telemetry – Daily Snapshot",
-        f"- Date: `{ts}`",
-        f"- Generated at: `{datetime.utcnow().isoformat()}Z`",
-        "",
-        "## Limits",
-        f"- Monthly soft cap: **${summary['soft_cap']:.2f}**",
-        f"- Monthly hard cap: **${summary['hard_cap']:.2f}**",
-        "",
-        "## Current Spend (placeholder)",
-        f"- Amount: **${summary['current_spend']:.2f}**",
-        f"- % of soft cap: **{summary['soft_pct']:.1f}%**",
-        f"- % of hard cap: **{summary['hard_pct']:.1f}%**",
-        "",
-        "## Status",
-        f"- Status: **{summary['status']}**",
-        f"- Notes: {summary['notes']}",
-        "",
-        "_Note: Values are placeholders until telemetry is wired to real billing sources._",
-    ]
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"[financial_telemetry] Wrote report: {path}")
-
-
-def main():
-    print("=== StegVerse Financial Telemetry v0.1 (Genesis) ===")
-    ensure_dirs()
-
-    fin_cfg = load_yaml(FIN_LIMITS_CONFIG)
-    limits = fin_cfg.get("limits", {})
-    soft_cap = float(limits.get("monthly_soft_cap", 250.0))
-    hard_cap = float(limits.get("monthly_hard_cap", 275.0))
-
-    ledger_path = get_business_ledger(fin_cfg)
-    biz_data = load_json(ledger_path) if ledger_path.exists() else {}
-
-    current_spend = compute_placeholder_spend(biz_data)
-    soft_pct = (current_spend / soft_cap * 100.0) if soft_cap > 0 else 0.0
-    hard_pct = (current_spend / hard_cap * 100.0) if hard_cap > 0 else 0.0
-
-    status = "OK"
-    notes = "Within soft cap."
-    if soft_pct >= 85.0 and soft_pct < 95.0:
-        status = "WARN"
-        notes = "Approaching soft cap. Consider slowing non-essential work."
-    elif soft_pct >= 95.0 or hard_pct >= 90.0:
-        status = "THROTTLE"
-        notes = "Near or above limits. Genesis suggests throttling workloads."
-
-    summary = {
+    return {
         "soft_cap": soft_cap,
         "hard_cap": hard_cap,
         "current_spend": current_spend,
-        "soft_pct": soft_pct,
-        "hard_pct": hard_pct,
+    }
+
+
+def evaluate_status(cfg: dict) -> dict:
+    soft_cap = cfg["soft_cap"]
+    hard_cap = cfg["hard_cap"]
+    current = cfg["current_spend"]
+
+    soft_pct = (current / soft_cap * 100.0) if soft_cap > 0 else 0.0
+    hard_pct = (current / hard_cap * 100.0) if hard_cap > 0 else 0.0
+
+    if current <= soft_cap:
+        status = "OK"
+        notes = "Within soft cap."
+    elif current <= hard_cap:
+        status = "WARN"
+        notes = "Between soft and hard cap."
+    else:
+        status = "ALERT"
+        notes = "Over hard cap."
+
+    return {
+        "soft_cap": soft_cap,
+        "hard_cap": hard_cap,
+        "current_spend": current,
+        "soft_pct": round(soft_pct, 2),
+        "hard_pct": round(hard_pct, 2),
         "status": status,
         "notes": notes,
     }
 
+
+def write_daily_markdown(summary: dict) -> Path:
+    LEDGER_ROOT.mkdir(parents=True, exist_ok=True)
+
+    today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    ts_iso = datetime.datetime.utcnow().isoformat() + "Z"
+
+    fname = f"daily_{today}.md"
+    out_path = LEDGER_ROOT / fname
+
+    lines = [
+        "# StegVerse Financial Telemetry",
+        "",
+        f"- Generated at: `{ts_iso}`",
+        "",
+        "## Caps",
+        f"- Soft cap: `${summary['soft_cap']:.2f}`",
+        f"- Hard cap: `${summary['hard_cap']:.2f}`",
+        "",
+        "## Current Spend",
+        f"- Amount: `${summary['current_spend']:.2f}`",
+        f"- % of soft cap: `{summary['soft_pct']:.2f}%`",
+        f"- % of hard cap: `{summary['hard_pct']:.2f}%`",
+        "",
+        "## Status",
+        f"- State: **{summary['status']}**",
+        f"- Notes: {summary['notes']}",
+    ]
+
+    out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return out_path
+
+
+def main() -> None:
+    cfg = load_config()
+    summary = evaluate_status(cfg)
+    out_path = write_daily_markdown(summary)
+
+    print("=== StegVerse Financial Telemetry v0.2 (Genesis) ===")
     print(json.dumps(summary, indent=2))
-    write_daily_report(summary)
-    print("=== Financial Telemetry completed (no external calls). ===")
+    print(f"[financial_telemetry] Wrote report: {out_path}")
+    print("=== Financial Telemetry completed ===")
 
 
 if __name__ == "__main__":
