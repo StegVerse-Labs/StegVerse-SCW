@@ -20,9 +20,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      EXPECTED_ORG: "StegVerse-Lab"
+      EXPECTED_ORG: "StegVerse-Labs"
       OLD_ORG: "StegVerse"
-      NEW_ORG: "StegVerse-Lab"
+      NEW_ORG: "StegVerse-Labs"
       PAT: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
       DRY_RUN: ${{ github.event.inputs.dry_run }}
       CHECK_PAT: ${{ github.event.inputs.check_pat }}
@@ -65,10 +65,9 @@ jobs:
           if [ -z "$files" ]; then
             echo "found_files="
             echo "✅ No files with '${OLD_ORG}/' found in common file types."
-          else
+          else:
             echo "Found files with '${OLD_ORG}/':"
             echo "$files"
-            # Save list for later steps
             echo "found_files<<EOF" >> $GITHUB_OUTPUT
             echo "$files" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
@@ -90,7 +89,6 @@ jobs:
         run: |
           echo "Applying in-place replacements: '${OLD_ORG}/' -> '${NEW_ORG}/'"
           for f in ${{ steps.find_files.outputs.found_files }}; do
-            # Use portable sed in-place edit
             sed -i.bak "s|${OLD_ORG}/|${NEW_ORG}/|g" "$f"
             rm -f "${f}.bak"
           done
@@ -105,7 +103,7 @@ jobs:
           if [ -z "$PAT" ]; then
             echo "❌ Secret GH_STEGVERSE_AI_TOKEN is NOT set (or empty)."
             note="PAT status: ❌ Secret GH_STEGVERSE_AI_TOKEN missing or empty."
-          else
+          else:
             echo "✅ GH_STEGVERSE_AI_TOKEN appears to be set. Testing against GitHub API..."
             status=$(curl -s -o /tmp/resp.txt -w "%{http_code}" \
               -H "Authorization: token $PAT" \
@@ -118,7 +116,7 @@ jobs:
               note="PAT status: ❌ 401 Unauthorized (invalid/expired/mis-pasted token)."
             elif [ "$status" = "403" ]; then
               note="PAT status: ❌ 403 Forbidden (valid token, but missing scopes or not allowed for this org/repo)."
-            else
+            else:
               note="PAT status: ⚠️ Unexpected HTTP status ${status}; see manual test."
             fi
           fi
@@ -152,11 +150,11 @@ jobs:
               echo
               if [ "${DRY_RUN}" = "true" ]; then
                 echo "_No changes were applied (dry run)._"
-              else
+              else:
                 echo "_In-place replacements from \`${OLD_ORG}/\` to \`${NEW_ORG}/\` were applied to the above files._"
               fi
               echo
-            else
+            else:
               echo "### Files with old org references"
               echo
               echo "- ✅ None found in scanned file types."
@@ -176,4 +174,18 @@ jobs:
 
           echo "Report updated."
 
-      -
+      - name: Commit and push changes (if not dry run)
+        if: env.DRY_RUN != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "stegverse-org-cleaner"
+          git config user.email "stegverse-org-cleaner@users.noreply.github.com"
+          git status
+          if ! git diff --quiet; then
+            git add .github/reports/org_cleanup_report.md
+            git add ${{ steps.find_files.outputs.found_files }} || true
+            git commit -m "chore: auto-fix old StegVerse org references and update cleanup report"
+            git push
+          else:
+            echo "No changes to commit."
