@@ -1,172 +1,148 @@
 #!/usr/bin/env python3
 """
-Fix & normalize StegVerse ledger event paths.
+fix_ledger_paths.py
 
-- Patches log_revenue_event.py so it writes to `ledger/events/...`
-  instead of `scripts/ledger/events/...`.
-- Migrates any existing revenue event files from the old path
-  to the new canonical location.
-- Writes a small JSON report under scripts/reports/ledger/.
+StegVerse-SCW ledger self-healing helper.
+
+Goals:
+- Ensure we use the canonical per-event layout:
+    ledger/events/YYYY-MM-DD/<event_id>.json
+- Migrate any stray / legacy files:
+    - scripts/ledger/events/*.jsonl  (old JSONL log)
+    - scripts/ledger/events/*.json   (misplaced JSON events)
+    - ledger/events/revenue_events.jsonl  (old single-file log)
+
+Notes:
+- Safe to run repeatedly (idempotent).
+- Never deletes source files; it copies / moves + leaves the original
+  and prints a warning so we can clean up later.
 """
 
-from pathlib import Path
 import json
-import shutil
-import datetime as dt
+import os
+from pathlib import Path
+from datetime import datetime
 
 ROOT = Path(__file__).resolve().parents[1]
+LEDGER_ROOT = ROOT / "ledger"
+CANON_EVENTS = LEDGER_ROOT / "events"
 
-OLD_EVENTS_DIR = ROOT / "scripts" / "ledger" / "events"
-NEW_EVENTS_DIR = ROOT / "ledger" / "events"
+# Legacy locations we want to scan
+LEGACY_PATHS = [
+    ROOT / "scripts" / "ledger" / "events",
+    LEDGER_ROOT / "events",  # for old jsonl in root
+]
 
-LOG_REVENUE_SCRIPT = ROOT / "scripts" / "genesis" / "log_revenue_event.py"
-REPORT_DIR = ROOT / "scripts" / "reports" / "ledger"
-REPORT_DIR.mkdir(parents=True, exist_ok=True)
+def ensure_dir(p: Path) -> None:
+    p.mkdir(parents=True, exist_ok=True)
 
-
-def patch_log_revenue_script():
+def parse_ts(ts: str) -> str:
     """
-    Rewrite any hard-coded 'scripts/ledger/events' path in
-    log_revenue_event.py to 'ledger/events'.
+    Return date string YYYY-MM-DD from a timestamp.
+    Falls back to 'unknown' if parsing fails.
     """
-    if not LOG_REVENUE_SCRIPT.exists():
-        return {"patched": False, "reason": "script_missing"}
+    try:
+        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        return dt.date().isoformat()
+    except Exception:
+        return "unknown"
 
-    text = LOG_REVENUE_SCRIPT.read_text(encoding="utf-8")
-    new_text = text.replace("scripts/ledger/events", "ledger/events")
-
-    if new_text == text:
-        return {"patched": False, "reason": "already_correct"}
-
-    LOG_REVENUE_SCRIPT.write_text(new_text, encoding="utf-8")
-    return {"patched": True, "reason": "path_rewritten"}
-
-
-def migrate_legacy_events():
+def migrate_jsonl_file(src: Path) -> int:
     """
-    Move any event files from scripts/ledger/events -> ledger/events.
-    If a file with the same name already exists at the new location,
-    we leave the old one in place and record a warning.
+    Read a JSONL file and emit one canonical JSON file per event.
+    Returns number of events migrated.
     """
-    moved = []
-    skipped = []
+    if not src.exists():
+        return 0
 
-    if not OLD_EVENTS_DIR.exists():
-        return {"moved": moved, "skipped": skipped, "old_dir_exists": False}
+    print(f"[fix_ledger_paths] Migrating JSONL events from {src}")
+    count = 0
+    with src.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except Exception as e:
+                print(f"[fix_ledger_paths]  ! Skipping bad line: {e}")
+                continue
 
-    NEW_EVENTS_DIR.mkdir(parents=True, exist_ok=True)
+            event_id = str(event.get("id") or f"event_{count}")
+            ts = str(event.get("ts") or "")
+            day = parse_ts(ts)
+            target_dir = CANON_EVENTS / day
+            ensure_dir(target_dir)
+            target = target_dir / f"{event_id}.json"
 
-    for p in OLD_EVENTS_DIR.glob("*.jsonl"):
-        target = NEW_EVENTS_DIR / p.name
-        if target.exists():
-            skipped.append({
-                "file": str(p.relative_to(ROOT)),
-                "reason": "target_exists",
-                "target": str(target.relative_to(ROOT)),
-            })
+            # Do not overwrite existing files
+            if target.exists():
+                print(f"[fix_ledger_paths]  - {target} already exists, skipping")
+                continue
+
+            target.write_text(json.dumps(event, indent=2), encoding="utf-8")
+            print(f"[fix_ledger_paths]  + wrote {target}")
+            count += 1
+
+    print(f"[fix_ledger_paths] Migrated {count} events from {src}")
+    return count
+
+def migrate_loose_json(src_dir: Path) -> int:
+    """
+    Migrate any loose *.json event files from a legacy directory into
+    the canonical layout, inferring day from ts if possible.
+    """
+    if not src_dir.exists():
+        return 0
+
+    print(f"[fix_ledger_paths] Scanning loose JSON events in {src_dir}")
+    count = 0
+    for p in src_dir.glob("*.json"):
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"[fix_ledger_paths]  ! Skipping {p}: {e}")
             continue
 
-        shutil.move(str(p), str(target))
-        moved.append({
-            "from": str(p.relative_to(ROOT)),
-            "to": str(target#!/usr/bin/env python3
-"""
-Fix & normalize StegVerse ledger event paths.
+        event_id = str(data.get("id") or p.stem)
+        ts = str(data.get("ts") or "")
+        day = parse_ts(ts)
+        target_dir = CANON_EVENTS / day
+        ensure_dir(target_dir)
+        target = target_dir / f"{event_id}.json"
 
-- Patches log_revenue_event.py so it writes to `ledger/events/...`
-  instead of `scripts/ledger/events/...`.
-- Migrates any existing revenue event files from the old path
-  to the new canonical location.
-- Writes a small JSON report under scripts/reports/ledger/.
-"""
-
-from pathlib import Path
-import json
-import shutil
-import datetime as dt
-
-ROOT = Path(__file__).resolve().parents[1]
-
-OLD_EVENTS_DIR = ROOT / "scripts" / "ledger" / "events"
-NEW_EVENTS_DIR = ROOT / "ledger" / "events"
-
-LOG_REVENUE_SCRIPT = ROOT / "scripts" / "genesis" / "log_revenue_event.py"
-REPORT_DIR = ROOT / "scripts" / "reports" / "ledger"
-REPORT_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def patch_log_revenue_script():
-    """
-    Rewrite any hard-coded 'scripts/ledger/events' path in
-    log_revenue_event.py to 'ledger/events'.
-    """
-    if not LOG_REVENUE_SCRIPT.exists():
-        return {"patched": False, "reason": "script_missing"}
-
-    text = LOG_REVENUE_SCRIPT.read_text(encoding="utf-8")
-    new_text = text.replace("scripts/ledger/events", "ledger/events")
-
-    if new_text == text:
-        return {"patched": False, "reason": "already_correct"}
-
-    LOG_REVENUE_SCRIPT.write_text(new_text, encoding="utf-8")
-    return {"patched": True, "reason": "path_rewritten"}
-
-
-def migrate_legacy_events():
-    """
-    Move any event files from scripts/ledger/events -> ledger/events.
-    If a file with the same name already exists at the new location,
-    we leave the old one in place and record a warning.
-    """
-    moved = []
-    skipped = []
-
-    if not OLD_EVENTS_DIR.exists():
-        return {"moved": moved, "skipped": skipped, "old_dir_exists": False}
-
-    NEW_EVENTS_DIR.mkdir(parents=True, exist_ok=True)
-
-    for p in OLD_EVENTS_DIR.glob("*.jsonl"):
-        target = NEW_EVENTS_DIR / p.name
         if target.exists():
-            skipped.append({
-                "file": str(p.relative_to(ROOT)),
-                "reason": "target_exists",
-                "target": str(target.relative_to(ROOT)),
-            })
+            print(f"[fix_ledger_paths]  - {target} already exists, skipping")
             continue
 
-        shutil.move(str(p), str(target))
-        moved.append({
-            "from": str(p.relative_to(ROOT)),
-            "to": str(target.relative_to(ROOT)),
-        })
+        target.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        print(f"[fix_ledger_paths]  + wrote {target}")
+        count += 1
 
-    # If directory is now empty, we can leave it or remove it; for now keep it.
-    return {
-        "moved": moved,
-        "skipped": skipped,
-        "old_dir_exists": True,
-    }
+    print(f"[fix_ledger_paths] Migrated {count} loose JSON events from {src_dir}")
+    return count
 
+def main() -> None:
+    ensure_dir(CANON_EVENTS)
 
-def main():
-    patch_result = patch_log_revenue_script()
-    migrate_result = migrate_legacy_events()
+    total = 0
 
-    report = {
-        "ts": dt.datetime.utcnow().isoformat() + "Z",
-        "patch_result": patch_result,
-        "migrate_result": migrate_result,
-    }
+    # 1) JSONL logs
+    jsonl_candidates = [
+        ROOT / "scripts" / "ledger" / "events" / "revenue_events.jsonl",
+        LEDGER_ROOT / "events" / "revenue_events.jsonl",
+    ]
+    for p in jsonl_candidates:
+        total += migrate_jsonl_file(p)
 
-    out = REPORT_DIR / "fix_ledger_paths_report.json"
-    out.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    # 2) Loose JSON files in legacy dirs
+    for legacy_root in LEGACY_PATHS:
+        total += migrate_loose_json(legacy_root)
 
-    print("=== fix_ledger_paths ===")
-    print(json.dumps(report, indent=2))
-
+    if total == 0:
+        print("[fix_ledger_paths] No legacy ledger events found. Nothing to migrate.")
+    else:
+        print(f"[fix_ledger_paths] Completed migration of {total} events.")
 
 if __name__ == "__main__":
     main()
