@@ -74,7 +74,7 @@ jobs:
           git config user.name  "StegVerse Guardian Worker"
           git config user.email "guardian-worker@stegverse.local"
 
-          # Find any README.md files that changed (new or modified)
+          # Collect just the README files that changed (new or modified)
           CHANGED_READMES=$(git status --porcelain | awk '/README\.md$/ {print $2}')
 
           if [ -n "${CHANGED_READMES}" ]; then
