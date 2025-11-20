@@ -1,0 +1,68 @@
+version: 1
+id: "stegverse-genesis"
+description: "StegVerse Genesis Core – 8-lane parallel build scaffolding"
+
+lanes:
+  core_intelligence:
+    id: "A"
+    priority: 1.00
+    enabled: true
+    workers:
+      - hypercore
+      - discovery
+      - healthcheck
+
+  financial_engine:
+    id: "B"
+    priority: 0.95
+    enabled: true
+    workers:
+      - financial_telemetry
+      - spending_guard
+
+  compliance_engine:
+    id: "C"
+    priority: 0.90
+    enabled: true
+    workers:
+      - compliance_scan
+
+  communication_layer:
+    id: "D"
+    priority: 0.92
+    enabled: true
+    workers:
+      - comms_bus
+
+  compute_autonomy:
+    id: "E"
+    priority: 0.93
+    enabled: true
+    workers:
+      - compute_scan
+
+  autopatch_selfheal:
+    id: "F"
+    priority: 0.98
+    enabled: true
+    workers:
+      - autopatch_selfheal
+
+  ai_worker_marketplace:
+    id: "G"
+    priority: 0.88
+    enabled: true
+    workers:
+      - marketplace_scan
+
+  enduser_products:
+    id: "H"
+    priority: 0.75
+    enabled: true
+    workers:
+      - products_seed
+
+defaults:
+  reports_dir: "reports/genesis"
+  ledgers_root: "stegverse-ledgers"
+  dry_run: true  # v0.1: NO external actions, no spending; structure and reporting only.
