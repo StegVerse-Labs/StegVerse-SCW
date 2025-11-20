@@ -1,0 +1,20 @@
+version: 1
+currency: "USD"
+
+limits:
+  monthly_soft_cap: 250.0     # Your chosen limit
+  monthly_hard_cap: 275.0     # Hard stop
+  warning_threshold: 0.85     # 85% of soft cap -> warning
+  throttle_threshold: 0.95    # 95% of soft cap -> throttle non-essential tasks
+
+ledgers:
+  personal:
+    enabled: true
+    path: "stegverse-ledgers/personal/ledger.enc.json"
+  business:
+    enabled: true
+    path: "stegverse-ledgers/business/ledger.json"
+
+simulation:
+  enabled: true
+  note: "Genesis v0.1 – telemetry and projections only; no real billing or external calls yet."
