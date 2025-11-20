@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Reuse your PATs (for future cross-repo work or if needed later)
+      # Reuse your PATs
       PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
       GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
 
@@ -33,23 +33,22 @@ jobs:
           TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
 
           if [ -z "${TOKEN}" ]; then
-            echo "WARNING: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
-            echo "This worker can still run locally in StegVerse-SCW but will not push cross-repo."
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
           fi
 
-          if [ -n "${TOKEN}" ]; then
-            echo "::add-mask::${TOKEN}"
+          echo "::add-mask::${TOKEN}"
 
-            {
-              echo "GITHUB_TOKEN=${TOKEN}"
-              echo "GH_TOKEN=${TOKEN}"
-              echo "STEG_TOKEN=${TOKEN}"
-            } >> "$GITHUB_ENV"
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
 
-            git config --global user.name  "StegVerse Guardian Worker"
-            git config --global user.email "guardian-worker@stegverse.local"
-            git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
-          fi
+          git config --global user.name  "StegVerse Guardian Worker"
+          git config --global user.email "guardian-worker@stegverse.local"
+
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -60,8 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          # PyYAML is required by guardian_worker_readmes.py
-          pip install pyyaml requests
+          pip install requests
 
       - name: Run Guardian README Worker
         run: |
@@ -76,13 +74,12 @@ jobs:
           git config user.name  "StegVerse Guardian Worker"
           git config user.email "guardian-worker@stegverse.local"
 
-          # Detect README changes (tracked + untracked)
-          if git status --porcelain | grep -E 'README.md$'; then
-            echo "Detected README changes; committing..."
+          # Find any README.md files that changed (new or modified)
+          CHANGED_READMES=$(git status --porcelain | awk '/README\.md$/ {print $2}')
 
-            # Stage all README.md files, including untracked
-            git ls-files --others --exclude-standard | grep 'README.md$' | xargs -r git add
-            git ls-files --modified | grep 'README.md$' | xargs -r git add
+          if [ -n "${CHANGED_READMES}" ]; then
+            echo "Detected README changes; committing..."
+            echo "${CHANGED_READMES}" | xargs -r git add
 
             git commit -m "Guardian Worker: generate missing README docs"
             git push origin "${GITHUB_REF_NAME:-main}"
