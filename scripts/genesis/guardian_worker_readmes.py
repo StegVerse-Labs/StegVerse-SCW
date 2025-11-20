@@ -1,19 +1,26 @@
 #!/usr/bin/env python
 """
-StegVerse Guardian Worker: README Generator (Genesis v0.3)
+StegVerse Guardian Worker: README Generator (Genesis v0.4, ASL-aware)
 
 Reads:
   - reports/guardians/guardian_run_latest.json
+  - docs/governance/automation_safety_levels.yaml
 
-For each directory listed under `readme_refresh.details.readme_missing`:
-  - If the directory exists and README.md is missing:
-      * Inspect file names in that directory.
+Behavior:
+  - Looks for the 'readme_refresh' task in the latest guardian run.
+  - Reads its assigned Automation Safety Level (ASL) from the governance config.
+  - If ASL-1: allowed to auto-generate missing README.md files.
+  - If higher than ASL-1: worker refuses to write, logs that it's blocked.
+
+For ASL-1:
+  - If README.md is missing in a folder:
+      * Inspect file names in that folder.
       * Call GitHub Models (via GITHUB_TOKEN) to generate a starter README.
-      * Save README.md with a clear "AUTO-GENERATED" banner.
+      * Save README.md with an auto-generated banner.
 
-This is a "lightweight AI entity":
-  - Only touches documentation (README.md).
-  - Never overwrites an existing README.
+Safety:
+  - Never overwrites an existing README.md.
+  - Caps the number of README files created per run.
 """
 
 from __future__ import annotations
@@ -24,13 +31,47 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
-import requests  # installed by guardian workers workflow
+import requests
+
+try:
+    import yaml  # We already use PyYAML in SCW
+except Exception:
+    yaml = None
 
 
 ROOT = Path(__file__).resolve().parents[2]  # .../StegVerse-SCW
 REPORT_DIR = ROOT / "reports" / "guardians"
 LATEST_JSON = REPORT_DIR / "guardian_run_latest.json"
+ASL_CONFIG = ROOT / "docs" / "governance" / "automation_safety_levels.yaml"
 
+
+# ---------------- ASL helpers ----------------
+
+def load_asl_config() -> Dict[str, Any]:
+    if not ASL_CONFIG.exists():
+        print(f"[ASL] Config not found at {ASL_CONFIG}; defaulting to safe mode (no writes).")
+        return {}
+    if yaml is None:
+        print("[ASL] PyYAML not available; defaulting to safe mode (no writes).")
+        return {}
+    with ASL_CONFIG.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+def get_task_asl(cfg: Dict[str, Any], task_id: str) -> str:
+    tasks = (cfg.get("tasks") or {})
+    t = tasks.get(task_id) or {}
+    return t.get("level") or ""
+
+
+def is_asl_at_most(asl: str, limit: str) -> bool:
+    order = ["ASL-1", "ASL-2", "ASL-3", "ASL-4", "ASL-5"]
+    if asl not in order or limit not in order:
+        return False
+    return order.index(asl) <= order.index(limit)
+
+
+# ---------------- Core helpers ----------------
 
 def load_latest_run() -> Dict[str, Any]:
     if not LATEST_JSON.exists():
@@ -47,7 +88,6 @@ def get_github_token() -> str:
 
 
 def call_github_model(system_prompt: str, user_prompt: str, token: str) -> str:
-    """Call GitHub Models chat completions API."""
     url = "https://models.github.ai/inference/chat/completions"
     payload = {
         "model": "openai/gpt-4.1-mini",
@@ -92,48 +132,63 @@ def list_folder_contents(folder: Path) -> List[str]:
 
 
 def build_user_prompt(rel_path: str, files: List[str]) -> str:
-    text_lines: List[str] = []
-    text_lines.append(
+    lines: List[str] = []
+    lines.append(
         "You are StegVerse Docs AI. Generate a short, practical README.md "
         "for this folder inside the StegVerse-SCW repository."
     )
-    text_lines.append("")
-    text_lines.append(f"Folder path (relative to repo root): `{rel_path}`")
-    text_lines.append("")
+    lines.append("")
+    lines.append(f"Folder path (relative to repo root): `{rel_path}`")
+    lines.append("")
     if files:
-        text_lines.append("Entries currently in this folder:")
+        lines.append("Entries currently in this folder:")
         for name in files:
-            text_lines.append(f"- {name}")
-        text_lines.append("")
+            lines.append(f"- {name}")
+        lines.append("")
     else:
-        text_lines.append("The folder is currently empty (no files detected).")
-        text_lines.append("")
-
-    text_lines.append("README requirements:")
-    text_lines.append("- Start with an H1 header matching the folder purpose.")
-    text_lines.append("- Include sections: Overview, Key files or responsibilities, How this fits into StegVerse, Notes/TODO.")
-    text_lines.append("- Do NOT invent specific APIs or behavior that you cannot infer.")
-    text_lines.append("- It's OK to include TODO bullets where details are unknown.")
-    text_lines.append("")
-    text_lines.append(
+        lines.append("The folder is currently empty (no files detected).")
+        lines.append("")
+    lines.append("README requirements:")
+    lines.append("- Start with an H1 header matching the folder purpose.")
+    lines.append("- Include sections: Overview, Key files/responsibilities, How this fits into StegVerse, Notes/TODO.")
+    lines.append("- Do NOT invent specific APIs or behavior that you cannot infer.")
+    lines.append("- It's OK to add TODO bullets where details are unknown.")
+    lines.append("")
+    lines.append(
         "Return only valid Markdown, no surrounding explanations. "
-        "Keep it concise and focused on helping a human (Rigel or a developer/AI worker) "
-        "understand and extend this folder."
+        "Keep it concise and focused on helping a human (Rigel or another "
+        "developer/AI worker) understand and extend this folder."
     )
-
-    return "\n".join(text_lines)
+    return "\n".join(lines)
 
 
 def main() -> int:
-    print("=== StegVerse Guardian Worker: README Generator ===")
+    print("=== StegVerse Guardian Worker: README Generator (ASL-aware) ===")
 
+    # 1) Load ASL config and verify that this task is allowed to write
+    asl_cfg = load_asl_config()
+    task_id = "readme_refresh"
+    task_asl = get_task_asl(asl_cfg, task_id)
+
+    if not task_asl:
+        print(f"[ASL] No ASL level configured for task '{task_id}'.")
+        print("[ASL] Refusing to auto-write READMEs (safe mode).")
+        return 0
+
+    print(f"[ASL] Task '{task_id}' is configured as {task_asl}")
+    if not is_asl_at_most(task_asl, "ASL-1"):
+        print("[ASL] This task is not ASL-1 or lower; refusing to write.")
+        print("[ASL] You can still generate proposals by adding another worker later.")
+        return 0
+
+    # 2) Load guardian latest run
     run_data = load_latest_run()
     token = get_github_token()
 
     tasks = run_data.get("tasks") or []
     readme_task = None
     for t in tasks:
-        if t.get("id") == "readme_refresh":
+        if t.get("id") == task_id:
             readme_task = t
             break
 
@@ -172,7 +227,7 @@ def main() -> int:
             skipped_existing += 1
             continue
 
-        # Safety: don't generate too many at once.
+        # Safety: cap number of creations per run
         if created >= 12:
             print("Reached generation limit (12 README files). Stopping.")
             break
@@ -188,7 +243,7 @@ def main() -> int:
             continue
 
         banner = (
-            "<!-- AUTO-GENERATED by StegVerse Guardian Worker.\n"
+            "<!-- AUTO-GENERATED by StegVerse Guardian Worker (ASL-1).\n"
             "     Edit freely; this file is meant as a starting point.\n"
             "     Regenerate via Guardians if needed. -->\n\n"
         )
