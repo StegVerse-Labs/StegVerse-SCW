@@ -1,0 +1,15 @@
+{
+  "id": "11084a2c-c595-48ac-91bf-0c9339e1f69f",
+  "ts": "2025-11-20T07:14:55.825123Z",
+  "amount": 10.01,
+  "currency": "USD",
+  "kind": "invoice",
+  "memo": "Test",
+  "source": "manual",
+  "status": "expected",
+  "stream": "stegcore",
+  "meta": {
+    "created_by": "genesis.log_revenue_event",
+    "schema": "stegverse.revenue.v1"
+  }
+}
