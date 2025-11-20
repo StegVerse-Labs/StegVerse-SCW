@@ -37,8 +37,10 @@ jobs:
             exit 1
           fi
 
+          # Mask token in logs
           echo "::add-mask::${TOKEN}"
 
+          # Make token available to Python
           {
             echo "GITHUB_TOKEN=${TOKEN}"
             echo "STEG_TOKEN=${TOKEN}"
@@ -46,6 +48,8 @@ jobs:
 
           git config --global user.name  "StegVerse Autopatch Bot"
           git config --global user.email "autopatch-bot@users.noreply.github.com"
+
+          # Force all https://github.com/... URLs to use the PAT
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Set up Python
@@ -58,6 +62,7 @@ jobs:
           set -euo pipefail
           pip install -r scripts/requirements-yaml.txt
 
+      # 👉 STEP 3: self-heal ledger event paths before main autopatch
       - name: Fix ledger event paths (self-heal)
         run: |
           set -euo pipefail
