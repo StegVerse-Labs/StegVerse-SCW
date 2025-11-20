@@ -1,0 +1,179 @@
+name: StegVerse Org Cleanup Auto-Fix Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "If true, only show what WOULD be changed without committing."
+        required: false
+        default: "true"
+      check_pat:
+        description: "Also test GH_STEGVERSE_AI_TOKEN and update report."
+        required: false
+        default: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  org-autofix:
+    runs-on: ubuntu-latest
+
+    env:
+      EXPECTED_ORG: "StegVerse-Lab"
+      OLD_ORG: "StegVerse"
+      NEW_ORG: "StegVerse-Lab"
+      PAT: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
+      DRY_RUN: ${{ github.event.inputs.dry_run }}
+      CHECK_PAT: ${{ github.event.inputs.check_pat }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print basic repo info
+        run: |
+          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "EXPECTED_ORG:      $EXPECTED_ORG"
+
+      - name: Verify repo owner/org
+        run: |
+          owner="${GITHUB_REPOSITORY%%/*}"
+          repo="${GITHUB_REPOSITORY##*/}"
+          echo "Detected owner: $owner"
+          echo "Detected repo:  $repo"
+
+          if [ "$owner" != "$EXPECTED_ORG" ]; then
+            echo "❌ Repo is not under expected org."
+            echo "   Expected: $EXPECTED_ORG"
+            echo "   Actual:   $owner"
+            exit 1
+          else:
+            echo "✅ Repo is under expected org: $EXPECTED_ORG"
+          fi
+
+      - name: Find files with old org references
+        id: find_files
+        run: |
+          echo "Scanning for references to old org '${OLD_ORG}/'..."
+          files=$(grep -RIl --exclude-dir=".git" \
+            --include="*.yml" --include="*.yaml" \
+            --include="*.md" --include="*.py" \
+            --include="*.ts" --include="*.js" \
+            "${OLD_ORG}/" . || true)
+
+          if [ -z "$files" ]; then
+            echo "found_files="
+            echo "✅ No files with '${OLD_ORG}/' found in common file types."
+          else
+            echo "Found files with '${OLD_ORG}/':"
+            echo "$files"
+            # Save list for later steps
+            echo "found_files<<EOF" >> $GITHUB_OUTPUT
+            echo "$files" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Show planned replacements (dry run preview)
+        if: steps.find_files.outputs.found_files != ''
+        run: |
+          echo "This is a preview of changes from '${OLD_ORG}/' to '${NEW_ORG}/'."
+          echo
+          for f in ${{ steps.find_files.outputs.found_files }}; do
+            echo "----- $f -----"
+            grep -n "${OLD_ORG}/" "$f" || true
+            echo
+          done
+
+      - name: Apply replacements (if not dry run)
+        if: steps.find_files.outputs.found_files != '' && env.DRY_RUN != 'true'
+        run: |
+          echo "Applying in-place replacements: '${OLD_ORG}/' -> '${NEW_ORG}/'"
+          for f in ${{ steps.find_files.outputs.found_files }}; do
+            # Use portable sed in-place edit
+            sed -i.bak "s|${OLD_ORG}/|${NEW_ORG}/|g" "$f"
+            rm -f "${f}.bak"
+          done
+          echo "Replacements applied."
+
+      - name: Check PAT and prepare report note
+        id: pat_check
+        if: env.CHECK_PAT == 'true'
+        run: |
+          note=""
+
+          if [ -z "$PAT" ]; then
+            echo "❌ Secret GH_STEGVERSE_AI_TOKEN is NOT set (or empty)."
+            note="PAT status: ❌ Secret GH_STEGVERSE_AI_TOKEN missing or empty."
+          else
+            echo "✅ GH_STEGVERSE_AI_TOKEN appears to be set. Testing against GitHub API..."
+            status=$(curl -s -o /tmp/resp.txt -w "%{http_code}" \
+              -H "Authorization: token $PAT" \
+              https://api.github.com/user)
+
+            echo "HTTP status: $status"
+            if [ "$status" = "200" ]; then
+              note="PAT status: ✅ Valid and authenticated to GitHub."
+            elif [ "$status" = "401" ]; then
+              note="PAT status: ❌ 401 Unauthorized (invalid/expired/mis-pasted token)."
+            elif [ "$status" = "403" ]; then
+              note="PAT status: ❌ 403 Forbidden (valid token, but missing scopes or not allowed for this org/repo)."
+            else
+              note="PAT status: ⚠️ Unexpected HTTP status ${status}; see manual test."
+            fi
+          fi
+
+          echo "note<<EOF" >> $GITHUB_OUTPUT
+          echo "$note" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Update org cleanup report
+        run: |
+          mkdir -p .github/reports
+          report=".github/reports/org_cleanup_report.md"
+
+          ts="$(date -u +"%Y-%m-%d %H:%M:%SZ")"
+
+          echo "Updating report at $report"
+          {
+            echo "## Org Cleanup Auto-Fix Run — ${ts}"
+            echo
+            echo "- Repo: \`${GITHUB_REPOSITORY}\`"
+            echo "- Expected org: \`${EXPECTED_ORG}\`"
+            echo "- Dry run: \`${DRY_RUN}\`"
+            echo
+
+            if [ -n "${{ steps.find_files.outputs.found_files }}" ]; then
+              echo "### Files with old org references"
+              echo
+              for f in ${{ steps.find_files.outputs.found_files }}; do
+                echo "- \`$f\`"
+              done
+              echo
+              if [ "${DRY_RUN}" = "true" ]; then
+                echo "_No changes were applied (dry run)._"
+              else
+                echo "_In-place replacements from \`${OLD_ORG}/\` to \`${NEW_ORG}/\` were applied to the above files._"
+              fi
+              echo
+            else
+              echo "### Files with old org references"
+              echo
+              echo "- ✅ None found in scanned file types."
+              echo
+            fi
+
+            if [ "${{ steps.pat_check.outputs.note }}" != "" ]; then
+              echo "### PAT status"
+              echo
+              echo "${{ steps.pat_check.outputs.note }}"
+              echo
+            fi
+
+            echo "---"
+            echo
+          } >> "$report"
+
+          echo "Report updated."
+
+      -
