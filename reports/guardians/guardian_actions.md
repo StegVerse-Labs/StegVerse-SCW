@@ -1,7 +1,7 @@
 # StegVerse Guardian Action Plan
 
-- Based on guardian run: `19538272450`
-- Generated at: `2025-11-20T13:20:29.102679Z`
+- Based on guardian run: `19538995496`
+- Generated at: `2025-11-20T13:45:41.640751Z`
 
 This file is the **bridge** between guardian scans and future AI workers.
 Guardians detect issues; this plan shows what should be done next.
@@ -10,16 +10,16 @@ Guardians detect issues; this plan shows what should be done next.
 
 ### README Refresh
 - Status: **warning**
-- Summary: 4 directory(ies) are missing README.md files.
+- Summary: 2 directory(ies) are missing README.md files.
 
 Readme already present in:
 - `README.md`
+- `ledger/README.md`
+- `reports/README.md`
 - `scripts/README.md`
 
 Readme missing in directories (high priority for docs workers):
-- `ledger`
 - `ledger/telemetry`
-- `reports`
 - `scripts/genesis`
 
 Suggested next actions:
@@ -29,5 +29,5 @@ Suggested next actions:
 
 ## Healthy guardian checks
 
-- `workflow_health` — **ok** — Found 134 workflow file(s).
+- `workflow_health` — **ok** — Found 136 workflow file(s).
 

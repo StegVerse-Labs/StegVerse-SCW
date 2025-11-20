@@ -1,5 +1,5 @@
 {
-  "generated_at": "2025-11-20T13:20:29.102679Z",
+  "generated_at": "2025-11-20T13:45:41.640751Z",
   "registry": {
     "description": "Registry of StegVerse guardian tasks and priorities.",
     "generated_by": "StegVerse Genesis",
@@ -35,11 +35,11 @@
     ],
     "version": 1
   },
-  "run_id": "19538272450",
+  "run_id": "19538995496",
   "tasks": [
     {
       "details": {
-        "count": 134,
+        "count": 136,
         "workflow_files": [
           "AutoPatch.yml",
           "actions-permission-check.yml",
@@ -85,6 +85,8 @@
           "genesis_economic_snapshot.yml",
           "genesis_financial_audit.yml",
           "genesis_financial_telemetry.yml",
+          "guardian_worker_workflows.yml",
+          "guardian_workers.yml",
           "guardians.yml",
           "hcb-pipeline.yml",
           "hybrid_bridge_ci.yml",
@@ -179,24 +181,24 @@
       },
       "id": "workflow_health",
       "status": "ok",
-      "summary": "Found 134 workflow file(s)."
+      "summary": "Found 136 workflow file(s)."
     },
     {
       "details": {
         "readme_missing": [
           "scripts/genesis",
-          "ledger",
-          "ledger/telemetry",
-          "reports"
+          "ledger/telemetry"
         ],
         "readme_present": [
           "README.md",
-          "scripts/README.md"
+          "scripts/README.md",
+          "ledger/README.md",
+          "reports/README.md"
         ]
       },
       "id": "readme_refresh",
       "status": "warning",
-      "summary": "4 directory(ies) are missing README.md files."
+      "summary": "2 directory(ies) are missing README.md files."
     }
   ]
 }
