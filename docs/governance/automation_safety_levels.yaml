@@ -1,0 +1,107 @@
+# docs/governance/automation_safety_levels.yaml
+version: 1
+title: "StegVerse Automation Safety Levels (ASL)"
+description: >
+  Defines how far autonomous workers are allowed to go for different kinds of
+  tasks, from safe documentation up to financial or legal changes.
+
+levels:
+  ASL-1:
+    name: "Low-risk (Docs & Metadata)"
+    summary: >
+      Purely descriptive changes. No behavior changes, no config that can
+      affect runtime or money. Safe for wide automation.
+    allowed_actions:
+      - create_or_update_docs
+      - add_or_update_readme
+      - comments_or_annotations
+      - non-functional formatting
+    guardrails:
+      - do_not_touch_runtime_code
+      - do_not_change_build_or_deploy_pipelines
+      - no_secrets
+
+  ASL-2:
+    name: "Medium-risk (Workflows & Small Autopatch)"
+    summary: >
+      Structural and CI-level changes that can affect how code runs in CI, but
+      not business logic or money flows.
+    allowed_actions:
+      - update_ci_workflows
+      - add_small_self_healing_steps
+      - add_or_update_lint_or_test_configs
+      - add_safe_autopatch_rules
+    guardrails:
+      - no_business_logic_changes
+      - no_changes_to_financial_or_legal_engines
+      - changes_must_be_reversible_and_small
+
+  ASL-3:
+    name: "High-risk (Runtime Behavior)"
+    summary: >
+      Changes that affect how StegVerse behaves at runtime. Must go through a
+      review or staging phase.
+    allowed_actions:
+      - propose_runtime_code_changes
+      - create_pull_requests_for_review
+      - generate_diff_only_patches
+    guardrails:
+      - require_human_review
+      - must_use_branch_or_pr
+      - no_direct_push_to_main
+
+  ASL-4:
+    name: "Strategic & Treasury-impacting Behavior"
+    summary: >
+      Changes that may alter economic policy, pricing, or strategic routing of
+      work and resources.
+    allowed_actions:
+      - generate_proposals_only
+      - draft_memos
+      - open_governance_issues
+    guardrails:
+      - no_automatic_code_changes
+      - no_auto_merge
+      - requires_explicit_Rigel_approval
+
+  ASL-5:
+    name: "Financial / Legal Engine Changes"
+    summary: >
+      Anything touching the financial ledger, wallet behavior, or legal
+      compliance engines.
+    allowed_actions:
+      - diagnostic_reports
+      - drift_or_risk_alerts
+      - proposal_memos
+    guardrails:
+      - strictly_read_only
+      - no_code_or_config_changes
+      - requires_out_of_band_approval
+
+# Map guardian / worker task IDs to ASL
+tasks:
+  # Our existing README worker
+  readme_refresh:
+    level: ASL-1
+    notes: "Safe to auto-generate missing README.md files."
+
+  # Example future tasks:
+  workflow_hygiene:
+    level: ASL-2
+    notes: "Can create PRs or small workflow patches."
+
+  test_scaffold:
+    level: ASL-2
+    notes: "Can add starter tests in a conservative way."
+
+  runtime_refactor:
+    level: ASL-3
+    notes: "Code changes must go via PR."
+
+  economic_snapshot:
+    level: ASL-5
+    notes: "Read-only ledger snapshot; no write access to transaction rules."
+
+  financial_engine_change:
+    level: ASL-5
+    notes: "Proposal-only; no automatic changes."
