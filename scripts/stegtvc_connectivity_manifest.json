@@ -5,8 +5,8 @@
 
   "source_paths": {
     "data/stegtvc_config.json": "data/stegtvc_config.json",
-    "app/resolver.py": "app/resolver.py",
-    "stegtvc_resolver.py": "stegtvc_client.py"
+    "app/stegtvccresolver.py": "app/stegtvc_resolver.py",
+    "stegtvc_client.py": "stegtvc_client.py"
   },
 
   "targets": [
