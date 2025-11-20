@@ -62,3 +62,4 @@ jobs:
 
           git commit -m "Economic snapshot: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           git push origin "${GITHUB_REF_NAME:-main}"
+          fi
