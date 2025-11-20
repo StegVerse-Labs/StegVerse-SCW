@@ -1,0 +1,36 @@
+version: 1
+description: "StegVerse AI worker classes and responsibilities"
+
+workers:
+  infra:
+    description: "Fix workflows, layout, dependencies, and repo health."
+    priority: 8
+    typical_tasks:
+      - "normalize file layouts"
+      - "fix broken GitHub Actions workflows"
+      - "keep autopatch manifests valid"
+      - "repair connectivity configs (TVC/TV/SCW/HCB)"
+  builder:
+    description: "Build features, modules, docs, and tests."
+    priority: 7
+    typical_tasks:
+      - "generate missing API endpoints"
+      - "create docs and READMEs"
+      - "add/repair unit tests"
+      - "implement new revenue modules"
+  compliance:
+    description: "Apply compliance rules, safeguard data & finance."
+    priority: 9
+    typical_tasks:
+      - "enforce compliance_rules.yaml"
+      - "flag high-risk flows"
+      - "review AI behaviors for safety"
+      - "tie financial actions to identity & intent"
+  economy:
+    description: "Handle payments, wallets, ledgers, and fraud signals."
+    priority: 9
+    typical_tasks:
+      - "record payment events into StegLedger"
+      - "sync Stripe/Coinbase webhooks"
+      - "monitor for suspicious patterns"
+      - "manage StegToken mint/burn/lock events"
