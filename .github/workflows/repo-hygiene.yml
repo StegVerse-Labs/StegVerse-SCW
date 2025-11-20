@@ -1,0 +1,47 @@
+name: StegVerse Repo Hygiene
+
+on:
+  workflow_dispatch: {}
+  # Optional: enable a daily run
+  # schedule:
+  #   - cron: "20 8 * * *"  # 08:20 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  repo_hygiene:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Repo Hygiene (Genesis v0.1)
+        run: |
+          set -euo pipefail
+          echo "=== StegVerse Repo Hygiene (Genesis v0.1) ==="
+          python scripts/genesis/repo_hygiene.py
+
+      - name: Commit hygiene report (if changed)
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Autopatch Bot"
+          git config user.email "autopatch-bot@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain scripts/reports/hygiene 2>/dev/null || echo '')" ]; then
+            echo "Detected hygiene report changes; committing..."
+            git add scripts/reports/hygiene
+            git commit -m "Repo hygiene report (Genesis v0.1)"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No hygiene report changes to commit."
+          fi
