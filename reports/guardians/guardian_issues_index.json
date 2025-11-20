@@ -1,0 +1,14 @@
+{
+  "issues": {
+    "readme_refresh_missing": {
+      "labels": [
+        "guardian",
+        "documentation"
+      ],
+      "number": 17,
+      "state": "open",
+      "title": "[Guardian] Missing README.md in key directories"
+    }
+  },
+  "version": 1
+}
