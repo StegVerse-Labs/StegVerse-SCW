@@ -9,6 +9,17 @@
       "id": "ensure_terminal_newline",
       "pattern": "\\Z",
       "replace": "\n"
+    },
+    {
+  "id": "fix_ledger_events_folder_structure",
+  "path": "scripts/ops/fix_ledger_paths.py",
+  "mode": "patch",
+  "description": "Ensure ledger events always live in ledger/events/YYYY-MM-DD/",
+  "requires_dirs": [
+    "ledger",
+    "ledger/events"
+    ],
+  "patch": ""
     }
   ]
 }
