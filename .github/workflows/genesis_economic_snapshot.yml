@@ -28,7 +28,10 @@ jobs:
       - name: Run Economic Snapshot
         run: |
           set -euo pipefail
-          python ledger/steg_wallet_view.py
+          cd "$GITHUB_WORKSPACE"
+          # Ensure the repo root is on PYTHONPATH so `ledger` is importable
+          export PYTHONPATH="$GITHUB_WORKSPACE:${PYTHONPATH:-}"
+          python -m ledger.steg_wallet_view
 
       - name: Commit economic snapshot
         run: |
