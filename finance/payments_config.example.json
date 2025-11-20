@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "stripe": {
+    "enabled": false,
+    "publishable_key_env": "STRIPE_PUBLISHABLE_KEY",
+    "secret_key_env": "STRIPE_SECRET_KEY",
+    "webhook_secret_env": "STRIPE_WEBHOOK_SECRET"
+  },
+  "coinbase": {
+    "enabled": false,
+    "api_key_env": "COINBASE_COMMERCE_API_KEY",
+    "webhook_secret_env": "COINBASE_COMMERCE_WEBHOOK_SECRET"
+  }
+}
