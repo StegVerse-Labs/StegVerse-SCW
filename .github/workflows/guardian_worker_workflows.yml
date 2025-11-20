@@ -1,11 +1,11 @@
 name: StegVerse Guardian Worker - Workflows
 
 on:
-  # Manual trigger so you can run it whenever you want
+  # Manual trigger for now
   workflow_dispatch: {}
-  # Optional: enable scheduled runs once guardians are stable
+  # Optional: enable once you’re comfortable
   # schedule:
-  #   - cron: "40 8 * * *"
+  #   - cron: "20 8 * * *"
 
 permissions:
   contents: write
@@ -16,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Prefer the classic PAT in PAT_WORKFLOW, fall back to GH_STEGVERSE_PAT
+      # Conceptually “owned by TV” – TV decides *which* PAT lives here,
+      # SCW only consumes it.
       PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
       GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
 
@@ -26,7 +27,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve token & configure git
+      - name: Resolve token & configure git (TV-managed)
         run: |
           set -euo pipefail
 
@@ -37,21 +38,22 @@ jobs:
             exit 1
           fi
 
-          # Mask token in logs
           echo "::add-mask::${TOKEN}"
 
-          # Expose token to anything that expects a GitHub token
+          # Expose as TV/guardian token for later steps
           {
-            echo "GITHUB_TOKEN=${TOKEN}"
-            echo "GH_TOKEN=${TOKEN}"
+            echo "GUARDIAN_PAT=${TOKEN}"
             echo "STEG_TOKEN=${TOKEN}"
           } >> "$GITHUB_ENV"
 
           git config --global user.name  "StegVerse Guardian Worker"
           git config --global user.email "guardian-worker@stegverse.local"
 
-          # Force all https://github.com/... URLs to use the PAT
+          # Force https URLs to use the PAT by default
           git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+          # Make absolutely sure origin uses the PAT (avoids GitHub App token)
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -62,43 +64,56 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          # PyYAML is used in ASL + workflow parsing; add more here if needed
           pip install pyyaml
 
-      - name: Run Workflow Health Guardian (ASL-1, report-only)
+      - name: Run Workflow Health Guardian (ASL-1, reports only)
         run: |
           set -euo pipefail
-          echo "=== StegVerse Guardian Worker: Workflow HEALTH (ASL-1) ==="
+          echo "=== Guardian: workflow_health (ASL-1) ==="
           python scripts/genesis/guardian_worker_workflows_health.py
-          echo "=== HEALTH worker completed ==="
 
       - name: Run Workflow Hygiene Guardian (ASL-2, auto-fix)
         run: |
           set -euo pipefail
-          echo "=== StegVerse Guardian Worker: Workflow HYGIENE (ASL-2) ==="
+          echo "=== Guardian: workflow_hygiene (ASL-2) ==="
           python scripts/genesis/guardian_worker_workflows_hygiene.py
-          echo "=== HYGIENE worker completed ==="
 
       - name: Show workflow diffs (if any)
         run: |
           set -euo pipefail
-          echo "=== Git diff after guardians ==="
+          echo "=== Git status after guardians ==="
           git status
-          git diff || true
+          echo ""
+          echo "=== Diffs under .github/workflows and reports/guardians ==="
+          git diff -- .github/workflows reports/guardians || true
 
       - name: Commit guardian changes (workflows + reports)
+        env:
+          GUARDIAN_PAT: ${{ env.GUARDIAN_PAT }}
         run: |
           set -euo pipefail
 
           git config user.name  "StegVerse Guardian Worker"
           git config user.email "guardian-worker@stegverse.local"
 
-          # Limit scope to workflows + guardian reports
-          if [ -n "$(git status --porcelain '.github/workflows' 'reports/guardians' 2>/dev/null || echo '')" ]; then
-            echo "Detected guardian changes; committing..."
-            git add .github/workflows reports/guardians || git add .github/workflows || true
-            git commit -m "Guardian Worker: workflows health & hygiene"
-            git push origin "${GITHUB_REF_NAME:-main}"
-          else
+          # Only look at workflows + guardian reports
+          CHANGES="$(git status --porcelain '.github/workflows' 'reports/guardians' 2>/dev/null || echo '')"
+
+          if [ -z "${CHANGES}" ]; then
             echo "No guardian changes to commit."
+            exit 0
           fi
+
+          echo "Detected guardian changes; committing..."
+          echo "${CHANGES}"
+
+          git add .github/workflows reports/guardians
+
+          git commit -m "Guardian Worker: workflows health & hygiene"
+
+          # Double-lock: ensure we push with PAT, not default GITHUB_TOKEN
+          if [ -n "${GUARDIAN_PAT:-}" ]; then
+            git remote set-url origin "https://x-access-token:${GUARDIAN_PAT}@github.com/${GITHUB_REPOSITORY}"
+          fi
+
+          git push origin "${GITHUB_REF_NAME:-main}"
