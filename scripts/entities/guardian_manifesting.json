@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "description": "StegVerse Guardian manifest: priorities, repos, and targets.",
+  "repos": [
+    "StegVerse-Labs/TVC",
+    "StegVerse-Labs/TV",
+    "StegVerse-Labs/hybrid-collab-bridge",
+    "StegVerse-Labs/StegVerse-SCW",
+    "StegVerse-Labs/Continuity"
+  ],
+  "critical_workflows": {
+    "StegVerse-Labs/TVC": [
+      "StegTV Connectivity Autopatch",
+      "StegVerse Multi-Repo Autopatch"
+    ],
+    "StegVerse-Labs/TV": [
+      "StegVerse Autopatch"
+    ],
+    "StegVerse-Labs/hybrid-collab-bridge": [
+      "StegVerse Connectivity Entity (Hybrid-Collab-Bridge)"
+    ],
+    "StegVerse-Labs/StegVerse-SCW": [
+      "StegVerse Autopatch",
+      "StegVerse Multi-Repo Autopatch",
+      "Economic Snapshot"
+    ],
+    "StegVerse-Labs/Continuity": [
+      "StegVerse Autopatch"
+    ]
+  },
+  "readme_targets": {
+    "StegVerse-Labs/TVC": [
+      "README.md"
+    ],
+    "StegVerse-Labs/TV": [
+      "README.md"
+    ],
+    "StegVerse-Labs/hybrid-collab-bridge": [
+      "README.md",
+      "README-HCB.md"
+    ],
+    "StegVerse-Labs/StegVerse-SCW": [
+      "README.md",
+      "README_OPS.md"
+    ],
+    "StegVerse-Labs/Continuity": [
+      "README.md"
+    ]
+  },
+  "task_priorities": {
+    "workflow_health": 1,
+    "readme_refresh": 2
+  },
+  "reports_dir": "reports/guardians"
+}
