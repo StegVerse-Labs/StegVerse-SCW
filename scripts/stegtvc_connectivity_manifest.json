@@ -4,9 +4,9 @@
   "source_repo": "StegVerse-Labs/TVC",
 
   "source_paths": {
-    "stegtvc_config.json": "data/tv_config.json",
+    "stegtv_config.json": "data/stegtvc_config.json",
     "resolver.py": "app/resolver.py",
-    "stegtvc_resolver.py": ".github/stegtvc_client.py"
+    "stegtvc_resolver.py": "stegtvc_client.py"
   },
 
   "targets": [
