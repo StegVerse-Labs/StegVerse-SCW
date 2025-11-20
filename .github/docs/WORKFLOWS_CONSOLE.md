@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2025-11-19 14:39 UTC**_
+_Last updated: **2025-11-20 06:31 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **79**
+- ➖ No dispatch: **86**
 - ❌ Broken: **40**
-- Total: **119**
+- Total: **126**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -46,6 +46,10 @@ _Last updated: **2025-11-19 14:39 UTC**_
 | `fix_it.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/fix_it.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/fix_it.yml) · [File](.github/workflows/fix_it.yml) |
 | `force-setup-common-python.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/force-setup-common-python.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/force-setup-common-python.yml) · [File](.github/workflows/force-setup-common-python.yml) |
 | `forward-to-bridge.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/forward-to-bridge.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/forward-to-bridge.yml) · [File](.github/workflows/forward-to-bridge.yml) |
+| `genesis_boot.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/genesis_boot.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/genesis_boot.yml) · [File](.github/workflows/genesis_boot.yml) |
+| `genesis_economic_snapshot.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/genesis_economic_snapshot.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/genesis_economic_snapshot.yml) · [File](.github/workflows/genesis_economic_snapshot.yml) |
+| `genesis_financial_audit.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/genesis_financial_audit.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/genesis_financial_audit.yml) · [File](.github/workflows/genesis_financial_audit.yml) |
+| `genesis_financial_telemetry.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/genesis_financial_telemetry.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/genesis_financial_telemetry.yml) · [File](.github/workflows/genesis_financial_telemetry.yml) |
 | `hcb-pipeline.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hcb-pipeline.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hcb-pipeline.yml) · [File](.github/workflows/hcb-pipeline.yml) |
 | `hybrid_bridge_ci.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hybrid_bridge_ci.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hybrid_bridge_ci.yml) · [File](.github/workflows/hybrid_bridge_ci.yml) |
 | `hybrid_bridge_functional.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hybrid_bridge_functional.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hybrid_bridge_functional.yml) · [File](.github/workflows/hybrid_bridge_functional.yml) |
@@ -98,7 +102,10 @@ _Last updated: **2025-11-19 14:39 UTC**_
 | `smoke_api_worker.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/smoke_api_worker.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/smoke_api_worker.yml) · [File](.github/workflows/smoke_api_worker.yml) |
 | `stegcore_governance_bootstrap.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegcore_governance_bootstrap.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegcore_governance_bootstrap.yml) · [File](.github/workflows/stegcore_governance_bootstrap.yml) |
 | `stegtalk_writer.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegtalk_writer.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegtalk_writer.yml) · [File](.github/workflows/stegtalk_writer.yml) |
+| `stegtvc_connectivity_autopatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegtvc_connectivity_autopatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegtvc_connectivity_autopatch.yml) · [File](.github/workflows/stegtvc_connectivity_autopatch.yml) |
+| `stegtvc_connectivity_sync.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegtvc_connectivity_sync.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegtvc_connectivity_sync.yml) · [File](.github/workflows/stegtvc_connectivity_sync.yml) |
 | `stegverse-multi-autopatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegverse-multi-autopatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegverse-multi-autopatch.yml) · [File](.github/workflows/stegverse-multi-autopatch.yml) |
+| `stegverse_hypercore_selfcheck.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegverse_hypercore_selfcheck.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/stegverse_hypercore_selfcheck.yml) · [File](.github/workflows/stegverse_hypercore_selfcheck.yml) |
 | `structure_on_demand.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/structure_on_demand.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/structure_on_demand.yml) · [File](.github/workflows/structure_on_demand.yml) |
 | `supercheck_remote.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/supercheck_remote.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/supercheck_remote.yml) · [File](.github/workflows/supercheck_remote.yml) |
 | `sweep_all.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/sweep_all.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/sweep_all.yml) · [File](.github/workflows/sweep_all.yml) |
