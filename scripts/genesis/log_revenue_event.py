@@ -14,7 +14,16 @@ import uuid
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+# Auto-discover repo root by walking upward until .git or ledger/ is found
+def find_repo_root(start: Path) -> Path:
+    p = start
+    for _ in range(10):
+        if (p / ".git").exists() or (p / "ledger").exists():
+            return p
+        p = p.parent
+    raise RuntimeError("Could not locate repository root")
+
+ROOT = find_repo_root(Path(__file__).resolve())
 EVENTS_DIR = ROOT / "ledger" / "events"
 EVENTS_FILE = EVENTS_DIR / "revenue_events.jsonl"
 
