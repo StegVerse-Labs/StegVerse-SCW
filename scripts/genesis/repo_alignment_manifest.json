@@ -1,0 +1,42 @@
+{
+  "version": "genesis.v0.2",
+  "org_default": "StegVerse-Labs",
+  "branch_default": "main",
+
+  "repos": [
+    { "repo": "StegVerse-Labs/StegVerse-SCW", "branch": "main", "enabled": true, "priority": 1, "role": "scw" },
+    { "repo": "StegVerse-Labs/tv",           "branch": "main", "enabled": true, "priority": 1, "role": "token-vault" },
+    { "repo": "StegVerse-Labs/site",         "branch": "main", "enabled": true, "priority": 1, "role": "web" },
+    { "repo": "StegVerse-Labs/sandbox",      "branch": "main", "enabled": true, "priority": 1, "role": "sandbox" },
+
+    { "repo": "StegVerse-Labs/Continuity",   "branch": "main", "enabled": true, "priority": 2, "role": "continuity" },
+    { "repo": "StegVerse-Labs/socialupdater","branch": "main", "enabled": true, "priority": 2, "role": "social" },
+    { "repo": "StegVerse-Labs/VAwatchdog",   "branch": "main", "enabled": true, "priority": 2, "role": "va" },
+
+    { "repo": "StegVerse-Labs/FREE-DOM",     "branch": "main", "enabled": true, "priority": 2, "role": "books-core" },
+    { "repo": "StegVerse-Labs/Biography",    "branch": "main", "enabled": true, "priority": 2, "role": "biography-core" },
+    { "repo": "StegVerse-Labs/3I-Atlas",     "branch": "main", "enabled": true, "priority": 2, "role": "fiction-core" },
+
+    { "repo": "StegVerse-Labs/StegCore",     "branch": "main", "enabled": true, "priority": 1, "role": "core-engine" },
+    { "repo": "StegVerse-Labs/StegTalk",     "branch": "main", "enabled": true, "priority": 2, "role": "messaging" },
+    { "repo": "StegVerse-Labs/StegHeal",     "branch": "main", "enabled": true, "priority": 2, "role": "healing" },
+    { "repo": "StegVerse-Labs/StegArchive",  "branch": "main", "enabled": true, "priority": 3, "role": "archive" },
+    { "repo": "StegVerse-Labs/StegLearn",    "branch": "main", "enabled": true, "priority": 3, "role": "learning" },
+    { "repo": "StegVerse-Labs/StegBusiness", "branch": "main", "enabled": true, "priority": 3, "role": "business" }
+  ],
+
+  "placeholders": {
+    "FREE_DOM_books_expected": 12,
+    "FREE_DOM_books_pattern": "StegVerse-Labs/FREE-DOM-Book{n}",
+    "BIO_shards_expected": ["Epsteinality", "Trumpality", "EliteEra", "VAwatchdog"],
+    "BIO_shards_pattern": "StegVerse-Labs/Biography-{name}"
+  },
+
+  "checks": {
+    "require_readme": true,
+    "require_license": true,
+    "require_ci_workflow": true,
+    "require_topics_file": false,
+    "workflow_dispatch_required": true
+  }
+}
