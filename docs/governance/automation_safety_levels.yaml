@@ -84,6 +84,10 @@ tasks:
   readme_refresh:
     level: ASL-1
     notes: "Safe to auto-generate missing README.md files."
+  
+  repo_alignment_check:
+    level: "ASL-1"
+    notes: "Read-only scan of StegVerse org for cross-repo alignment."
 
   # Example future tasks:
   workflow_hygiene:
@@ -97,11 +101,16 @@ tasks:
   runtime_refactor:
     level: ASL-3
     notes: "Code changes must go via PR."
-
+  
+  repo_alignment_fix:
+    level: "ASL-3"
+    notes: "Safe scaffolding auto-fixes in failing repos. Never edits workflows unless explicitly enabled."
+    
   economic_snapshot:
     level: ASL-5
     notes: "Read-only ledger snapshot; no write access to transaction rules."
-
+  
   financial_engine_change:
     level: ASL-5
     notes: "Proposal-only; no automatic changes."
+  
