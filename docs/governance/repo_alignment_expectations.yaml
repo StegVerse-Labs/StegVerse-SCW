@@ -1,0 +1,30 @@
+version: 1
+description: "Cross-repo communication + file-sharing alignment baseline"
+
+# Repos to scan. Add more here anytime.
+targets:
+  - repo: "StegVerse-Labs/TVC"
+  - repo: "StegVerse-Labs/hybrid-collab-bridge"
+  - repo: "StegVerse-Labs/TV"
+  - repo: "StegVerse-Labs/StegVerse-SCW"
+
+# Files that MUST exist in each repo for connectivity & file-sharing.
+required_files:
+  - ".github/workflows/autopatch.yml"
+  - ".github/workflows/workflows-status-badges.yml"
+  - "data/stegtvc_config.json"
+  - "app/resolver.py"
+  - ".github/stegtvc_client.py"
+
+# Workflows that should exist (names are matched loosely by file path).
+required_workflows:
+  - ".github/workflows/autopatch.yml"
+  - ".github/workflows/guardian_omni_guardian.yml"
+  - ".github/workflows/guardian_worker_readmes.yml"
+
+# Optional checks. If API access doesn't allow them, they become "unknown" not fail.
+optional_checks:
+  ensure_workflow_dispatch: true
+  check_repo_secrets_names:
+    - "PAT_WORKFLOW"
+    - "GH_STEGVERSE_PAT"
