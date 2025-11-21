@@ -1,0 +1,90 @@
+name: StegVerse Guardian Worker – Repo Alignment Fixer
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "10 8 * * *"
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  alignment_fixer:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+          echo "::add-mask::${TOKEN}"
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+          git config --global user.name  "StegVerse Alignment Fixer"
+          git config --global user.email "alignment-fixer@stegverse.local"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install GitHub CLI (if missing)
+        run: |
+          if ! command -v gh >/dev/null 2>&1; then
+            type -p apt-get && sudo apt-get update && sudo apt-get install -y gh || true
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          set -euo pipefail
+          pip install requests pyyaml
+
+      - name: Run Alignment Fixer (only if failures exist)
+        run: |
+          set -euo pipefail
+          if [ ! -f reports/guardians/repo_alignment_latest.json ]; then
+            echo "No alignment report found; run alignment check first."
+            exit 0
+          fi
+          FAILS=$(python - <<'PY'
+import json, pathlib
+p = pathlib.Path("reports/guardians/repo_alignment_latest.json")
+j = json.loads(p.read_text())
+print(len([r for r in j.get("results",[]) if r.get("status")=="fail"]))
+PY
+)
+          if [ "$FAILS" -eq 0 ]; then
+            echo "No failures in alignment report, skipping fixer."
+            exit 0
+          fi
+          python scripts/genesis/guardian_repo_alignment_fixer.py
+
+      - name: Commit fixer reports (if changed)
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain 'reports/guardians/repo_alignment_fixer_latest.*' 'reports/guardians/repo_alignment_fix_history.json' 2>/dev/null || echo '')" ]; then
+            git add reports/guardians/repo_alignment_fixer_latest.json \
+                    reports/guardians/repo_alignment_fixer_latest.md \
+                    reports/guardians/repo_alignment_fix_history.json
+            git commit -m "Guardian: update alignment fixer reports"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No fixer report changes to commit."
+          fi
