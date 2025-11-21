@@ -1,0 +1,73 @@
+name: StegVerse Guardian Worker – Repo Alignment Check
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "25 8 * * *"   # daily, safe read-only check
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  alignment_check:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}  # Classic PAT (Option B)
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Classic PAT & configure git
+        run: |
+          set -euo pipefail
+          TOKEN="${PAT_WORKFLOW:-}"
+          if [ -z "$TOKEN" ]; then
+            echo "ERROR: PAT_WORKFLOW (Classic PAT) is required for Option B."
+            exit 1
+          fi
+
+          echo "::add-mask::${TOKEN}"
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Guardian (Alignment Check)"
+          git config --global user.email "guardian-alignment@stegverse.local"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install PyYAML requests
+
+      - name: Run Repo Alignment Check (ASL-1)
+        run: |
+          set -euo pipefail
+          echo "=== Repo Alignment Check (Genesis v0.2) ==="
+          python scripts/genesis/repo_alignment_check.py \
+            --manifest scripts/genesis/repo_alignment_manifest.json \
+            --write-latest
+
+      - name: Commit alignment reports (if changed)
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain reports/guardians scripts/reports 2>/dev/null || true)" ]; then
+            git add reports/guardians scripts/reports || true
+            git commit -m "Guardian: update repo alignment report"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No alignment report changes to commit."
+          fi
