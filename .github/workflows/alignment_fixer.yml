@@ -1,0 +1,82 @@
+name: StegVerse Guardian Worker – Repo Alignment Auto-Fixer
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "55 8 * * *"   # daily after alignment_check
+
+permissions:
+  contents: write
+  workflows: write
+  issues: write
+
+jobs:
+  alignment_fixer:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}  # Classic PAT (Option B)
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Classic PAT & configure git
+        run: |
+          set -euo pipefail
+          TOKEN="${PAT_WORKFLOW:-}"
+          if [ -z "$TOKEN" ]; then
+            echo "ERROR: PAT_WORKFLOW (Classic PAT) is required for Option B."
+            exit 1
+          fi
+
+          echo "::add-mask::${TOKEN}"
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Guardian (Alignment Fixer)"
+          git config --global user.email "guardian-fixer@stegverse.local"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install PyYAML requests
+
+      - name: Run Alignment Auto-Fixer (ASL-3)
+        run: |
+          set -euo pipefail
+          echo "=== Repo Alignment Auto-Fixer (Genesis v0.2) ==="
+
+          # If latest report is missing, skip safely.
+          if [ ! -f reports/guardians/repo_alignment_latest.json ]; then
+            echo "No latest alignment report found; skipping."
+            exit 0
+          fi
+
+          python scripts/genesis/repo_alignment_fixer.py \
+            --manifest scripts/genesis/repo_alignment_manifest.json \
+            --latest reports/guardians/repo_alignment_latest.json \
+            --apply
+
+      - name: Commit fixer reports (if changed)
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain reports/guardians scripts/reports 2>/dev/null || true)" ]; then
+            git add reports/guardians scripts/reports || true
+            git commit -m "Guardian: update alignment fixer report"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No fixer report changes to commit."
+          fi
