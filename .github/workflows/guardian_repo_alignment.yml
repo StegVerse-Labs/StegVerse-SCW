@@ -1,0 +1,77 @@
+name: StegVerse Guardian Worker – Repo Alignment
+
+on:
+  workflow_dispatch: {}
+  # optional once daily
+  # schedule:
+  #   - cron: "30 9 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  alignment:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+      PAT_WORKFLOW_FG: ${{ secrets.PAT_WORKFLOW_FG }}
+      STEGVERSE_ORG: StegVerse-Labs
+      # If this run is using classic PAT, set:
+      STEGVERSE_PAT_TYPE: fine-grained
+      # If you *know* the token has workflows:write, flip to "1":
+      STEGVERSE_WORKFLOWS_WRITE: "0"
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+          TOKEN="${PAT_WORKFLOW_FG:-${GH_STEGVERSE_PAT:-${PAT_WORKFLOW:-}}}"
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: No PAT found."
+            exit 1
+          fi
+          echo "::add-mask::${TOKEN}"
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Guardian Worker"
+          git config --global user.email "guardian-worker@stegverse.local"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Install deps
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install pyyaml || true
+
+      - name: Run Repo Alignment Check (ASL-1)
+        run: |
+          set -euo pipefail
+          python scripts/genesis/guardian_worker_repo_alignment_check.py
+
+      - name: Commit alignment reports (if changed)
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain 'reports/guardians' 2>/dev/null || echo '')" ]; then
+            git add reports/guardians
+            git commit -m "Guardian: update repo alignment report"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No report changes."
+          fi
+
+      - name: Run Repo Alignment Auto-Fixer (ASL-3)
+        run: |
+          set -euo pipefail
+          python scripts/genesis/guardian_worker_repo_alignment_fix.py
