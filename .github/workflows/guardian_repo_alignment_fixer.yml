@@ -64,12 +64,12 @@ jobs:
             exit 0
           fi
           FAILS=$(python - <<'PY'
-import json, pathlib
-p = pathlib.Path("reports/guardians/repo_alignment_latest.json")
-j = json.loads(p.read_text())
-print(len([r for r in j.get("results",[]) if r.get("status")=="fail"]))
-PY
-)
+            import json, pathlib
+            p = pathlib.Path("reports/guardians/repo_alignment_latest.json")
+            j = json.loads(p.read_text())
+            print(len([r for r in j.get("results",[]) if r.get("status")=="fail"]))
+            PY
+            )
           if [ "$FAILS" -eq 0 ]; then
             echo "No failures in alignment report, skipping fixer."
             exit 0
