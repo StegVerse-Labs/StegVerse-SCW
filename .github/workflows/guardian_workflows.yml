@@ -1,0 +1,85 @@
+name: StegVerse Guardian Worker – Workflows (Health + Hygiene)
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "10 9 * * *"   # daily, after fixer
+
+permissions:
+  contents: write
+  workflows: write
+  issues: write
+  actions: read
+
+jobs:
+  guardian_workflows:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}  # Classic PAT (Option B)
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Classic PAT & configure git
+        run: |
+          set -euo pipefail
+          TOKEN="${PAT_WORKFLOW:-}"
+          if [ -z "$TOKEN" ]; then
+            echo "ERROR: PAT_WORKFLOW (Classic PAT) is required for Option B."
+            exit 1
+          fi
+
+          echo "::add-mask::${TOKEN}"
+          {
+            echo "GITHUB_TOKEN=${TOKEN}"
+            echo "GH_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
+          } >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Guardian (Workflows)"
+          git config --global user.email "guardian-workflows@stegverse.local"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install guardian deps
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install PyYAML requests
+
+      - name: Run Workflow Health Guardian (ASL-1)
+        run: |
+          set -euo pipefail
+          echo "=== Workflow Health Guardian ==="
+          python scripts/genesis/guardian_worker_workflows_health.py
+
+      - name: Run Workflow Hygiene Guardian (ASL-2)
+        run: |
+          set -euo pipefail
+          echo "=== Workflow Hygiene Guardian ==="
+          python scripts/genesis/guardian_worker_workflows_hygiene.py
+
+      - name: Show workflow diffs (if any)
+        run: |
+          set -euo pipefail
+          git status --porcelain .github/workflows || true
+          git diff .github/workflows || true
+
+      - name: Commit guardian changes (workflows + reports)
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain .github/workflows reports/guardians scripts/reports 2>/dev/null || true)" ]; then
+            git add .github/workflows reports/guardians scripts/reports || true
+            git commit -m "Guardian Worker: workflows health & hygiene"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No guardian workflow/report changes to commit."
+          fi
