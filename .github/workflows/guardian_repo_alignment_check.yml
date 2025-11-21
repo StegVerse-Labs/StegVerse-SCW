@@ -1,0 +1,64 @@
+name: StegVerse Guardian Worker – Repo Alignment Check
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "40 7 * * *"  # daily @ 07:40 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  alignment_check:
+    runs-on: ubuntu-latest
+
+    env:
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve token & configure git
+        run: |
+          set -euo pipefail
+          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            exit 1
+          fi
+          echo "::add-mask::${TOKEN}"
+          echo "GITHUB_TOKEN=${TOKEN}" >> "$GITHUB_ENV"
+
+          git config --global user.name  "StegVerse Repo Alignment Guardian"
+          git config --global user.email "alignment-guardian@stegverse.local"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          set -euo pipefail
+          pip install requests pyyaml
+
+      - name: Run Repo Alignment Check
+        run: |
+          set -euo pipefail
+          python scripts/genesis/guardian_repo_alignment_check.py
+
+      - name: Commit alignment reports (if changed)
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain 'reports/guardians/repo_alignment_latest.*' 2>/dev/null || echo '')" ]; then
+            git add reports/guardians/repo_alignment_latest.json reports/guardians/repo_alignment_latest.md
+            git commit -m "Guardian: update repo alignment report"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No alignment report changes to commit."
+          fi
