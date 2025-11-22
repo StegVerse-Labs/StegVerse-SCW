@@ -1,6 +1,6 @@
 # StegVerse Repo Alignment Report
 
-- Generated: `2025-11-21T15:54:10+00:00`
+- Generated: `2025-11-22T05:18:15+00:00`
 - Org: `StegVerse-Labs`
 - Repos scanned: **14**
 - Pass: **0**
@@ -26,7 +26,7 @@
   - `has_root_readme`: ✅
   - `has_asl_config`: ❌
   - `has_steglink`: ❌
-  - `has_docs_dir`: ❌
+  - `has_docs_dir`: ✅
   - `has_scripts_dir`: ✅
   - `has_workflows_dir`: ✅
   - `has_any_workflow_dispatch`: ✅

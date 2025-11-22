@@ -3,8 +3,8 @@
   "repos_pass": 0,
   "repos_fail": 14,
   "repos_error": 0,
-  "ts_utc": "2025-11-21T15:54:10+00:00",
-  "rid": "1763740450",
+  "ts_utc": "2025-11-22T05:18:15+00:00",
+  "rid": "1763788695",
   "org": "StegVerse-Labs",
   "repos": [
     {
@@ -35,7 +35,7 @@
         "has_root_readme": true,
         "has_asl_config": false,
         "has_steglink": false,
-        "has_docs_dir": false,
+        "has_docs_dir": true,
         "has_scripts_dir": true,
         "has_workflows_dir": true,
         "has_any_workflow_dispatch": true,
