@@ -1,10 +1,10 @@
 # Ops Console
 
-_Last updated: **2025-11-22 08:16 UTC**_
+_Last updated: **2025-11-22 08:20 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **104**
-- ❌ Broken: **41**
+- ➖ No dispatch: **105**
+- ❌ Broken: **40**
 - Total: **145**
 
 | Workflow | State | Actions |
@@ -84,7 +84,7 @@ _Last updated: **2025-11-22 08:16 UTC**_
 | `ops-console.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ops-console.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ops-console.yml) · [File](.github/workflows/ops-console.yml) |
 | `org_cleanup_autofix.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/org_cleanup_autofix.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/org_cleanup_autofix.yml) · [File](.github/workflows/org_cleanup_autofix.yml) |
 | `org_cleanup_worker.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/org_cleanup_worker.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/org_cleanup_worker.yml) · [File](.github/workflows/org_cleanup_worker.yml) |
-| `pat_auditor.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/pat_auditor.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/pat_auditor.yml) · [File](.github/workflows/pat_auditor.yml) |
+| `pat_auditor.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/pat_auditor.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/pat_auditor.yml) · [File](.github/workflows/pat_auditor.yml) |
 | `patch_artifacts_index.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_artifacts_index.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_artifacts_index.yml) · [File](.github/workflows/patch_artifacts_index.yml) |
 | `patch_convert_to_uploader.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_convert_to_uploader.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_convert_to_uploader.yml) · [File](.github/workflows/patch_convert_to_uploader.yml) |
 | `patch_triggers.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_triggers.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_triggers.yml) · [File](.github/workflows/patch_triggers.yml) |
