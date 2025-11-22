@@ -1,0 +1,52 @@
+name: StegVerse PAT Auditor
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        token:
+          - name: PAT_WORKFLOW_CLASSIC
+            secret: PAT_WORKFLOW
+          - name: PAT_WORKFLOW_FG
+            secret: PAT_WORKFLOW_FG
+          - name: GH_STEGVERSE_PAT_FG
+            secret: GH_STEGVERSE_PAT
+
+    steps:
+      - name: Check out StegVerse-SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run PAT audit for ${{ matrix.token.name }}
+        env:
+          TOKEN_NAME: ${{ matrix.token.name }}
+          TOKEN_VALUE: ${{ secrets[matrix.token.secret] }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN_VALUE:-}" ]; then
+            echo "⚠️ Secret '${{ matrix.token.secret }}' is empty or not set. Skipping."
+            exit 0
+          fi
+          echo "::add-mask::${TOKEN_VALUE}"
+          python scripts/genesis/pat_auditor.py
