@@ -1,280 +1,215 @@
 {
-  "repos_total": 14,
-  "repos_pass": 0,
-  "repos_fail": 14,
-  "repos_error": 0,
-  "ts_utc": "2025-11-22T05:18:15+00:00",
-  "rid": "1763788695",
-  "org": "StegVerse-Labs",
-  "repos": [
+  "summary": {
+    "repos_total": 4,
+    "repos_pass": 0,
+    "repos_fail": 4,
+    "repos_error": 0,
+    "ts_utc": "2025-11-22T07:44:51Z",
+    "rid": "19592463072"
+  },
+  "results": [
     {
-      "name": "StegVerse-Labs/3I-Atlas",
-      "url": "https://github.com/StegVerse-Labs/3I-Atlas",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": false,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": false,
-        "clone_ok": true
+      "repo": "StegVerse-Labs/TVC",
+      "status": "fail",
+      "required_files": {
+        ".github/workflows/autopatch.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/workflows/workflows-status-badges.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        "data/stegtvc_config.json": {
+          "ok": true,
+          "msg": "present"
+        },
+        "app/resolver.py": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/stegtvc_client.py": {
+          "ok": false,
+          "msg": "missing"
+        }
       },
-      "notes": [
-        "No workflow_dispatch found in any workflow (reporting only).",
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
+      "required_workflows": {
+        ".github/workflows/autopatch.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/workflows/guardian_omni_guardian.yml": {
+          "ok": false,
+          "msg": "missing"
+        },
+        ".github/workflows/guardian_worker_readmes.yml": {
+          "ok": false,
+          "msg": "missing"
+        }
+      },
+      "optional": {
+        "workflow_dispatch_missing_in": [],
+        "secrets_status": "ok",
+        "secrets_missing": []
+      },
+      "notes": []
     },
     {
-      "name": "StegVerse-Labs/Continuity",
-      "url": "https://github.com/StegVerse-Labs/Continuity",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": true,
-        "has_scripts_dir": true,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
+      "repo": "StegVerse-Labs/hybrid-collab-bridge",
+      "status": "fail",
+      "required_files": {
+        ".github/workflows/autopatch.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/workflows/workflows-status-badges.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        "data/stegtvc_config.json": {
+          "ok": true,
+          "msg": "present"
+        },
+        "app/resolver.py": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/stegtvc_client.py": {
+          "ok": true,
+          "msg": "present"
+        }
       },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
+      "required_workflows": {
+        ".github/workflows/autopatch.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/workflows/guardian_omni_guardian.yml": {
+          "ok": false,
+          "msg": "missing"
+        },
+        ".github/workflows/guardian_worker_readmes.yml": {
+          "ok": false,
+          "msg": "missing"
+        }
+      },
+      "optional": {
+        "workflow_dispatch_missing_in": [
+          ".github/workflows/ci.yml"
+        ],
+        "secrets_status": "ok",
+        "secrets_missing": []
+      },
+      "notes": []
     },
     {
-      "name": "StegVerse-Labs/Epsteinality",
-      "url": "https://github.com/StegVerse-Labs/Epsteinality",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": false,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
+      "repo": "StegVerse-Labs/TV",
+      "status": "fail",
+      "required_files": {
+        ".github/workflows/autopatch.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/workflows/workflows-status-badges.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        "data/stegtvc_config.json": {
+          "ok": true,
+          "msg": "present"
+        },
+        "app/resolver.py": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/stegtvc_client.py": {
+          "ok": false,
+          "msg": "missing"
+        }
       },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
+      "required_workflows": {
+        ".github/workflows/autopatch.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/workflows/guardian_omni_guardian.yml": {
+          "ok": false,
+          "msg": "missing"
+        },
+        ".github/workflows/guardian_worker_readmes.yml": {
+          "ok": false,
+          "msg": "missing"
+        }
+      },
+      "optional": {
+        "workflow_dispatch_missing_in": [
+          ".github/workflows/forward-to-bridge.yml",
+          ".github/workflows/tv_apply_reusable.yml",
+          ".github/workflows/tv_auto_heal.yml",
+          ".github/workflows/tv_self_heal_on_push.yml",
+          ".github/workflows/tv_verify_reusable.yml"
+        ],
+        "secrets_status": "ok",
+        "secrets_missing": []
+      },
+      "notes": []
     },
     {
-      "name": "StegVerse-Labs/FREE-DOM",
-      "url": "https://github.com/StegVerse-Labs/FREE-DOM",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": true,
-        "has_scripts_dir": true,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
+      "repo": "StegVerse-Labs/StegVerse-SCW",
+      "status": "fail",
+      "required_files": {
+        ".github/workflows/autopatch.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/workflows/workflows-status-badges.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        "data/stegtvc_config.json": {
+          "ok": true,
+          "msg": "present"
+        },
+        "app/resolver.py": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/stegtvc_client.py": {
+          "ok": false,
+          "msg": "missing"
+        }
       },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/Giuffre-ality",
-      "url": "https://github.com/StegVerse-Labs/Giuffre-ality",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": false,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
+      "required_workflows": {
+        ".github/workflows/autopatch.yml": {
+          "ok": true,
+          "msg": "present"
+        },
+        ".github/workflows/guardian_omni_guardian.yml": {
+          "ok": false,
+          "msg": "missing"
+        },
+        ".github/workflows/guardian_worker_readmes.yml": {
+          "ok": false,
+          "msg": "missing"
+        }
       },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/Governance",
-      "url": "https://github.com/StegVerse-Labs/Governance",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": true,
-        "has_scripts_dir": false,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": false,
-        "clone_ok": true
+      "optional": {
+        "workflow_dispatch_missing_in": [
+          ".github/workflows/autopatch_dryrun.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/ci_governance.yml",
+          ".github/workflows/docs-suite-on-complete.yml",
+          ".github/workflows/forward-to-bridge.yml",
+          ".github/workflows/setup-common-python.yml",
+          ".github/workflows/taskops-export-weekly.yml",
+          ".github/workflows/taskops-first-run-update.yml",
+          ".github/workflows/yaml_corrector.yml",
+          ".github/workflows/yaml_corrector_v2.yml"
+        ],
+        "secrets_status": "ok",
+        "secrets_missing": []
       },
-      "notes": [
-        "No workflow_dispatch found in any workflow (reporting only).",
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/Maxwellality",
-      "url": "https://github.com/StegVerse-Labs/Maxwellality",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": false,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
-      },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/Site",
-      "url": "https://github.com/StegVerse-Labs/Site",
-      "pass": false,
-      "checks": {
-        "has_root_readme": false,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": true,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
-      },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/StegBiography",
-      "url": "https://github.com/StegVerse-Labs/StegBiography",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": false,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": false,
-        "clone_ok": true
-      },
-      "notes": [
-        "No workflow_dispatch found in any workflow (reporting only).",
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/StegVerse-Healer",
-      "url": "https://github.com/StegVerse-Labs/StegVerse-Healer",
-      "pass": false,
-      "checks": {
-        "has_root_readme": false,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": false,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": false,
-        "clone_ok": true
-      },
-      "notes": [
-        "No workflow_dispatch found in any workflow (reporting only).",
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/StegVerse-SCW",
-      "url": "https://github.com/StegVerse-Labs/StegVerse-SCW",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": true,
-        "has_steglink": false,
-        "has_docs_dir": true,
-        "has_scripts_dir": true,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
-      },
-      "notes": [
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/TVC",
-      "url": "https://github.com/StegVerse-Labs/TVC",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": false,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
-      },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/Trumpality",
-      "url": "https://github.com/StegVerse-Labs/Trumpality",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": true,
-        "has_scripts_dir": true,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
-      },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
-    },
-    {
-      "name": "StegVerse-Labs/hybrid-collab-bridge",
-      "url": "https://github.com/StegVerse-Labs/hybrid-collab-bridge",
-      "pass": false,
-      "checks": {
-        "has_root_readme": true,
-        "has_asl_config": false,
-        "has_steglink": false,
-        "has_docs_dir": false,
-        "has_scripts_dir": true,
-        "has_workflows_dir": true,
-        "has_any_workflow_dispatch": true,
-        "clone_ok": true
-      },
-      "notes": [
-        "Missing docs/governance/automation_safety_levels.yaml (fixer can add).",
-        "Missing docs/stegverse/.steglink.(json|yaml) (fixer can add)."
-      ]
+      "notes": []
     }
   ]
 }
