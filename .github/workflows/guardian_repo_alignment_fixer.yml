@@ -1,19 +1,23 @@
-name: StegVerse Guardian Worker – Repo Alignment Fixer
+name: StegVerse Guardian Worker – Repo Alignment Auto-Fixer
 
 on:
   workflow_dispatch: {}
-  schedule:
-    - cron: "10 8 * * *"
+  # Optional scheduled run once stable
+  # schedule:
+  #   - cron: "40 8 * * *"
 
 permissions:
   contents: write
   actions: write
+  issues: write
 
 jobs:
   alignment_fixer:
     runs-on: ubuntu-latest
 
     env:
+      # Prefer fine-grained workflow PAT first (Option B)
+      PAT_WORKFLOW_FG: ${{ secrets.PAT_WORKFLOW_FG }}
       PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
       GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
 
@@ -24,27 +28,30 @@ jobs:
           fetch-depth: 0
 
       - name: Resolve token & configure git
+        shell: bash
         run: |
           set -euo pipefail
-          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
+
+          TOKEN="${PAT_WORKFLOW_FG:-${PAT_WORKFLOW:-${GH_STEGVERSE_PAT:-}}}"
+
           if [ -z "${TOKEN}" ]; then
-            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
+            echo "ERROR: No PAT found (PAT_WORKFLOW_FG / PAT_WORKFLOW / GH_STEGVERSE_PAT)."
             exit 1
           fi
+
           echo "::add-mask::${TOKEN}"
+
           {
             echo "GITHUB_TOKEN=${TOKEN}"
             echo "GH_TOKEN=${TOKEN}"
+            echo "STEG_TOKEN=${TOKEN}"
           } >> "$GITHUB_ENV"
-          git config --global user.name  "StegVerse Alignment Fixer"
-          git config --global user.email "alignment-fixer@stegverse.local"
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
-      - name: Install GitHub CLI (if missing)
-        run: |
-          if ! command -v gh >/dev/null 2>&1; then
-            type -p apt-get && sudo apt-get update && sudo apt-get install -y gh || true
-          fi
+          git config --global user.name  "StegVerse Guardian Worker"
+          git config --global user.email "guardian-worker@stegverse.local"
+
+          # Force https to use PAT
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -52,39 +59,46 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
+        shell: bash
         run: |
           set -euo pipefail
+          python -m pip install --upgrade pip
           pip install requests pyyaml
 
-      - name: Run Alignment Fixer (only if failures exist)
+      - name: Run Repo Alignment Check (ASL-1)
+        shell: bash
         run: |
           set -euo pipefail
-          if [ ! -f reports/guardians/repo_alignment_latest.json ]; then
-            echo "No alignment report found; run alignment check first."
-            exit 0
-          fi
-          FAILS=$(python - <<'PY'
-            import json, pathlib
-            p = pathlib.Path("reports/guardians/repo_alignment_latest.json")
-            j = json.loads(p.read_text())
-            print(len([r for r in j.get("results",[]) if r.get("status")=="fail"]))
-            PY
-            )
-          if [ "$FAILS" -eq 0 ]; then
-            echo "No failures in alignment report, skipping fixer."
-            exit 0
-          fi
-          python scripts/genesis/guardian_repo_alignment_fixer.py
+          echo "=== Repo Alignment Check (pre-fix) ==="
+          python scripts/genesis/repo_alignment_check.py
+
+      - name: Run Repo Alignment Auto-Fixer (ASL-3)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== Repo Alignment Auto-Fixer ==="
+          python scripts/genesis/repo_alignment_autofixer.py
 
       - name: Commit fixer reports (if changed)
+        shell: bash
         run: |
           set -euo pipefail
-          if [ -n "$(git status --porcelain 'reports/guardians/repo_alignment_fixer_latest.*' 'reports/guardians/repo_alignment_fix_history.json' 2>/dev/null || echo '')" ]; then
-            git add reports/guardians/repo_alignment_fixer_latest.json \
-                    reports/guardians/repo_alignment_fixer_latest.md \
-                    reports/guardians/repo_alignment_fix_history.json
-            git commit -m "Guardian: update alignment fixer reports"
+
+          git config user.name  "StegVerse Guardian Worker"
+          git config user.email "guardian-worker@stegverse.local"
+
+          if [ -n "$(git status --porcelain 'reports/guardians' 2>/dev/null || echo '')" ]; then
+            echo "Detected fixer report changes; committing..."
+            git add reports/guardians
+            git commit -m "Guardian: update repo alignment fixer report"
             git push origin "${GITHUB_REF_NAME:-main}"
           else
             echo "No fixer report changes to commit."
           fi
+
+      - name: Re-run Alignment Check (post-fix)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== Repo Alignment Check (post-fix) ==="
+          python scripts/genesis/repo_alignment_check.py
