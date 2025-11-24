@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2025-11-24 08:24 UTC**_
+_Last updated: **2025-11-24 21:26 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **105**
+- ➖ No dispatch: **108**
 - ❌ Broken: **40**
-- Total: **145**
+- Total: **148**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -85,6 +85,7 @@ _Last updated: **2025-11-24 08:24 UTC**_
 | `org_cleanup_autofix.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/org_cleanup_autofix.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/org_cleanup_autofix.yml) · [File](.github/workflows/org_cleanup_autofix.yml) |
 | `org_cleanup_worker.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/org_cleanup_worker.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/org_cleanup_worker.yml) · [File](.github/workflows/org_cleanup_worker.yml) |
 | `pat_auditor.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/pat_auditor.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/pat_auditor.yml) · [File](.github/workflows/pat_auditor.yml) |
+| `pat_secrets_guardian.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/pat_secrets_guardian.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/pat_secrets_guardian.yml) · [File](.github/workflows/pat_secrets_guardian.yml) |
 | `patch_artifacts_index.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_artifacts_index.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_artifacts_index.yml) · [File](.github/workflows/patch_artifacts_index.yml) |
 | `patch_convert_to_uploader.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_convert_to_uploader.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_convert_to_uploader.yml) · [File](.github/workflows/patch_convert_to_uploader.yml) |
 | `patch_triggers.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_triggers.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_triggers.yml) · [File](.github/workflows/patch_triggers.yml) |
@@ -111,6 +112,7 @@ _Last updated: **2025-11-24 08:24 UTC**_
 | `scw-api-autodeploy.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-autodeploy.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-autodeploy.yml) · [File](.github/workflows/scw-api-autodeploy.yml) |
 | `scw-api-config-and-deploy.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-config-and-deploy.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-config-and-deploy.yml) · [File](.github/workflows/scw-api-config-and-deploy.yml) |
 | `scw-api-health-and-report.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-health-and-report.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-health-and-report.yml) · [File](.github/workflows/scw-api-health-and-report.yml) |
+| `scw_orchestrator.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_orchestrator.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_orchestrator.yml) · [File](.github/workflows/scw_orchestrator.yml) |
 | `seed-autodocs-verify.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-autodocs-verify.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-autodocs-verify.yml) · [File](.github/workflows/seed-autodocs-verify.yml) |
 | `seed-steg-config.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-steg-config.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-steg-config.yml) · [File](.github/workflows/seed-steg-config.yml) |
 | `seed_config.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed_config.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed_config.yml) · [File](.github/workflows/seed_config.yml) |
@@ -133,6 +135,7 @@ _Last updated: **2025-11-24 08:24 UTC**_
 | `taskops-first-run-regression.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-regression.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-regression.yml) · [File](.github/workflows/taskops-first-run-regression.yml) |
 | `taskops-first-run-update.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-update.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-update.yml) · [File](.github/workflows/taskops-first-run-update.yml) |
 | `taskops-nightly.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-nightly.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-nightly.yml) · [File](.github/workflows/taskops-nightly.yml) |
+| `token_smoke_test.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/token_smoke_test.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/token_smoke_test.yml) · [File](.github/workflows/token_smoke_test.yml) |
 | `universal_fixit.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/universal_fixit.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/universal_fixit.yml) · [File](.github/workflows/universal_fixit.yml) |
 | `validate-autopatch-manifest.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-autopatch-manifest.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-autopatch-manifest.yml) · [File](.github/workflows/validate-autopatch-manifest.yml) |
 | `validate-hcb.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-hcb.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-hcb.yml) · [File](.github/workflows/validate-hcb.yml) |
