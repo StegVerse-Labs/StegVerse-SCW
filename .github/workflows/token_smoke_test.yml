@@ -1,0 +1,32 @@
+name: Token Smoke Test
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
+    steps:
+      - name: Confirm token is present
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ GH_STEGVERSE_AI_TOKEN not injected."
+            exit 1
+          fi
+          echo "✅ Token injected (length ${#GH_TOKEN})."
+
+      - name: Who am I? (auth check)
+        run: |
+          echo "Checking authentication..."
+          gh auth status
+          gh api user --jq '{login: .login, id: .id}'
+
+      - name: List org repos (access check)
+        run: |
+          echo "Listing StegVerse-Labs repos visible to token..."
+          gh api orgs/StegVerse-Labs/repos --paginate --jq '.[].full_name' | head -n 50
