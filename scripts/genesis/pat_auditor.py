@@ -1,495 +1,384 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
-StegVerse PAT Auditor (Genesis v0.2)
+StegVerse PAT Auditor (ASL-1)
 
-Purpose
--------
-Audit GitHub Personal Access Tokens (classic + fine-grained) used by StegVerse
-workflows. Designed to run inside GitHub Actions, but also works locally.
+What it does:
+  - Discovers PATs from environment.
+  - Verifies each PAT can authenticate.
+  - Probes repo read/write access in up to two orgs.
+  - Detects workflow-write capability (common pain point).
+  - Writes markdown + json report to reports/pat_audit/.
 
-What it does
-------------
-For each token:
-  1. Verify token is valid and get who it belongs to.
-  2. List organizations visible to that token.
-  3. For a configured set of target orgs, test:
-       - org visibility/membership
-       - repo read access
-       - repo permission level (pull/push/admin; inferred)
-       - workflows read access
-  4. Write machine + human reports.
+How to pass PATs:
+  For each token define:
+    <KEY>_NAME = human label (string)
+    <KEY>_PAT  = token value (secret)
 
-Inputs (env)
-------------
-- PAT_NAME / PAT_TOKEN:
-    Audit a single token explicitly.
+  Example:
+    PAT_WORKFLOW_FG_NAME="PAT_WORKFLOW_FG"
+    PAT_WORKFLOW_FG_PAT="<secret>"
 
-OR
-
-- Any env var whose name matches one of:
-    * startswith("PAT_")  e.g., PAT_WORKFLOW_FG, PAT_WORKFLOW_CLASSIC
-    * endswith("_PAT")    e.g., GH_STEGVERSE_PAT
-  and is non-empty, will be audited.
-
-Optional config:
-- TARGET_ORGS: comma-separated org list to test (default: "StegVerse,StegVerse-Labs")
-- SAMPLE_REPO: repo name to test in each org (default: "StegVerse-SCW")
-               If absent in an org, auditor will pick the first repo it can list.
-- REPORT_DIR: output folder (default: "scripts/reports/pat_audit")
-
-Safety
-------
-- Read-only. No writes to any repo or workflow.
-- Redacts tokens in all output.
+Safety:
+  - Read-only GitHub API calls only.
+  - No mutations.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
-import datetime as _dt
 from dataclasses import dataclass, asdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
-
-GITHUB_API = "https://api.github.com"
-
-
-ROOT = Path(__file__).resolve().parents[2]  # .../StegVerse-SCW
-DEFAULT_REPORT_DIR = ROOT / "scripts" / "reports" / "pat_audit"
+ROOT = Path(__file__).resolve().parents[2]
+REPORT_DIR = ROOT / "reports" / "pat_audit"
 
 
-# -------------------------- helpers --------------------------
-
-def now_utc_iso() -> str:
-    return _dt.datetime.now(_dt.UTC).isoformat()
-
-
-def redact(token: str, show: int = 4) -> str:
-    if not token:
-        return ""
-    if len(token) <= show * 2:
-        return "*" * len(token)
-    return token[:show] + ("*" * (len(token) - show * 2)) + token[-show:]
-
-
-def env_tokens() -> Dict[str, str]:
-    """
-    Collect tokens to audit.
-    Priority:
-      1) Explicit PAT_NAME + PAT_TOKEN
-      2) Any PAT_* or *_PAT env vars
-    """
-    explicit_name = os.getenv("PAT_NAME")
-    explicit_token = os.getenv("PAT_TOKEN")
-
-    toks: Dict[str, str] = {}
-
-    if explicit_name and explicit_token:
-        toks[explicit_name.strip()] = explicit_token.strip()
-        return toks
-
-    for k, v in os.environ.items():
-        if not v or not isinstance(v, str):
-            continue
-        if k.startswith("PAT_") or k.endswith("_PAT"):
-            toks[k] = v.strip()
-
-    return toks
-
-
-def headers_for(token: str) -> Dict[str, str]:
-    return {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "stegverse-pat-auditor",
-    }
-
-
-def gh_get(token: str, path: str, params: Optional[Dict[str, Any]] = None) -> requests.Response:
-    return requests.get(f"{GITHUB_API}{path}", headers=headers_for(token), params=params or {})
-
-
-def summarize_response(r: requests.Response) -> Dict[str, Any]:
-    """
-    Safely summarize GitHub API responses.
-
-    Handles:
-      - JSON objects (dict)
-      - JSON lists
-      - Non-JSON responses
-    """
-    ct = r.headers.get("content-type", "")
-
-    summary: Dict[str, Any] = {
-        "status_code": r.status_code,
-        "type": None,
-        "message": None,
-        "size": None,
-        "url": r.url,
-    }
-
-    if "application/json" not in ct:
-        summary["type"] = "non-json"
-        try:
-            summary["message"] = r.text[:200]
-        except Exception:
-            pass
-        return summary
-
-    try:
-        j = r.json()
-
-        if isinstance(j, dict):
-            summary["type"] = "object"
-            summary["message"] = j.get("message")
-            summary["size"] = len(j)
-
-        elif isinstance(j, list):
-            summary["type"] = "list"
-            summary["size"] = len(j)
-            if j:
-                summary["message"] = str(j[0])[:200]
-
-        else:
-            summary["type"] = type(j).__name__
-
-    except Exception as e:
-        summary["type"] = "json-parse-error"
-        summary["message"] = str(e)
-
-    return summary
-
-
-def safe_json(r: requests.Response) -> Any:
-    try:
-        return r.json()
-    except Exception:
-        return None
-
-
-# -------------------------- models --------------------------
+# ---------------- Models ----------------
 
 @dataclass
-class RepoCheck:
-    org: str
-    repo: str
-    ok_repo_read: bool
-    permissions: Dict[str, bool]
-    ok_workflows_read: bool
-    notes: str = ""
+class ProbeResult:
+    ok: bool
+    status: int
+    message: Optional[str] = None
+    url: Optional[str] = None
+    detail: Optional[Any] = None
 
 
 @dataclass
-class OrgCheck:
-    org: str
-    ok_visible: bool
-    ok_member_or_public: bool
-    repo_check: Optional[RepoCheck]
-    notes: str = ""
+class PatAudit:
+    label: str
+    token_present: bool
+    auth_ok: bool
+    auth_login: Optional[str]
+    auth_type: Optional[str]
+    auth_scopes: List[str]
 
+    org_primary: str
+    org_secondary: str
 
-@dataclass
-class TokenAudit:
-    name: str
-    redacted: str
-    ok_user: bool
-    user_login: Optional[str]
-    user_id: Optional[int]
-    visible_orgs: List[str]
-    target_orgs: List[OrgCheck]
-    rate_limit: Optional[Dict[str, Any]]
+    primary_repo_sample: Optional[str]
+    secondary_repo_sample: Optional[str]
+
+    can_list_primary_repos: bool
+    can_list_secondary_repos: bool
+
+    can_push_primary_sample: bool
+    can_push_secondary_sample: bool
+
+    can_write_workflows_primary: bool
+    can_write_workflows_secondary: bool
+
     errors: List[str]
 
 
-# -------------------------- audit logic --------------------------
+# ---------------- GitHub helpers ----------------
 
-def audit_user(token: str) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
-    r = gh_get(token, "/user")
-    if r.status_code != 200:
-        return False, None, f"/user failed: {summarize_response(r)}"
-    return True, safe_json(r), None
-
-
-def list_orgs_visible(token: str) -> Tuple[List[str], Optional[str]]:
-    r = gh_get(token, "/user/orgs", params={"per_page": 200})
-    if r.status_code != 200:
-        return [], f"/user/orgs failed: {summarize_response(r)}"
-    data = safe_json(r) or []
-    orgs = [o.get("login") for o in data if isinstance(o, dict) and o.get("login")]
-    return orgs, None
+def gh_headers(token: str) -> Dict[str, str]:
+    return {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "StegVerse-PAT-Auditor",
+    }
 
 
-def check_org_visibility(token: str, org: str, visible_orgs: List[str]) -> OrgCheck:
-    # If org is in visible orgs list, we consider it visible.
-    ok_visible = org in visible_orgs
-
-    # If org not visible, could still be public-only access. We'll do a GET org.
-    r_org = gh_get(token, f"/orgs/{org}")
-    ok_org_get = r_org.status_code == 200
-
-    ok_member_or_public = ok_visible or ok_org_get
-
-    notes = ""
-    if not ok_member_or_public:
-        notes = f"Org not visible and /orgs/{org} not accessible: {summarize_response(r_org)}"
-
-    # Repo check will be filled separately
-    return OrgCheck(
-        org=org,
-        ok_visible=ok_visible,
-        ok_member_or_public=ok_member_or_public,
-        repo_check=None,
-        notes=notes
-    )
-
-
-def pick_sample_repo(token: str, org: str, sample_repo_env: str) -> Tuple[Optional[str], Optional[str]]:
-    # Prefer explicit SAMPLE_REPO
-    if sample_repo_env:
-        # verify it exists & is readable
-        r = gh_get(token, f"/repos/{org}/{sample_repo_env}")
-        if r.status_code == 200:
-            return sample_repo_env, None
-
-    # else list first repo we can see
-    r = gh_get(token, f"/orgs/{org}/repos", params={"per_page": 1})
-    if r.status_code != 200:
-        return None, f"Cannot list repos in {org}: {summarize_response(r)}"
-    data = safe_json(r) or []
-    if not data:
-        return None, f"No repos visible in {org} for this token."
-    first = data[0]
-    if isinstance(first, dict) and first.get("name"):
-        return first["name"], None
-    return None, f"Unexpected repo list shape for {org}."
-
-
-def check_repo_and_workflows(token: str, org: str, repo: str) -> RepoCheck:
-    notes = ""
-
-    # Repo read / permissions inference
-    r_repo = gh_get(token, f"/repos/{org}/{repo}")
-    ok_repo_read = r_repo.status_code == 200
-    perms = {"pull": False, "push": False, "admin": False, "maintain": False, "triage": False}
-
-    if ok_repo_read:
-        j = safe_json(r_repo) or {}
-        p = j.get("permissions") if isinstance(j, dict) else None
-        if isinstance(p, dict):
-            for k in perms:
-                if k in p:
-                    perms[k] = bool(p.get(k))
+def summarize_response(r: requests.Response) -> ProbeResult:
+    """
+    Robust summary that handles JSON object / list / plain text.
+    """
+    msg = None
+    detail = None
+    try:
+        ct = r.headers.get("content-type", "")
+        if "application/json" in ct:
+            j = r.json()
+            detail = j
+            if isinstance(j, dict):
+                msg = j.get("message")
+            elif isinstance(j, list):
+                # list responses don't have "message"
+                msg = None
         else:
-            notes += "Repo permissions not included in response (common for FG PATs). "
-    else:
-        notes += f"Repo GET failed: {summarize_response(r_repo)} "
+            detail = r.text[:500]
+    except Exception:
+        detail = r.text[:500] if hasattr(r, "text") else None
 
-    # Workflows read
-    r_wf = gh_get(token, f"/repos/{org}/{repo}/actions/workflows", params={"per_page": 1})
-    ok_workflows_read = r_wf.status_code == 200
-    if not ok_workflows_read:
-        notes += f"Workflows read failed: {summarize_response(r_wf)} "
-
-    return RepoCheck(
-        org=org,
-        repo=repo,
-        ok_repo_read=ok_repo_read,
-        permissions=perms,
-        ok_workflows_read=ok_workflows_read,
-        notes=notes.strip()
+    return ProbeResult(
+        ok=r.status_code < 400,
+        status=r.status_code,
+        message=msg,
+        url=r.url,
+        detail=detail,
     )
 
 
-def read_rate_limit(token: str) -> Optional[Dict[str, Any]]:
-    r = gh_get(token, "/rate_limit")
-    if r.status_code != 200:
-        return None
-    return safe_json(r)
+def gh_get(token: str, url: str) -> ProbeResult:
+    r = requests.get(url, headers=gh_headers(token), timeout=20)
+    return summarize_response(r)
 
 
-def audit_token(name: str, token: str, target_orgs: List[str], sample_repo_env: str) -> TokenAudit:
+def gh_post(token: str, url: str, json_body: Any) -> ProbeResult:
+    r = requests.post(url, headers=gh_headers(token), json=json_body, timeout=20)
+    return summarize_response(r)
+
+
+def whoami(token: str) -> Tuple[bool, Optional[str], Optional[str], List[str], Optional[str]]:
+    r = requests.get("https://api.github.com/user", headers=gh_headers(token), timeout=20)
+    scopes_hdr = r.headers.get("x-oauth-scopes", "") or ""
+    scopes = [s.strip() for s in scopes_hdr.split(",") if s.strip()]
+
+    if r.status_code >= 400:
+        pr = summarize_response(r)
+        return False, None, None, scopes, pr.message or "auth failed"
+
+    data = r.json()
+    login = data.get("login")
+    typ = data.get("type")
+    return True, login, typ, scopes, None
+
+
+def list_repos_in_org(token: str, org: str) -> Tuple[bool, Optional[str], int, Optional[str]]:
+    url = f"https://api.github.com/orgs/{org}/repos?per_page=1&type=all"
+    pr = gh_get(token, url)
+    if not pr.ok:
+        return False, None, pr.status, pr.message
+
+    sample_name = None
+    if isinstance(pr.detail, list) and pr.detail:
+        sample_name = pr.detail[0].get("name")
+    return True, sample_name, pr.status, None
+
+
+def probe_push(token: str, org: str, repo: str) -> bool:
+    """
+    Push-probe WITHOUT writing:
+      we check permission via repo endpoint + permissions block.
+    """
+    url = f"https://api.github.com/repos/{org}/{repo}"
+    pr = gh_get(token, url)
+    if not pr.ok or not isinstance(pr.detail, dict):
+        return False
+    perms = pr.detail.get("permissions") or {}
+    return bool(perms.get("push"))
+
+
+def probe_workflow_write(token: str, org: str, repo: str) -> bool:
+    """
+    Checks whether token appears to have workflow write capability.
+    We infer this from permissions + token scopes.
+
+    Note: GitHub does not expose workflow permission directly.
+    So:
+      - push on repo AND
+      - scopes include 'workflow' OR classic full-repo scope
+    """
+    auth_ok, _, _, scopes, _ = whoami(token)
+    if not auth_ok:
+        return False
+
+    can_push = probe_push(token, org, repo)
+    if not can_push:
+        return False
+
+    scope_set = set(scopes)
+    if "workflow" in scope_set:
+        return True
+    if "repo" in scope_set or "public_repo" in scope_set:
+        # classic broad scopes usually allow workflow updates *if org allows*
+        return True
+    return False
+
+
+# ---------------- PAT discovery ----------------
+
+def discover_pats_from_env() -> List[Tuple[str, str]]:
+    """
+    Finds env pairs <KEY>_NAME and <KEY>_PAT.
+    Returns list of (label, token).
+    """
+    env = dict(os.environ)
+    labels_tokens: List[Tuple[str, str]] = []
+
+    # Find all *_PAT keys
+    pat_keys = [k for k in env.keys() if k.endswith("_PAT")]
+    for pat_key in sorted(pat_keys):
+        base = pat_key[:-4]
+        name_key = base + "_NAME"
+        label = env.get(name_key, base)
+        token = env.get(pat_key, "")
+        if token.strip():
+            labels_tokens.append((label, token.strip()))
+
+    return labels_tokens
+
+
+# ---------------- Reporting ----------------
+
+def now_utc_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def write_reports(audits: List[PatAudit], org_primary: str, org_secondary: str) -> Tuple[Path, Path]:
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+    json_path = REPORT_DIR / f"pat_audit_{ts}.json"
+    md_path = REPORT_DIR / f"pat_audit_{ts}.md"
+
+    # JSON
+    json_data = {
+        "generated_at": now_utc_iso(),
+        "org_primary": org_primary,
+        "org_secondary": org_secondary,
+        "pat_count": len(audits),
+        "audits": [asdict(a) for a in audits],
+    }
+    json_path.write_text(json.dumps(json_data, indent=2), encoding="utf-8")
+
+    # Markdown
+    lines = []
+    lines.append("# StegVerse PAT Audit Report")
+    lines.append("")
+    lines.append(f"- Generated at (UTC): `{now_utc_iso()}`")
+    lines.append(f"- Primary org: `{org_primary}`")
+    lines.append(f"- Secondary org: `{org_secondary}`")
+    lines.append(f"- PATs audited: `{len(audits)}`")
+    lines.append("")
+
+    for a in audits:
+        status = "✅ PASS" if (a.auth_ok and (a.can_list_primary_repos or a.can_list_secondary_repos)) else "❌ FAIL"
+        lines.append(f"## {a.label} — {status}")
+        lines.append("")
+        lines.append(f"- Token present: `{a.token_present}`")
+        lines.append(f"- Auth OK: `{a.auth_ok}`")
+        if a.auth_login:
+            lines.append(f"- Auth login: `{a.auth_login}` ({a.auth_type})")
+        lines.append(f"- Scopes: `{', '.join(a.auth_scopes) or 'none reported'}`")
+        lines.append("")
+        lines.append(f"### Org Access")
+        lines.append(f"- Can list repos in `{org_primary}`: `{a.can_list_primary_repos}`")
+        lines.append(f"- Sample repo: `{a.primary_repo_sample or 'n/a'}`")
+        lines.append(f"- Can push sample: `{a.can_push_primary_sample}`")
+        lines.append(f"- Can write workflows (inferred): `{a.can_write_workflows_primary}`")
+        lines.append("")
+        lines.append(f"- Can list repos in `{org_secondary}`: `{a.can_list_secondary_repos}`")
+        lines.append(f"- Sample repo: `{a.secondary_repo_sample or 'n/a'}`")
+        lines.append(f"- Can push sample: `{a.can_push_secondary_sample}`")
+        lines.append(f"- Can write workflows (inferred): `{a.can_write_workflows_secondary}`")
+        lines.append("")
+        if a.errors:
+            lines.append("### Errors / Notes")
+            for e in a.errors:
+                lines.append(f"- {e}")
+            lines.append("")
+        lines.append("---")
+        lines.append("")
+
+    md_path.write_text("\n".join(lines), encoding="utf-8")
+    return md_path, json_path
+
+
+# ---------------- Main ----------------
+
+def audit_one(label: str, token: str, org_primary: str, org_secondary: str) -> PatAudit:
     errors: List[str] = []
 
-    ok_user, user_data, err = audit_user(token)
-    if err:
-        errors.append(err)
+    token_present = bool(token.strip())
 
-    user_login = user_data.get("login") if ok_user and isinstance(user_data, dict) else None
-    user_id = user_data.get("id") if ok_user and isinstance(user_data, dict) else None
+    auth_ok, login, typ, scopes, auth_err = whoami(token)
+    if not auth_ok and auth_err:
+        errors.append(f"Auth failed: {auth_err}")
 
-    visible_orgs, err_orgs = list_orgs_visible(token)
-    if err_orgs:
-        errors.append(err_orgs)
+    # Primary org
+    can_list_primary, prim_sample, prim_status, prim_err = list_repos_in_org(token, org_primary)
+    if not can_list_primary:
+        errors.append(f"Cannot list repos in {org_primary}: {prim_err or prim_status}")
 
-    org_checks: List[OrgCheck] = []
-    for org in target_orgs:
-        oc = check_org_visibility(token, org, visible_orgs)
+    can_push_primary = probe_push(token, org_primary, prim_sample) if prim_sample else False
+    can_write_wf_primary = probe_workflow_write(token, org_primary, prim_sample) if prim_sample else False
 
-        # only attempt repo checks if we can see org at all
-        if oc.ok_member_or_public:
-            repo_name, err_repo_pick = pick_sample_repo(token, org, sample_repo_env)
-            if err_repo_pick:
-                oc.notes = (oc.notes + " " + err_repo_pick).strip()
-            if repo_name:
-                oc.repo_check = check_repo_and_workflows(token, org, repo_name)
-        org_checks.append(oc)
+    # Secondary org
+    can_list_secondary, sec_sample, sec_status, sec_err = list_repos_in_org(token, org_secondary)
+    if not can_list_secondary:
+        errors.append(f"Cannot list repos in {org_secondary}: {sec_err or sec_status}")
 
-    rl = read_rate_limit(token)
+    can_push_secondary = probe_push(token, org_secondary, sec_sample) if sec_sample else False
+    can_write_wf_secondary = probe_workflow_write(token, org_secondary, sec_sample) if sec_sample else False
 
-    return TokenAudit(
-        name=name,
-        redacted=redact(token),
-        ok_user=ok_user,
-        user_login=user_login,
-        user_id=user_id,
-        visible_orgs=visible_orgs,
-        target_orgs=org_checks,
-        rate_limit=rl,
-        errors=errors
+    return PatAudit(
+        label=label,
+        token_present=token_present,
+        auth_ok=auth_ok,
+        auth_login=login,
+        auth_type=typ,
+        auth_scopes=scopes,
+
+        org_primary=org_primary,
+        org_secondary=org_secondary,
+
+        primary_repo_sample=prim_sample,
+        secondary_repo_sample=sec_sample,
+
+        can_list_primary_repos=can_list_primary,
+        can_list_secondary_repos=can_list_secondary,
+
+        can_push_primary_sample=can_push_primary,
+        can_push_secondary_sample=can_push_secondary,
+
+        can_write_workflows_primary=can_write_wf_primary,
+        can_write_workflows_secondary=can_write_wf_secondary,
+
+        errors=errors,
     )
 
 
-# -------------------------- reporting --------------------------
-
-def ensure_dir(p: Path) -> None:
-    p.mkdir(parents=True, exist_ok=True)
-
-
-def write_json(report_dir: Path, audit: TokenAudit) -> Path:
-    ensure_dir(report_dir)
-    out = report_dir / f"pat_audit_{audit.name}_latest.json"
-    out.write_text(json.dumps(asdict(audit), indent=2), encoding="utf-8")
-    return out
-
-
-def write_md(report_dir: Path, audit: TokenAudit) -> Path:
-    ensure_dir(report_dir)
-    out = report_dir / f"pat_audit_{audit.name}_latest.md"
-
-    lines: List[str] = []
-    lines.append(f"# StegVerse PAT Audit — `{audit.name}`")
-    lines.append("")
-    lines.append(f"- Generated: `{now_utc_iso()}`")
-    lines.append(f"- Token: `{audit.redacted}`")
-    lines.append(f"- Valid user: `{audit.ok_user}`")
-    if audit.user_login:
-        lines.append(f"- User: `{audit.user_login}` (id `{audit.user_id}`)")
-    lines.append("")
-
-    lines.append("## Visible Orgs")
-    if audit.visible_orgs:
-        for o in audit.visible_orgs:
-            lines.append(f"- ✅ `{o}`")
-    else:
-        lines.append("- (none visible)")
-    lines.append("")
-
-    lines.append("## Target Org Checks")
-    for oc in audit.target_orgs:
-        lines.append(f"### `{oc.org}`")
-        lines.append(f"- Visible in /user/orgs: `{oc.ok_visible}`")
-        lines.append(f"- Accessible via /orgs/{oc.org}: `{oc.ok_member_or_public}`")
-        if oc.repo_check:
-            rc = oc.repo_check
-            lines.append(f"- Sample repo: `{rc.repo}`")
-            lines.append(f"  - Repo read: `{rc.ok_repo_read}`")
-            lines.append(f"  - Workflows read: `{rc.ok_workflows_read}`")
-            lines.append("  - Permissions (inferred):")
-            for k, v in rc.permissions.items():
-                sym = "✅" if v else "❌"
-                lines.append(f"    - {sym} `{k}`")
-            if rc.notes:
-                lines.append(f"  - Notes: {rc.notes}")
-        if oc.notes:
-            lines.append(f"- Notes: {oc.notes}")
-        lines.append("")
-
-    if audit.errors:
-        lines.append("## Errors")
-        for e in audit.errors:
-            lines.append(f"- ❌ {e}")
-        lines.append("")
-
-    if audit.rate_limit:
-        lines.append("## Rate Limit (raw)")
-        lines.append("```json")
-        lines.append(json.dumps(audit.rate_limit, indent=2)[:4000])
-        lines.append("```")
-        lines.append("")
-
-    out.write_text("\n".join(lines), encoding="utf-8")
-    return out
-
-
-# -------------------------- main --------------------------
-
 def main() -> int:
-    tokens = env_tokens()
-    if not tokens:
-        print("No PATs found in env. Provide PAT_NAME+PAT_TOKEN or PAT_* / *_PAT vars.")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--org-primary", default="StegVerse")
+    ap.add_argument("--org-secondary", default="StegVerse-Labs")
+    ap.add_argument("--strict", default="false")
+    args = ap.parse_args()
+
+    org_primary = args.org_primary
+    org_secondary = args.org_secondary
+    strict = (args.strict or "false").lower() == "true"
+
+    pats = discover_pats_from_env()
+    if not pats:
+        print("No PATs found in env. Provide <KEY>_NAME + <KEY>_PAT pairs.")
+        print("Example: PAT_WORKFLOW_FG_NAME / PAT_WORKFLOW_FG_PAT")
         return 1
 
-    target_orgs = [o.strip() for o in os.getenv("TARGET_ORGS", "StegVerse,StegVerse-Labs").split(",") if o.strip()]
-    sample_repo_env = os.getenv("SAMPLE_REPO", "StegVerse-SCW").strip()
-    report_dir = Path(os.getenv("REPORT_DIR", str(DEFAULT_REPORT_DIR)))
+    audits: List[PatAudit] = []
+    any_fail = False
 
-    print("=== StegVerse PAT Auditor (Genesis v0.2) ===")
-    print(f"Tokens detected: {list(tokens.keys())}")
-    print(f"Target orgs: {target_orgs}")
-    print(f"Sample repo preference: {sample_repo_env}")
-    print(f"Report dir: {report_dir}")
-    print("")
+    for label, token in pats:
+        print(f"\n--- Auditing {label} ---")
+        a = audit_one(label, token, org_primary, org_secondary)
+        audits.append(a)
 
-    all_audits: Dict[str, Any] = {}
+        passed = a.auth_ok and (a.can_list_primary_repos or a.can_list_secondary_repos)
+        any_fail = any_fail or (not passed)
 
-    for name, tok in tokens.items():
-        print(f"--- Auditing {name} ({redact(tok)}) ---")
-        audit = audit_token(name, tok, target_orgs, sample_repo_env)
+        print(f"Auth OK: {a.auth_ok} | {org_primary} list: {a.can_list_primary_repos} | {org_secondary} list: {a.can_list_secondary_repos}")
 
-        jpath = write_json(report_dir, audit)
-        mpath = write_md(report_dir, audit)
+    md_path, json_path = write_reports(audits, org_primary, org_secondary)
 
-        all_audits[name] = asdict(audit)
-        print(f"✅ Wrote JSON: {jpath}")
-        print(f"✅ Wrote MD:   {mpath}")
-        print("")
+    print("\nReport written:")
+    print(f"- {md_path}")
+    print(f"- {json_path}")
 
-    # write rollup
-    rollup_json = report_dir / "pat_audit_rollup_latest.json"
-    rollup_md = report_dir / "pat_audit_rollup_latest.md"
+    if strict and any_fail:
+        print("\nSTRICT mode enabled: failing job due to PAT failures.")
+        return 2
 
-    rollup_json.write_text(json.dumps(all_audits, indent=2), encoding="utf-8")
-
-    md_lines = ["# StegVerse PAT Audit — Rollup", f"- Generated: `{now_utc_iso()}`", ""]
-    for name, ad in all_audits.items():
-        md_lines.append(f"## `{name}`")
-        md_lines.append(f"- Token: `{ad.get('redacted')}`")
-        md_lines.append(f"- Valid user: `{ad.get('ok_user')}`")
-        md_lines.append(f"- User: `{ad.get('user_login')}`")
-        md_lines.append(f"- Visible orgs: {', '.join(ad.get('visible_orgs') or []) or '(none)'}")
-        for oc in ad.get("target_orgs", []):
-            md_lines.append(f"  - Org `{oc['org']}` accessible: `{oc['ok_member_or_public']}`")
-            rc = oc.get("repo_check")
-            if rc:
-                md_lines.append(f"    - Repo `{rc['repo']}` read: `{rc['ok_repo_read']}`, workflows read: `{rc['ok_workflows_read']}`")
-                perms = rc.get("permissions") or {}
-                md_lines.append(f"    - Perms: " + ", ".join([f"{k}={v}" for k, v in perms.items()]))
-        if ad.get("errors"):
-            md_lines.append("  - Errors:")
-            for e in ad["errors"]:
-                md_lines.append(f"    - ❌ {e}")
-        md_lines.append("")
-
-    rollup_md.write_text("\n".join(md_lines), encoding="utf-8")
-
-    print(f"✅ Wrote rollup JSON: {rollup_json}")
-    print(f"✅ Wrote rollup MD:   {rollup_md}")
-    print("=== PAT audit complete. ===")
     return 0
 
 
