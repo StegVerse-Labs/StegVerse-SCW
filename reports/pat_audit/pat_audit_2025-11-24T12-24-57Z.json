@@ -1,0 +1,78 @@
+{
+  "generated_at": "2025-11-24T12:24:57.165090+00:00",
+  "org_primary": "StegVerse",
+  "org_secondary": "StegVerse-Labs",
+  "pat_count": 3,
+  "audits": [
+    {
+      "label": "GH_STEGVERSE_PAT_FG",
+      "token_present": true,
+      "auth_ok": true,
+      "auth_login": "StegVerse",
+      "auth_type": "User",
+      "auth_scopes": [],
+      "org_primary": "StegVerse",
+      "org_secondary": "StegVerse-Labs",
+      "primary_repo_sample": null,
+      "secondary_repo_sample": "Site",
+      "can_list_primary_repos": false,
+      "can_list_secondary_repos": true,
+      "can_push_primary_sample": false,
+      "can_push_secondary_sample": true,
+      "can_write_workflows_primary": false,
+      "can_write_workflows_secondary": false,
+      "errors": [
+        "Cannot list repos in StegVerse: Not Found"
+      ]
+    },
+    {
+      "label": "PAT_WORKFLOW_CLASSIC",
+      "token_present": true,
+      "auth_ok": true,
+      "auth_login": "StegVerse",
+      "auth_type": "User",
+      "auth_scopes": [
+        "audit_log",
+        "delete:packages",
+        "delete_repo",
+        "repo",
+        "workflow",
+        "write:packages"
+      ],
+      "org_primary": "StegVerse",
+      "org_secondary": "StegVerse-Labs",
+      "primary_repo_sample": null,
+      "secondary_repo_sample": "Site",
+      "can_list_primary_repos": false,
+      "can_list_secondary_repos": true,
+      "can_push_primary_sample": false,
+      "can_push_secondary_sample": true,
+      "can_write_workflows_primary": false,
+      "can_write_workflows_secondary": true,
+      "errors": [
+        "Cannot list repos in StegVerse: Not Found"
+      ]
+    },
+    {
+      "label": "PAT_WORKFLOW_FG",
+      "token_present": true,
+      "auth_ok": true,
+      "auth_login": "StegVerse",
+      "auth_type": "User",
+      "auth_scopes": [],
+      "org_primary": "StegVerse",
+      "org_secondary": "StegVerse-Labs",
+      "primary_repo_sample": null,
+      "secondary_repo_sample": "Site",
+      "can_list_primary_repos": false,
+      "can_list_secondary_repos": true,
+      "can_push_primary_sample": false,
+      "can_push_secondary_sample": true,
+      "can_write_workflows_primary": false,
+      "can_write_workflows_secondary": false,
+      "errors": [
+        "Cannot list repos in StegVerse: Not Found"
+      ]
+    }
+  ]
+}
