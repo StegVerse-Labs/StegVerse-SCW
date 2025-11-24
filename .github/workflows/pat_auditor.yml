@@ -1,25 +1,46 @@
 name: StegVerse PAT Auditor
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      org_primary:
+        description: "Primary org to test (default StegVerse)"
+        required: false
+        default: "StegVerse"
+      org_secondary:
+        description: "Secondary org to test (default StegVerse-Labs)"
+        required: false
+        default: "StegVerse-Labs"
+      strict:
+        description: "Fail job if any PAT fails audit"
+        required: false
+        default: "false"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  audit:
+  pat_audit:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        token:
-          - name: PAT_WORKFLOW_CLASSIC
-            secret: PAT_WORKFLOW
-          - name: PAT_WORKFLOW_FG
-            secret: PAT_WORKFLOW_FG
-          - name: GH_STEGVERSE_PAT_FG
-            secret: GH_STEGVERSE_PAT
+    env:
+      # --- Provide PATs here via secrets ---
+      # Each PAT uses two env vars:
+      #   <NAME>_NAME: label string
+      #   <NAME>_PAT:  the actual token (secret)
+
+      GH_STEGVERSE_PAT_FG_NAME: "GH_STEGVERSE_PAT_FG"
+      GH_STEGVERSE_PAT_FG_PAT: ${{ secrets.GH_STEGVERSE_PAT_FG_PAT }}
+
+      PAT_WORKFLOW_FG_NAME: "PAT_WORKFLOW_FG"
+      PAT_WORKFLOW_FG_PAT: ${{ secrets.PAT_WORKFLOW_FG_PAT }}
+
+      PAT_WORKFLOW_CLASSIC_NAME: "PAT_WORKFLOW_CLASSIC"
+      PAT_WORKFLOW_CLASSIC_PAT: ${{ secrets.PAT_WORKFLOW_CLASSIC_PAT }}
+
+      # Optional additional PATs? just add more pairs:
+      # SOME_PAT_NAME: "SOME_PAT"
+      # SOME_PAT_PAT: ${{ secrets.SOME_PAT_PAT }}
 
     steps:
       - name: Check out StegVerse-SCW
@@ -36,17 +57,33 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          pip install requests
+          pip install requests pyyaml
 
-      - name: Run PAT audit for ${{ matrix.token.name }}
+      - name: Run PAT auditor
         env:
-          TOKEN_NAME: ${{ matrix.token.name }}
-          TOKEN_VALUE: ${{ secrets[matrix.token.secret] }}
+          ORG_PRIMARY: ${{ github.event.inputs.org_primary }}
+          ORG_SECONDARY: ${{ github.event.inputs.org_secondary }}
+          STRICT: ${{ github.event.inputs.strict }}
         run: |
           set -euo pipefail
-          if [ -z "${TOKEN_VALUE:-}" ]; then
-            echo "⚠️ Secret '${{ matrix.token.secret }}' is empty or not set. Skipping."
-            exit 0
+          echo "=== StegVerse PAT Auditor ==="
+          python scripts/genesis/pat_auditor.py \
+            --org-primary "${ORG_PRIMARY:-StegVerse}" \
+            --org-secondary "${ORG_SECONDARY:-StegVerse-Labs}" \
+            --strict "${STRICT:-false}"
+
+      - name: Commit audit report (if changed)
+        run: |
+          set -euo pipefail
+
+          git config user.name  "StegVerse Autopatch Bot"
+          git config user.email "autopatch-bot@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain 'reports/pat_audit' 2>/dev/null || echo '')" ]; then
+            echo "Detected PAT audit report changes; committing..."
+            git add reports/pat_audit
+            git commit -m "PAT audit report (automated)"
+            git push origin "${GITHUB_REF_NAME:-main}"
+          else
+            echo "No PAT audit report changes to commit."
           fi
-          echo "::add-mask::${TOKEN_VALUE}"
-          python scripts/genesis/pat_auditor.py
