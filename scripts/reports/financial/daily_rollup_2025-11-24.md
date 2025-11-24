@@ -1,0 +1,16 @@
+# StegVerse Daily Financial Rollup
+
+- Generated at: `2025-11-24T08:51:12.208986+00:00`
+
+## Wallet Snapshot
+- Source: `ledger/telemetry/financial/wallet_snapshot_2025-11-24.md`
+- Snapshot time: `2025-11-24T08:41:28.520528Z`
+
+## Component Reports
+- Wallet snapshot: `ledger/telemetry/financial/wallet_snapshot_2025-11-24.md`
+- Financial telemetry: `scripts/reports/financial/daily_rollup_2025-11-23.md`
+- Ledger integrity: `scripts/reports/ledger/ledger_integrity_2025-11-24.md`
+
+## Notes
+- This is a lightweight index for all Genesis financial views.
+- Future versions may inline summaries / KPIs here.
