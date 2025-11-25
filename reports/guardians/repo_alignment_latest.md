@@ -1,7 +1,7 @@
 # StegVerse Repo Alignment Report
 
-- Run: 2025-11-24T07:46:05Z
-- RID: `19626985016`
+- Run: 2025-11-25T07:46:13Z
+- RID: `19662088035`
 
 ## Summary
 - Total repos: **4**
@@ -27,7 +27,8 @@
 **Optional:** workflow_dispatch present in all workflows.
 
 **Optional secrets check:** ok
-- ✅ all required secret names present
+- ❌ missing secret name `PAT_WORKFLOW`
+- ❌ missing secret name `GH_STEGVERSE_PAT`
 
 ### ❌ StegVerse-Labs/hybrid-collab-bridge
 
