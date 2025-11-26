@@ -1,7 +1,7 @@
 # StegVerse Repo Alignment Report
 
-- Run: 2025-11-25T07:46:13Z
-- RID: `19662088035`
+- Run: 2025-11-26T07:46:18Z
+- RID: `19696291360`
 
 ## Summary
 - Total repos: **4**
@@ -72,7 +72,8 @@
 - ⚠️ `.github/workflows/tv_verify_reusable.yml`
 
 **Optional secrets check:** ok
-- ✅ all required secret names present
+- ❌ missing secret name `PAT_WORKFLOW`
+- ❌ missing secret name `GH_STEGVERSE_PAT`
 
 ### ❌ StegVerse-Labs/StegVerse-SCW
 

@@ -4,8 +4,8 @@
     "repos_pass": 0,
     "repos_fail": 4,
     "repos_error": 0,
-    "ts_utc": "2025-11-25T07:46:13Z",
-    "rid": "19662088035"
+    "ts_utc": "2025-11-26T07:46:18Z",
+    "rid": "19696291360"
   },
   "results": [
     {
@@ -153,7 +153,10 @@
           ".github/workflows/tv_verify_reusable.yml"
         ],
         "secrets_status": "ok",
-        "secrets_missing": []
+        "secrets_missing": [
+          "PAT_WORKFLOW",
+          "GH_STEGVERSE_PAT"
+        ]
       },
       "notes": []
     },
