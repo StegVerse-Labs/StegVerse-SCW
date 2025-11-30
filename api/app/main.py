@@ -1,5 +1,5 @@
 import os, hmac, hashlib, json, time
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
@@ -13,17 +13,22 @@ USE_MEMORY_ONLY = False
 _mem_kv: Dict[str, str] = {}
 _mem_list: List[str] = []
 
+
 def _mem_get(key: str) -> Optional[str]:
     return _mem_kv.get(key)
+
 
 def _mem_set(key: str, val: str):
     _mem_kv[key] = val
 
+
 def _mem_lpush(key: str, val: str):
     _mem_list.insert(0, val)
 
+
 def _mem_hset(name: str, key: str, val: str):
     _mem_kv[f"{name}:{key}"] = val
+
 
 def _mem_hgetall(name: str) -> Dict[str, str]:
     prefix = f"{name}:"
@@ -34,7 +39,8 @@ REDIS_URL = os.getenv("REDIS_URL", "").strip()
 redis_client = None
 if REDIS_URL:
     try:
-        import redis
+        import redis  # type: ignore
+
         redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
     except Exception:
         USE_MEMORY_ONLY = True
@@ -116,6 +122,10 @@ K_DEPLOY_LOG = "scw:deploy_log"
 DEPLOY_REPORT_TOKEN = os.getenv("DEPLOY_REPORT_TOKEN", "").strip()
 MAX_DEPLOY_LOG = 50
 
+# External health targets (override via env if needed)
+SCW_UI_HEALTH_URL = os.getenv("SCW_UI_HEALTH_URL", "https://scw-ui.onrender.com/diag.html")
+SCW_API_HEALTH_URL = os.getenv("SCW_API_HEALTH_URL", "https://scw-api.onrender.com/v1/ops/health")
+
 
 def sig(body: bytes) -> str:
     if not HMAC_SECRET:
@@ -168,45 +178,22 @@ class ServiceRegistration(BaseModel):
 
 
 class DeployReport(BaseModel):
-    source: str            # e.g. "github-actions"
+    source: str  # e.g. "github-actions"
     workflow: str
     run_id: str
     run_url: str
     commit_sha: str
     branch: str
-    status: str            # "success" | "failure" | "cancelled"
+    status: str  # "success" | "failure" | "cancelled"
     health_code: int
     health_body: Dict[str, Any] = {}
     ts: int
 
 
-class HookResult(BaseModel):
-    url: str
-    status: int
-    body: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-
-
-class ExternalCheckResult(BaseModel):
-    """Result of a single external health check."""
-    name: str
-    url: str
-    ok: bool
-    status: int
-    elapsed_ms: float
-    error: Optional[str] = None
-
-
 # ---------------------------
 # App
 # ---------------------------
-app = FastAPI(
-    title="SCW-API",
-    version="1.2.0",
-    docs_url="/docs",
-    openapi_url="/openapi.json",
-)
-
+app = FastAPI(title="SCW-API", version="1.2.0", docs_url="/docs", openapi_url="/openapi.json")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in ALLOW_ORIGINS.split(",")] if ALLOW_ORIGINS else ["*"],
@@ -216,9 +203,6 @@ app.add_middleware(
 )
 
 
-# ---------------------------
-# Basic health / status
-# ---------------------------
 @app.get("/v1/ops/health")
 def health():
     return {
@@ -248,9 +232,6 @@ def env_required():
     return {"ok": True, "present": present}
 
 
-# ---------------------------
-# Admin bootstrap / rotate
-# ---------------------------
 @app.post("/v1/ops/config/bootstrap")
 def bootstrap(body: BootstrapBody):
     if _get(K_ADMIN):
@@ -262,32 +243,21 @@ def bootstrap(body: BootstrapBody):
 
 
 @app.post("/v1/ops/config/rotate")
-def rotate(
-    body: RotateBody,
-    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
-):
+def rotate(body: RotateBody, x_admin_token: Optional[str] = Header(None, convert_underscores=False)):
     stored = _get(K_ADMIN)
     if not stored:
         raise HTTPException(status_code=403, detail="Admin token not set. Bootstrap required.")
-
     reset_secret = _get(K_RESET_SECRET)
     if x_admin_token != stored and (not reset_secret or body.reset_secret != reset_secret):
         raise HTTPException(status_code=403, detail="Invalid admin token or reset secret.")
-
     _set(K_ADMIN, body.new_admin_token)
     _set(K_LAST_ROTATE_TS, str(now_ts()))
     audit("rotate", {"ok": True})
     return {"ok": True, "message": "Admin token rotated."}
 
 
-# ---------------------------
-# Service registry
-# ---------------------------
 @app.post("/v1/ops/service/register")
-def svc_register(
-    body: ServiceRegistration,
-    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
-):
+def svc_register(body: ServiceRegistration, x_admin_token: Optional[str] = Header(None, convert_underscores=False)):
     require_admin(x_admin_token)
     _hset(K_SERVICE_REG, body.name, json.dumps(body.dict()))
     audit("service_register", {"name": body.name})
@@ -297,20 +267,25 @@ def svc_register(
 # ---------------------------
 # Build trigger (fan-out via env webhooks)
 # ---------------------------
+class HookResult(BaseModel):
+    url: str
+    status: int
+    body: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
 @app.post("/v1/ops/build/trigger")
-def build_trigger(
-    manifest: BrandManifest,
-    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
-):
+def build_trigger(manifest: BrandManifest, x_admin_token: Optional[str] = Header(None, convert_underscores=False)):
     require_admin(x_admin_token)
 
     render_hooks = [h for h in os.getenv("RENDER_HOOKS", "").split(",") if h.strip()]
     netlify_hooks = [h for h in os.getenv("NETLIFY_HOOKS", "").split(",") if h.strip()]
-    vercel_hooks  = [h for h in os.getenv("VERCEL_HOOKS", "").split(",") if h.strip()]
+    vercel_hooks = [h for h in os.getenv("VERCEL_HOOKS", "").split(",") if h.strip()]
 
+    # manifest-provided hooks extend, but never replace, env hooks
     render_hooks += manifest.webhooks.render
     netlify_hooks += manifest.webhooks.netlify
-    vercel_hooks  += manifest.webhooks.vercel
+    vercel_hooks += manifest.webhooks.vercel
 
     payload = {"brand": manifest.dict(), "meta": {"ts": now_ts(), "env": ENV_NAME}}
 
@@ -330,12 +305,7 @@ def build_trigger(
 
     tasks = [fire(u) for u in (render_hooks + netlify_hooks + vercel_hooks)]
     results = asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks)) if tasks else []
-
-    audit("build_trigger", {
-        "brand_id": manifest.brand_id,
-        "results": [r.dict() for r in results],
-    })
-
+    audit("build_trigger", {"brand_id": manifest.brand_id, "results": [r.dict() for r in results]})
     return {"ok": True, "brand_id": manifest.brand_id, "hook_results": [r.dict() for r in results]}
 
 
@@ -343,16 +313,11 @@ def build_trigger(
 # Deploy summary receiver + listing (for Actions to report)
 # ---------------------------
 @app.post("/v1/ops/deploy/report")
-def deploy_report(
-    report: DeployReport,
-    authorization: Optional[str] = Header(None),
-):
+def deploy_report(report: DeployReport, authorization: Optional[str] = Header(None)):
     if not DEPLOY_REPORT_TOKEN:
         raise HTTPException(status_code=503, detail="DEPLOY_REPORT_TOKEN not configured.")
-
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token.")
-
     token = authorization.split(" ", 1)[1]
     if token != DEPLOY_REPORT_TOKEN:
         raise HTTPException(status_code=403, detail="Invalid token.")
@@ -362,6 +327,7 @@ def deploy_report(
         if redis_client:
             redis_client.ltrim(K_DEPLOY_LOG, 0, MAX_DEPLOY_LOG - 1)
     except Exception:
+        # memory fallback already holds the list
         pass
 
     audit("deploy_report", {"status": report.status, "sha": report.commit_sha})
@@ -385,86 +351,70 @@ def deploy_summary(limit: int = 10):
             items.append(json.loads(line))
         except Exception:
             continue
-
     return {"ok": True, "items": items}
 
 
 # ---------------------------
-# External health checks (UI, site, etc.)
+# Full external health check
 # ---------------------------
+def _check_url(url: str, timeout: float = 5.0) -> Dict[str, Any]:
+    """Small helper used by /v1/ops/health/external to probe URLs safely."""
+    try:
+        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+            resp = client.get(url)
+        snippet: str
+        try:
+            # short JSON / text preview only
+            data = resp.text
+            snippet = data[:300]
+        except Exception:
+            snippet = ""
+        return {
+            "url": url,
+            "ok": resp.status_code < 400,
+            "status": resp.status_code,
+            "preview": snippet,
+        }
+    except Exception as e:
+        return {
+            "url": url,
+            "ok": False,
+            "status": 0,
+            "error": str(e)[:300],
+        }
+
+
 @app.get("/v1/ops/health/external")
-async def external_health():
+def health_external():
     """
-    Hit a small set of external URLs (UI, Vercel site, etc.)
-    Config via env:
+    One-shot, 'tell me everything' health endpoint.
 
-      UI_HEALTH_URL              -> e.g. https://scw-ui.onrender.com/diag.html
-      SITE_HEALTH_URL            -> e.g. https://stegverse.org/
-      EXTERNAL_HEALTH_TARGETS    -> optional CSV: "name|url,name2|url2"
-
-    Returns overall ok + per-target detail.
+    - Includes internal health() + status() + env_required()
+    - Probes UI + API via HTTP
+    - Returns a single JSON blob suitable for SCW diag.html
     """
+    internal = health()
+    cfg = status()
+    env_summary = env_required()
 
-    targets: List[Tuple[str, str]] = []
+    ui_probe = _check_url(SCW_UI_HEALTH_URL)
+    api_probe = _check_url(SCW_API_HEALTH_URL)
 
-    ui = os.getenv("UI_HEALTH_URL", "").strip()
-    if ui:
-        targets.append(("ui", ui))
+    overall_ok = bool(
+        internal.get("ok")
+        and ui_probe.get("ok")
+        and api_probe.get("ok")
+    )
 
-    site = os.getenv("SITE_HEALTH_URL", "").strip()
-    if site:
-        targets.append(("site", site))
-
-    extra = os.getenv("EXTERNAL_HEALTH_TARGETS", "").strip()
-    if extra:
-        for raw in extra.split(","):
-            raw = raw.strip()
-            if not raw:
-                continue
-            if "|" in raw:
-                name, url = raw.split("|", 1)
-            else:
-                name, url = raw, raw
-            targets.append((name.strip(), url.strip()))
-
-    results: List[ExternalCheckResult] = []
-
-    if not targets:
-        return {"ok": False, "results": [], "message": "No external targets configured."}
-
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        for name, url in targets:
-            start = time.time()
-            try:
-                resp = await client.get(url)
-                elapsed_ms = (time.time() - start) * 1000.0
-                ok = 200 <= resp.status_code < 500
-                results.append(
-                    ExternalCheckResult(
-                        name=name,
-                        url=url,
-                        ok=ok,
-                        status=resp.status_code,
-                        elapsed_ms=elapsed_ms,
-                    )
-                )
-            except Exception as e:
-                elapsed_ms = (time.time() - start) * 1000.0
-                results.append(
-                    ExternalCheckResult(
-                        name=name,
-                        url=url,
-                        ok=False,
-                        status=0,
-                        elapsed_ms=elapsed_ms,
-                        error=str(e)[:300],
-                    )
-                )
-
-    overall_ok = all(r.ok for r in results)
-    audit("external_health", {
+    return {
         "ok": overall_ok,
-        "targets": [r.dict() for r in results],
-    })
-
-    return {"ok": overall_ok, "results": [r.dict() for r in results]}
+        "env": ENV_NAME,
+        "internal": internal,
+        "config": cfg,
+        "env_required": env_summary,
+        "external": {
+            "ui": ui_probe,
+            "api": api_probe,
+        },
+        "ts": now_ts(),
+    }
