@@ -1,5 +1,5 @@
-import os, hmac, hashlib, json, time, asyncio
-from typing import Optional, Dict, Any, List, Tuple
+import os, hmac, hashlib, json, time
+from typing import Optional, Dict, Any, List
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
@@ -119,6 +119,10 @@ K_RESET_SECRET = "scw:reset_secret"
 K_SERVICE_REG = "scw:services"
 K_DEPLOY_LOG = "scw:deploy_log"
 
+# CFP keys
+K_CFP_CURRENT_SEASON = "cfp:current_season"          # optional override
+K_CFP_SEASON_PREFIX = "cfp:season:"                  # e.g. "cfp:season:2025"
+
 DEPLOY_REPORT_TOKEN = os.getenv("DEPLOY_REPORT_TOKEN", "").strip()
 MAX_DEPLOY_LOG = 50
 
@@ -187,31 +191,23 @@ class DeployReport(BaseModel):
     ts: int
 
 
-# ---------------------------
-# CFP upstream config + cache
-# ---------------------------
-CFP_UPSTREAM_URL = os.getenv("CFP_UPSTREAM_URL", "").strip()
-CFP_UPSTREAM_KEY_HEADER = os.getenv("CFP_UPSTREAM_KEY_HEADER", "").strip()
-CFP_UPSTREAM_KEY_VALUE = os.getenv("CFP_UPSTREAM_KEY_VALUE", "").strip()
-CFP_CACHE_SECONDS = int(os.getenv("CFP_CACHE_SECONDS", "600"))
-
-# simple in-memory cache keyed by season (or "latest")
-_cfp_cache: Dict[str, Any] = {}
-_cfp_cache_ts: Dict[str, int] = {}
+# ----- CFP models -----
+class CFPTeam(BaseModel):
+    rank: int
+    team: str
+    record: str
+    conf: str
+    last_rank: Optional[int] = None
+    movement: Optional[int] = None
+    projection: Optional[str] = None  # e.g. "hold", "up", "down"
 
 
-def _cfp_cache_get(key: str) -> Optional[Any]:
-    ts = _cfp_cache_ts.get(key)
-    if not ts:
-        return None
-    if now_ts() - ts > CFP_CACHE_SECONDS:
-        return None
-    return _cfp_cache.get(key)
-
-
-def _cfp_cache_set(key: str, value: Any) -> None:
-    _cfp_cache[key] = value
-    _cfp_cache_ts[key] = now_ts()
+class CFPState(BaseModel):
+    season: int
+    week: int
+    released_at: Optional[str] = None  # ISO timestamp or human string
+    note: Optional[str] = None
+    rankings: List[CFPTeam] = []
 
 
 # ---------------------------
@@ -247,7 +243,7 @@ def root():
         "health_url": "/v1/ops/health",
         "status_url": "/v1/ops/config/status",
         "external_health_url": "/healthz",
-        "cfp_api_url": "/api/cfp",
+        "cfp_url": "/api/cfp",
     }
 
 
@@ -280,6 +276,9 @@ def env_required():
     return {"ok": True, "present": present}
 
 
+# ---------------------------
+# Bootstrap / Rotate Admin
+# ---------------------------
 @app.post("/v1/ops/config/bootstrap")
 def bootstrap(body: BootstrapBody):
     if _get(K_ADMIN):
@@ -307,6 +306,9 @@ def rotate(
     return {"ok": True, "message": "Admin token rotated."}
 
 
+# ---------------------------
+# Service registration
+# ---------------------------
 @app.post("/v1/ops/service/register")
 def svc_register(
     body: ServiceRegistration,
@@ -354,6 +356,8 @@ def build_trigger(
                 return HookResult(url=url, status=resp.status_code, body=body)
         except Exception as e:
             return HookResult(url=url, status=0, error=str(e)[:400] or "error")
+
+    import asyncio
 
     tasks = [fire(u) for u in (render_hooks + netlify_hooks + vercel_hooks)]
     results = asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks)) if tasks else []
@@ -406,70 +410,6 @@ def deploy_summary(limit: int = 10):
 
 
 # ---------------------------
-# CFP API: /api/cfp
-# ---------------------------
-@app.get("/api/cfp")
-async def get_cfp(season: Optional[int] = None):
-    """
-    Proxy endpoint used by Site workflows.
-
-    - Reads from CFP_UPSTREAM_URL (required).
-    - Passes through ?season=YYYY if provided.
-    - Optional auth header via CFP_UPSTREAM_KEY_HEADER / CFP_UPSTREAM_KEY_VALUE.
-    - Returns the upstream JSON **as-is**.
-    - Uses a small in-memory cache to avoid hammering the provider.
-    """
-    if not CFP_UPSTREAM_URL:
-        raise HTTPException(status_code=503, detail="CFP_UPSTREAM_URL not configured.")
-
-    cache_key = str(season or "latest")
-    cached = _cfp_cache_get(cache_key)
-    if cached is not None:
-        return cached
-
-    params: Dict[str, Any] = {}
-    if season is not None:
-        params["season"] = season
-
-    headers: Dict[str, str] = {}
-    if CFP_UPSTREAM_KEY_HEADER and CFP_UPSTREAM_KEY_VALUE:
-        headers[CFP_UPSTREAM_KEY_HEADER] = CFP_UPSTREAM_KEY_VALUE
-
-    try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            resp = await client.get(CFP_UPSTREAM_URL, params=params, headers=headers)
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Error calling CFP upstream: {e}")
-
-    if resp.status_code != 200:
-        raise HTTPException(
-            status_code=resp.status_code,
-            detail=f"CFP upstream returned HTTP {resp.status_code}",
-        )
-
-    try:
-        data = resp.json()
-    except Exception:
-        raise HTTPException(status_code=502, detail="CFP upstream did not return valid JSON.")
-
-    _cfp_cache_set(cache_key, data)
-    return data
-
-
-@app.get("/api/cfp/status")
-def cfp_status():
-    """
-    Quick diagnostics for the CFP module.
-    """
-    return {
-        "ok": bool(CFP_UPSTREAM_URL),
-        "upstream_url_set": bool(CFP_UPSTREAM_URL),
-        "cache_seconds": CFP_CACHE_SECONDS,
-        "has_cached_keys": list(_cfp_cache_ts.keys()),
-    }
-
-
-# ---------------------------
 # External health for monitors (/healthz)
 # ---------------------------
 @app.get("/healthz")
@@ -490,3 +430,160 @@ def external_health():
         "bootstrapped_at": s.get("bootstrapped_at"),
         "last_rotate_at": s.get("last_rotate_at"),
     }
+
+
+# =====================================================================
+# CFP MODULE
+# =====================================================================
+
+def _cfp_season_key(season: int) -> str:
+    return f"{K_CFP_SEASON_PREFIX}{season}"
+
+
+def _get_current_cfp_season() -> int:
+    # order of precedence:
+    #   1) stored override in storage
+    #   2) ENV CFP_SEASON
+    #   3) default 2025
+    stored = _get(K_CFP_CURRENT_SEASON)
+    if stored:
+        try:
+            return int(stored)
+        except ValueError:
+            pass
+    env_val = os.getenv("CFP_SEASON")
+    if env_val:
+        try:
+            return int(env_val)
+        except ValueError:
+            pass
+    return 2025
+
+
+def _load_cfp_state(season: int) -> CFPState:
+    raw = _get(_cfp_season_key(season))
+    if raw:
+        try:
+            return CFPState.parse_raw(raw)
+        except Exception:
+            pass
+
+    # Fallback: empty state with a helpful note so callers still get 200/JSON.
+    return CFPState(
+        season=season,
+        week=0,
+        released_at=None,
+        note="No CFP data stored yet for this season.",
+        rankings=[],
+    )
+
+
+def _save_cfp_state(state: CFPState):
+    key = _cfp_season_key(state.season)
+    _set(key, state.json())
+    # if this is the newest season we've seen, record it as current
+    current = _get_current_cfp_season()
+    if state.season >= current:
+        _set(K_CFP_CURRENT_SEASON, str(state.season))
+
+
+@app.get("/api/cfp")
+def cfp_current():
+    """
+    Return current CFP state for the active season.
+    This is what CFP Data Sync / front-end should normally call.
+    """
+    season = _get_current_cfp_season()
+    state = _load_cfp_state(season)
+    return {
+        "ok": True,
+        "season": state.season,
+        "week": state.week,
+        "released_at": state.released_at,
+        "note": state.note,
+        "rankings": [t.dict() for t in state.rankings],
+    }
+
+
+@app.get("/api/cfp/{season}")
+def cfp_by_season(season: int):
+    """
+    Fetch CFP state for a specific season (e.g. /api/cfp/2025).
+    """
+    state = _load_cfp_state(season)
+    return {
+        "ok": True,
+        "season": state.season,
+        "week": state.week,
+        "released_at": state.released_at,
+        "note": state.note,
+        "rankings": [t.dict() for t in state.rankings],
+    }
+
+
+@app.post("/api/cfp/{season}")
+def cfp_upsert(
+    season: int,
+    state: CFPState,
+    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
+):
+    """
+    Admin-only upsert of CFP state for a season.
+
+    Intended usage:
+      - GitHub Actions or admin tools POST new rankings here
+      - SCW-API persists them (Redis or in-memory)
+      - Site repo sync job pulls via CFP_API_URL and writes JSON files
+    """
+    require_admin(x_admin_token)
+    # Trust path param as the source of truth for season
+    state.season = season
+    _save_cfp_state(state)
+    audit(
+        "cfp_upsert",
+        {"season": state.season, "week": state.week, "count": len(state.rankings)},
+    )
+    return {"ok": True, "season": state.season, "saved": len(state.rankings)}
+
+
+@app.get("/api/cfp/meta")
+def cfp_meta():
+    """
+    Lightweight meta endpoint for diagnostics.
+    """
+    current = _get_current_cfp_season()
+    raw_keys = [k for k in _mem_kv.keys() if k.startswith(K_CFP_SEASON_PREFIX)]
+    if redis_client:
+        try:
+            raw_keys = list(
+                set(raw_keys)
+                | {
+                    k
+                    for k in redis_client.scan_iter(f"{K_CFP_SEASON_PREFIX}*")  # type: ignore[attr-defined]
+                }
+            )
+        except Exception:
+            pass
+    seasons: List[int] = []
+    for k in raw_keys:
+        try:
+            seasons.append(int(k.split(":")[-1]))
+        except Exception:
+            continue
+    seasons = sorted(set(seasons))
+    return {
+        "ok": True,
+        "current_season": current,
+        "seasons_with_data": seasons,
+    }
+
+
+# Aliases so older clients using CFP_API_URL + "/cfp" or "/cfp/{season}" still work
+@app.get("/cfp")
+def cfp_current_alias():
+    return cfp_current()
+
+
+@app.get("/cfp/{season}")
+def cfp_by_season_alias(season: int):
+    return cfp_by_season(season)
