@@ -1,15 +1,14 @@
-import os, hmac, hashlib, json, time, asyncio
-from typing import Optional, Dict, Any, List
+import os, hmac, hashlib, json, time
+from typing import Optional, Dict, Any, List, Tuple
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-
-# =============================================================================
-# Storage: Redis with memory fallback
-# =============================================================================
+# ---------------------------
+# Storage: Redis with memory fallback (never crash)
+# ---------------------------
 USE_MEMORY_ONLY = False
 _mem_kv: Dict[str, str] = {}
 _mem_list: List[str] = []
@@ -38,10 +37,10 @@ def _mem_hgetall(name: str) -> Dict[str, str]:
 
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 redis_client = None
-
 if REDIS_URL:
     try:
-        import redis
+        import redis  # type: ignore
+
         redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
     except Exception:
         USE_MEMORY_ONLY = True
@@ -53,7 +52,7 @@ def _get(key: str) -> Optional[str]:
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_get(key)
     try:
-        return redis_client.get(key)
+        return redis_client.get(key)  # type: ignore[attr-defined]
     except Exception:
         return _mem_get(key)
 
@@ -63,7 +62,7 @@ def _set(key: str, val: str):
         _mem_set(key, val)
         return
     try:
-        redis_client.set(key, val)
+        redis_client.set(key, val)  # type: ignore[attr-defined]
     except Exception:
         _mem_set(key, val)
 
@@ -73,7 +72,7 @@ def _lpush(key: str, val: str):
         _mem_lpush(key, val)
         return
     try:
-        redis_client.lpush(key, val)
+        redis_client.lpush(key, val)  # type: ignore[attr-defined]
     except Exception:
         _mem_lpush(key, val)
 
@@ -83,7 +82,7 @@ def _hset(name: str, key: str, val: str):
         _mem_hset(name, key, val)
         return
     try:
-        redis_client.hset(name, key, val)
+        redis_client.hset(name, key, val)  # type: ignore[attr-defined]
     except Exception:
         _mem_hset(name, key, val)
 
@@ -92,9 +91,19 @@ def _hgetall(name: str) -> Dict[str, str]:
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_hgetall(name)
     try:
-        return redis_client.hgetall(name)
+        return redis_client.hgetall(name)  # type: ignore[attr-defined]
     except Exception:
         return _mem_hgetall(name)
+
+
+def _get_json(key: str) -> Optional[Any]:
+    raw = _get(key)
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except Exception:
+        return None
 
 
 def now_ts() -> int:
@@ -106,9 +115,9 @@ def audit(event: str, payload: Dict[str, Any]):
     _lpush("scw:audit", json.dumps(entry))
 
 
-# =============================================================================
+# ---------------------------
 # Config / Security
-# =============================================================================
+# ---------------------------
 HMAC_SECRET = os.getenv("HMAC_SECRET", "")
 ENV_NAME = os.getenv("ENV_NAME", "prod")
 ALLOW_ORIGINS = os.getenv("ALLOW_ORIGINS", "*")
@@ -120,13 +129,21 @@ K_RESET_SECRET = "scw:reset_secret"
 K_SERVICE_REG = "scw:services"
 K_DEPLOY_LOG = "scw:deploy_log"
 
+# CFP cache keys
+K_CFP_CACHE = "scw:cfp_cache"
+K_CFP_CACHE_TS = "scw:cfp_cache_ts"
+
 DEPLOY_REPORT_TOKEN = os.getenv("DEPLOY_REPORT_TOKEN", "").strip()
 MAX_DEPLOY_LOG = 50
 
+# CFP module configuration
+CFP_SOURCE_URL = os.getenv("CFP_SOURCE_URL", "").strip()
+try:
+    CFP_CACHE_TTL = int(os.getenv("CFP_CACHE_TTL", "600"))
+except ValueError:
+    CFP_CACHE_TTL = 600
 
-# =============================================================================
-# HMAC
-# =============================================================================
+
 def sig(body: bytes) -> str:
     if not HMAC_SECRET:
         return ""
@@ -136,14 +153,16 @@ def sig(body: bytes) -> str:
 def require_admin(x_admin_token: Optional[str]):
     stored = _get(K_ADMIN)
     if not stored:
-        raise HTTPException(status_code=403, detail="Admin token not set. Bootstrap required.")
+        raise HTTPException(
+            status_code=403, detail="Admin token not set. Bootstrap required."
+        )
     if not x_admin_token or x_admin_token != stored:
         raise HTTPException(status_code=403, detail="Invalid admin token.")
 
 
-# =============================================================================
-# Models (Admin + Config)
-# =============================================================================
+# ---------------------------
+# Models
+# ---------------------------
 class BootstrapBody(BaseModel):
     admin_token: str = Field(min_length=16)
 
@@ -167,7 +186,7 @@ class BrandManifest(BaseModel):
     logo_url: str
     domain: str = ""
     env_overrides: Dict[str, str] = {}
-    webhooks: BrandWebhooks = BrandWebhooks()
+    webhooks: BrandWebhooks = BrandWebhooks()  # additive; server env remains source of truth
 
 
 class ServiceRegistration(BaseModel):
@@ -177,78 +196,56 @@ class ServiceRegistration(BaseModel):
 
 
 class DeployReport(BaseModel):
-    source: str
+    source: str  # e.g. "github-actions"
     workflow: str
     run_id: str
     run_url: str
     commit_sha: str
     branch: str
-    status: str
+    status: str  # "success" | "failure" | "cancelled"
     health_code: int
     health_body: Dict[str, Any] = {}
     ts: int
 
 
-# =============================================================================
-# CFP Module Models
-# =============================================================================
-class CFPTeam(BaseModel):
-    id: str
-    name: str
-    conference: str
-    ranking: int
-
-
-class CFPData(BaseModel):
-    year: int
-    teams: List[CFPTeam]
-
-
-# =============================================================================
-# FastAPI App
-# =============================================================================
+# ---------------------------
+# App
+# ---------------------------
 app = FastAPI(
     title="SCW-API",
-    version="1.2.0",
+    version="1.1.0",
     docs_url="/docs",
     openapi_url="/openapi.json",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in ALLOW_ORIGINS.split(",")],
+    allow_origins=[o.strip() for o in ALLOW_ORIGINS.split(",")] if ALLOW_ORIGINS else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# =============================================================================
-# Root + Internal Health
-# =============================================================================
+# -------- Root + internal health/status --------
 @app.get("/")
 def root():
+    """
+    Simple root endpoint so hitting https://scw-api.onrender.com
+    shows a friendly message instead of 404.
+    """
     return {
         "ok": True,
         "service": "SCW-API",
         "env": ENV_NAME,
-        "healthz": "/healthz",
-    }
-
-
-@app.get("/healthz")
-def external_health():
-    """Render health check endpoint."""
-    status = bool(_get(K_ADMIN)) or bool(_get(K_BOOTSTRAP_TS))
-    return {
-        "ok": status,
-        "env": ENV_NAME,
-        "admin_set": bool(_get(K_ADMIN)),
+        "health_url": "/v1/ops/health",
+        "status_url": "/v1/ops/config/status",
+        "external_health_url": "/healthz",
     }
 
 
 @app.get("/v1/ops/health")
-def internal_health():
+def health():
     return {
         "ok": True,
         "env": ENV_NAME,
@@ -259,7 +256,7 @@ def internal_health():
 
 
 @app.get("/v1/ops/config/status")
-def config_status():
+def status():
     return {
         "admin_set": bool(_get(K_ADMIN)),
         "bootstrapped_at": _get(K_BOOTSTRAP_TS),
@@ -268,9 +265,14 @@ def config_status():
     }
 
 
-# =============================================================================
-# Admin Ops
-# =============================================================================
+@app.get("/v1/ops/env/required")
+def env_required():
+    # Show presence (not values) of critical env vars for quick diagnosis
+    keys = ["ENV_NAME", "ALLOW_ORIGINS", "HMAC_SECRET", "DEPLOY_REPORT_TOKEN", "REDIS_URL"]
+    present = {k: bool(os.getenv(k)) for k in keys}
+    return {"ok": True, "present": present}
+
+
 @app.post("/v1/ops/config/bootstrap")
 def bootstrap(body: BootstrapBody):
     if _get(K_ADMIN):
@@ -278,61 +280,40 @@ def bootstrap(body: BootstrapBody):
     _set(K_ADMIN, body.admin_token)
     _set(K_BOOTSTRAP_TS, str(now_ts()))
     audit("bootstrap", {"ok": True})
-    return {"ok": True}
+    return {"ok": True, "message": "Admin token set."}
 
 
 @app.post("/v1/ops/config/rotate")
-def rotate(body: RotateBody, x_admin_token: Optional[str] = Header(None, convert_underscores=False)):
+def rotate(
+    body: RotateBody,
+    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
+):
     stored = _get(K_ADMIN)
     if not stored:
-        raise HTTPException(status_code=403, detail="Admin token not set.")
+        raise HTTPException(status_code=403, detail="Admin token not set. Bootstrap required.")
     reset_secret = _get(K_RESET_SECRET)
-    if x_admin_token != stored and (not reset_secret or reset_secret != body.reset_secret):
-        raise HTTPException(status_code=403, detail="Invalid admin token.")
+    if x_admin_token != stored and (not reset_secret or body.reset_secret != reset_secret):
+        raise HTTPException(status_code=403, detail="Invalid admin token or reset secret.")
     _set(K_ADMIN, body.new_admin_token)
     _set(K_LAST_ROTATE_TS, str(now_ts()))
     audit("rotate", {"ok": True})
-    return {"ok": True}
+    return {"ok": True, "message": "Admin token rotated."}
 
 
-# =============================================================================
-# CFP API MODULE
-# =============================================================================
-
-CFP_STORE_KEY = "scw:cfp_data"   # stored JSON blob in Redis/memory
-
-
-@app.get("/v1/cfp/ping")
-def cfp_ping():
-    return {"ok": True, "module": "cfp"}
-
-
-@app.get("/v1/cfp/current")
-def cfp_current():
-    raw = _get(CFP_STORE_KEY)
-    if not raw:
-        raise HTTPException(status_code=404, detail="No CFP data stored yet.")
-    try:
-        return json.loads(raw)
-    except:
-        raise HTTPException(status_code=500, detail="Stored CFP data corrupted.")
-
-
-@app.post("/v1/cfp/update")
-def cfp_update(
-    data: CFPData,
+@app.post("/v1/ops/service/register")
+def svc_register(
+    body: ServiceRegistration,
     x_admin_token: Optional[str] = Header(None, convert_underscores=False),
 ):
     require_admin(x_admin_token)
-    payload = data.dict()
-    _set(CFP_STORE_KEY, json.dumps(payload))
-    audit("cfp_update", {"year": data.year, "teams": len(data.teams)})
-    return {"ok": True, "stored_year": data.year}
+    _hset(K_SERVICE_REG, body.name, json.dumps(body.dict()))
+    audit("service_register", {"name": body.name})
+    return {"ok": True, "message": "Service registered."}
 
 
-# =============================================================================
-# Build + Deploy Handlers (unchanged)
-# =============================================================================
+# ---------------------------
+# Build trigger (fan-out via env webhooks)
+# ---------------------------
 class HookResult(BaseModel):
     url: str
     status: int
@@ -340,28 +321,184 @@ class HookResult(BaseModel):
     error: Optional[str] = None
 
 
+@app.post("/v1/ops/build/trigger")
+def build_trigger(
+    manifest: BrandManifest,
+    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
+):
+    require_admin(x_admin_token)
+    render_hooks = [h for h in os.getenv("RENDER_HOOKS", "").split(",") if h.strip()]
+    netlify_hooks = [h for h in os.getenv("NETLIFY_HOOKS", "").split(",") if h.strip()]
+    vercel_hooks = [h for h in os.getenv("VERCEL_HOOKS", "").split(",") if h.strip()]
+    render_hooks += manifest.webhooks.render
+    netlify_hooks += manifest.webhooks.netlify
+    vercel_hooks += manifest.webhooks.vercel
+
+    payload = {"brand": manifest.dict(), "meta": {"ts": now_ts(), "env": ENV_NAME}}
+
+    async def fire(url: str):
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                resp = await client.post(url, json=payload)
+                try:
+                    body = resp.json()
+                except Exception:
+                    body = {"text": resp.text[:500]}
+                return HookResult(url=url, status=resp.status_code, body=body)
+        except Exception as e:
+            return HookResult(url=url, status=0, error=str(e)[:400] or "error")
+
+    import asyncio
+
+    tasks = [fire(u) for u in (render_hooks + netlify_hooks + vercel_hooks)]
+    results = asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks)) if tasks else []
+    audit(
+        "build_trigger",
+        {"brand_id": manifest.brand_id, "results": [r.dict() for r in results]},
+    )
+    return {"ok": True, "brand_id": manifest.brand_id, "hook_results": [r.dict() for r in results]}
+
+
+# ---------------------------
+# Deploy summary receiver + listing (for Actions to report)
+# ---------------------------
 @app.post("/v1/ops/deploy/report")
 def deploy_report(report: DeployReport, authorization: Optional[str] = Header(None)):
     if not DEPLOY_REPORT_TOKEN:
-        raise HTTPException(status_code=503, detail="DEPLOY_REPORT_TOKEN missing")
+        raise HTTPException(status_code=503, detail="DEPLOY_REPORT_TOKEN not configured.")
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing bearer token")
+        raise HTTPException(status_code=401, detail="Missing bearer token.")
     token = authorization.split(" ", 1)[1]
     if token != DEPLOY_REPORT_TOKEN:
-        raise HTTPException(status_code=403, detail="Invalid token")
+        raise HTTPException(status_code=403, detail="Invalid token.")
     _lpush(K_DEPLOY_LOG, json.dumps(report.dict()))
-    audit("deploy_report", {"sha": report.commit_sha})
+    try:
+        if redis_client:
+            redis_client.ltrim(K_DEPLOY_LOG, 0, MAX_DEPLOY_LOG - 1)  # type: ignore[attr-defined]
+    except Exception:
+        pass
+    audit("deploy_report", {"status": report.status, "sha": report.commit_sha})
     return {"ok": True}
 
 
 @app.get("/v1/ops/deploy/summary")
 def deploy_summary(limit: int = 10):
     limit = max(1, min(limit, MAX_DEPLOY_LOG))
-    raw = _mem_list[:limit]
-    items = []
+    try:
+        if redis_client:
+            raw = redis_client.lrange(K_DEPLOY_LOG, 0, limit - 1)  # type: ignore[attr-defined]
+        else:
+            raw = _mem_list[:limit]
+    except Exception:
+        raw = _mem_list[:limit]
+    items: List[Dict[str, Any]] = []
     for line in raw:
         try:
             items.append(json.loads(line))
-        except:
-            pass
+        except Exception:
+            continue
     return {"ok": True, "items": items}
+
+
+# ---------------------------
+# CFP module (proxy + cache)
+# ---------------------------
+
+def _cfp_set_cache(data: Any) -> None:
+    _set(K_CFP_CACHE, json.dumps(data))
+    _set(K_CFP_CACHE_TS, str(now_ts()))
+
+
+def _cfp_get_cache() -> Tuple[Optional[Any], Optional[int]]:
+    data = _get_json(K_CFP_CACHE)
+    ts_raw = _get(K_CFP_CACHE_TS)
+    ts = int(ts_raw) if ts_raw else None
+    return data, ts
+
+
+def _cfp_fetch_from_source() -> Any:
+    if not CFP_SOURCE_URL:
+        # Keep this a 503 so Actions can spot configuration issues cleanly
+        raise HTTPException(status_code=503, detail="CFP_SOURCE_URL not configured.")
+    try:
+        resp = httpx.get(CFP_SOURCE_URL, timeout=15.0)
+        resp.raise_for_status()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error fetching CFP source: {e}")
+
+    try:
+        data = resp.json()
+    except Exception:
+        # Fallback: just return truncated text if the source is not JSON
+        data = {"text": resp.text[:4000]}
+    _cfp_set_cache(data)
+    return data
+
+
+@app.get("/api/cfp")
+def cfp_latest(force_refresh: bool = False):
+    """
+    Main CFP endpoint used by GitHub Actions.
+
+    - If cache is fresh (you control TTL via CFP_CACHE_TTL) it returns cached data.
+    - If cache is stale, missing, or force_refresh=true, it pulls from CFP_SOURCE_URL,
+      updates the cache, and returns the fresh data.
+    """
+    cached, ts = _cfp_get_cache()
+    now = now_ts()
+    age = now - ts if ts is not None else None
+
+    if force_refresh or cached is None or (age is not None and age > CFP_CACHE_TTL):
+        data = _cfp_fetch_from_source()
+        ts = now_ts()
+        age = 0
+    else:
+        data = cached
+
+    return {
+        "ok": True,
+        "source": CFP_SOURCE_URL or "unset",
+        "cached_at": ts,
+        "age_seconds": age,
+        "ttl_seconds": CFP_CACHE_TTL,
+        "data": data,
+    }
+
+
+@app.get("/api/cfp/status")
+def cfp_status():
+    """
+    Lightweight status for dashboards: when was CFP data last cached, and how old is it?
+    """
+    _, ts = _cfp_get_cache()
+    age = now_ts() - ts if ts is not None else None
+    return {
+        "ok": True,
+        "source": CFP_SOURCE_URL or "unset",
+        "cached_at": ts,
+        "age_seconds": age,
+        "ttl_seconds": CFP_CACHE_TTL,
+    }
+
+
+# ---------------------------
+# External health for monitors (/healthz)
+# ---------------------------
+@app.get("/healthz")
+def external_health():
+    """
+    Simple, stable health endpoint suitable for uptime monitors.
+    Aggregates the internal health + config status into one payload.
+    """
+    h = health()
+    s = status()
+    return {
+        "ok": h.get("ok", False)
+        and bool(s.get("admin_set", False) or s.get("bootstrapped_at") is not None),
+        "env": h.get("env"),
+        "storage": h.get("storage"),
+        "redis_url_set": h.get("redis_url_set"),
+        "admin_set": s.get("admin_set"),
+        "bootstrapped_at": s.get("bootstrapped_at"),
+        "last_rotate_at": s.get("last_rotate_at"),
+    }
