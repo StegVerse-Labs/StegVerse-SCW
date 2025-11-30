@@ -1,5 +1,5 @@
 import os, hmac, hashlib, json, time
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
@@ -52,7 +52,7 @@ def _get(key: str) -> Optional[str]:
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_get(key)
     try:
-        return redis_client.get(key)
+        return redis_client.get(key)  # type: ignore[attr-defined]
     except Exception:
         return _mem_get(key)
 
@@ -62,7 +62,7 @@ def _set(key: str, val: str):
         _mem_set(key, val)
         return
     try:
-        redis_client.set(key, val)
+        redis_client.set(key, val)  # type: ignore[attr-defined]
     except Exception:
         _mem_set(key, val)
 
@@ -72,7 +72,7 @@ def _lpush(key: str, val: str):
         _mem_lpush(key, val)
         return
     try:
-        redis_client.lpush(key, val)
+        redis_client.lpush(key, val)  # type: ignore[attr-defined]
     except Exception:
         _mem_lpush(key, val)
 
@@ -82,7 +82,7 @@ def _hset(name: str, key: str, val: str):
         _mem_hset(name, key, val)
         return
     try:
-        redis_client.hset(name, key, val)
+        redis_client.hset(name, key, val)  # type: ignore[attr-defined]
     except Exception:
         _mem_hset(name, key, val)
 
@@ -91,7 +91,7 @@ def _hgetall(name: str) -> Dict[str, str]:
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_hgetall(name)
     try:
-        return redis_client.hgetall(name)
+        return redis_client.hgetall(name)  # type: ignore[attr-defined]
     except Exception:
         return _mem_hgetall(name)
 
@@ -122,10 +122,6 @@ K_DEPLOY_LOG = "scw:deploy_log"
 DEPLOY_REPORT_TOKEN = os.getenv("DEPLOY_REPORT_TOKEN", "").strip()
 MAX_DEPLOY_LOG = 50
 
-# External health targets (override via env if needed)
-SCW_UI_HEALTH_URL = os.getenv("SCW_UI_HEALTH_URL", "https://scw-ui.onrender.com/diag.html")
-SCW_API_HEALTH_URL = os.getenv("SCW_API_HEALTH_URL", "https://scw-api.onrender.com/v1/ops/health")
-
 
 def sig(body: bytes) -> str:
     if not HMAC_SECRET:
@@ -136,7 +132,9 @@ def sig(body: bytes) -> str:
 def require_admin(x_admin_token: Optional[str]):
     stored = _get(K_ADMIN)
     if not stored:
-        raise HTTPException(status_code=403, detail="Admin token not set. Bootstrap required.")
+        raise HTTPException(
+            status_code=403, detail="Admin token not set. Bootstrap required."
+        )
     if not x_admin_token or x_admin_token != stored:
         raise HTTPException(status_code=403, detail="Invalid admin token.")
 
@@ -167,8 +165,7 @@ class BrandManifest(BaseModel):
     logo_url: str
     domain: str = ""
     env_overrides: Dict[str, str] = {}
-    # additive; server env remains source of truth
-    webhooks: BrandWebhooks = BrandWebhooks()
+    webhooks: BrandWebhooks = BrandWebhooks()  # additive; server env remains source of truth
 
 
 class ServiceRegistration(BaseModel):
@@ -193,7 +190,13 @@ class DeployReport(BaseModel):
 # ---------------------------
 # App
 # ---------------------------
-app = FastAPI(title="SCW-API", version="1.2.0", docs_url="/docs", openapi_url="/openapi.json")
+app = FastAPI(
+    title="SCW-API",
+    version="1.1.0",
+    docs_url="/docs",
+    openapi_url="/openapi.json",
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in ALLOW_ORIGINS.split(",")] if ALLOW_ORIGINS else ["*"],
@@ -201,6 +204,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# -------- Root + internal health/status --------
+@app.get("/")
+def root():
+    """
+    Simple root endpoint so hitting https://scw-api.onrender.com
+    shows a friendly message instead of 404.
+    """
+    return {
+        "ok": True,
+        "service": "SCW-API",
+        "env": ENV_NAME,
+        "health_url": "/v1/ops/health",
+        "status_url": "/v1/ops/config/status",
+        "external_health_url": "/healthz",
+    }
 
 
 @app.get("/v1/ops/health")
@@ -243,7 +263,10 @@ def bootstrap(body: BootstrapBody):
 
 
 @app.post("/v1/ops/config/rotate")
-def rotate(body: RotateBody, x_admin_token: Optional[str] = Header(None, convert_underscores=False)):
+def rotate(
+    body: RotateBody,
+    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
+):
     stored = _get(K_ADMIN)
     if not stored:
         raise HTTPException(status_code=403, detail="Admin token not set. Bootstrap required.")
@@ -257,7 +280,10 @@ def rotate(body: RotateBody, x_admin_token: Optional[str] = Header(None, convert
 
 
 @app.post("/v1/ops/service/register")
-def svc_register(body: ServiceRegistration, x_admin_token: Optional[str] = Header(None, convert_underscores=False)):
+def svc_register(
+    body: ServiceRegistration,
+    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
+):
     require_admin(x_admin_token)
     _hset(K_SERVICE_REG, body.name, json.dumps(body.dict()))
     audit("service_register", {"name": body.name})
@@ -275,14 +301,14 @@ class HookResult(BaseModel):
 
 
 @app.post("/v1/ops/build/trigger")
-def build_trigger(manifest: BrandManifest, x_admin_token: Optional[str] = Header(None, convert_underscores=False)):
+def build_trigger(
+    manifest: BrandManifest,
+    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
+):
     require_admin(x_admin_token)
-
     render_hooks = [h for h in os.getenv("RENDER_HOOKS", "").split(",") if h.strip()]
     netlify_hooks = [h for h in os.getenv("NETLIFY_HOOKS", "").split(",") if h.strip()]
     vercel_hooks = [h for h in os.getenv("VERCEL_HOOKS", "").split(",") if h.strip()]
-
-    # manifest-provided hooks extend, but never replace, env hooks
     render_hooks += manifest.webhooks.render
     netlify_hooks += manifest.webhooks.netlify
     vercel_hooks += manifest.webhooks.vercel
@@ -305,7 +331,10 @@ def build_trigger(manifest: BrandManifest, x_admin_token: Optional[str] = Header
 
     tasks = [fire(u) for u in (render_hooks + netlify_hooks + vercel_hooks)]
     results = asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks)) if tasks else []
-    audit("build_trigger", {"brand_id": manifest.brand_id, "results": [r.dict() for r in results]})
+    audit(
+        "build_trigger",
+        {"brand_id": manifest.brand_id, "results": [r.dict() for r in results]},
+    )
     return {"ok": True, "brand_id": manifest.brand_id, "hook_results": [r.dict() for r in results]}
 
 
@@ -321,15 +350,12 @@ def deploy_report(report: DeployReport, authorization: Optional[str] = Header(No
     token = authorization.split(" ", 1)[1]
     if token != DEPLOY_REPORT_TOKEN:
         raise HTTPException(status_code=403, detail="Invalid token.")
-
     _lpush(K_DEPLOY_LOG, json.dumps(report.dict()))
     try:
         if redis_client:
-            redis_client.ltrim(K_DEPLOY_LOG, 0, MAX_DEPLOY_LOG - 1)
+            redis_client.ltrim(K_DEPLOY_LOG, 0, MAX_DEPLOY_LOG - 1)  # type: ignore[attr-defined]
     except Exception:
-        # memory fallback already holds the list
         pass
-
     audit("deploy_report", {"status": report.status, "sha": report.commit_sha})
     return {"ok": True}
 
@@ -339,12 +365,11 @@ def deploy_summary(limit: int = 10):
     limit = max(1, min(limit, MAX_DEPLOY_LOG))
     try:
         if redis_client:
-            raw = redis_client.lrange(K_DEPLOY_LOG, 0, limit - 1)
+            raw = redis_client.lrange(K_DEPLOY_LOG, 0, limit - 1)  # type: ignore[attr-defined]
         else:
             raw = _mem_list[:limit]
     except Exception:
         raw = _mem_list[:limit]
-
     items: List[Dict[str, Any]] = []
     for line in raw:
         try:
@@ -355,66 +380,22 @@ def deploy_summary(limit: int = 10):
 
 
 # ---------------------------
-# Full external health check
+# External health for monitors (/healthz)
 # ---------------------------
-def _check_url(url: str, timeout: float = 5.0) -> Dict[str, Any]:
-    """Small helper used by /v1/ops/health/external to probe URLs safely."""
-    try:
-        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
-            resp = client.get(url)
-        snippet: str
-        try:
-            # short JSON / text preview only
-            data = resp.text
-            snippet = data[:300]
-        except Exception:
-            snippet = ""
-        return {
-            "url": url,
-            "ok": resp.status_code < 400,
-            "status": resp.status_code,
-            "preview": snippet,
-        }
-    except Exception as e:
-        return {
-            "url": url,
-            "ok": False,
-            "status": 0,
-            "error": str(e)[:300],
-        }
-
-
-@app.get("/v1/ops/health/external")
-def health_external():
+@app.get("/healthz")
+def external_health():
     """
-    One-shot, 'tell me everything' health endpoint.
-
-    - Includes internal health() + status() + env_required()
-    - Probes UI + API via HTTP
-    - Returns a single JSON blob suitable for SCW diag.html
+    Simple, stable health endpoint suitable for uptime monitors.
+    Aggregates the internal health + config status into one payload.
     """
-    internal = health()
-    cfg = status()
-    env_summary = env_required()
-
-    ui_probe = _check_url(SCW_UI_HEALTH_URL)
-    api_probe = _check_url(SCW_API_HEALTH_URL)
-
-    overall_ok = bool(
-        internal.get("ok")
-        and ui_probe.get("ok")
-        and api_probe.get("ok")
-    )
-
+    h = health()
+    s = status()
     return {
-        "ok": overall_ok,
-        "env": ENV_NAME,
-        "internal": internal,
-        "config": cfg,
-        "env_required": env_summary,
-        "external": {
-            "ui": ui_probe,
-            "api": api_probe,
-        },
-        "ts": now_ts(),
+        "ok": h.get("ok", False) and bool(s.get("admin_set", False) or s.get("bootstrapped_at") is not None),
+        "env": h.get("env"),
+        "storage": h.get("storage"),
+        "redis_url_set": h.get("redis_url_set"),
+        "admin_set": s.get("admin_set"),
+        "bootstrapped_at": s.get("bootstrapped_at"),
+        "last_rotate_at": s.get("last_rotate_at"),
     }
