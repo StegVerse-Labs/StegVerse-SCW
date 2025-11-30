@@ -1,9 +1,12 @@
 # StegVerse-SCW/api/main.py
-"""
-Thin shim so process managers can use `main:app` while the real
-FastAPI application lives in `api/app/main.py`.
-"""
+import os
+from app.main import app  # FastAPI instance
 
-from app.main import app  # noqa: F401
+if __name__ == "__main__":
+    import uvicorn
 
-__all__ = ["app"]
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "8000")),
+    )
