@@ -135,6 +135,7 @@ class ServiceRegistration(BaseModel):
     name: str
     base_url: str
     hmac_required: bool = True
+    health_path: str = "/v1/ops/health"
 
 class DeployReport(BaseModel):
     source: str            # e.g. "github-actions"
@@ -148,10 +149,19 @@ class DeployReport(BaseModel):
     health_body: Dict[str, Any] = {}
     ts: int
 
+class ServiceHealth(BaseModel):
+    name: str
+    url: str
+    ok: bool
+    status_code: int
+    elapsed_ms: int
+    body: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
 # ---------------------------
 # App
 # ---------------------------
-app = FastAPI(title="SCW-API", version="1.1.0", docs_url="/docs", openapi_url="/openapi.json")
+app = FastAPI(title="SCW-API", version="1.2.0", docs_url="/docs", openapi_url="/openapi.json")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in ALLOW_ORIGINS.split(",")] if ALLOW_ORIGINS else ["*"],
@@ -215,6 +225,19 @@ def svc_register(body: ServiceRegistration, x_admin_token: Optional[str] = Heade
     audit("service_register", {"name": body.name})
     return {"ok": True, "message": "Service registered."}
 
+@app.get("/v1/ops/service/list")
+def svc_list(x_admin_token: Optional[str] = Header(None, convert_underscores=False)):
+    require_admin(x_admin_token)
+    raw = _hgetall(K_SERVICE_REG)
+    items: List[Dict[str, Any]] = []
+    for name, val in raw.items():
+        try:
+            data = json.loads(val)
+            items.append(data)
+        except Exception:
+            items.append({"name": name, "raw": val, "error": "json_decode_failed"})
+    return {"ok": True, "services": items}
+
 # ---------------------------
 # Build trigger (fan-out via env webhooks)
 # ---------------------------
@@ -235,6 +258,7 @@ def build_trigger(manifest: BrandManifest, x_admin_token: Optional[str] = Header
     vercel_hooks  += manifest.webhooks.vercel
 
     payload = {"brand": manifest.dict(), "meta": {"ts": now_ts(), "env": ENV_NAME}}
+
     async def fire(url: str):
         try:
             async with httpx.AsyncClient(timeout=20.0) as client:
@@ -291,3 +315,72 @@ def deploy_summary(limit: int = 10):
         except Exception:
             continue
     return {"ok": True, "items": items}
+
+# ---------------------------
+# External health aggregation
+# ---------------------------
+@app.get("/v1/ops/health/external")
+async def external_health(
+    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
+    timeout: float = 5.0,
+):
+    """
+    Fan-out health check for all registered services.
+
+    Reads registrations from scw:services hash and calls:
+      base_url.rstrip("/") + health_path
+    for each ServiceRegistration.
+    """
+    require_admin(x_admin_token)
+
+    raw = _hgetall(K_SERVICE_REG)
+    services: List[ServiceRegistration] = []
+    for name, val in raw.items():
+        try:
+            data = json.loads(val)
+            services.append(ServiceRegistration(**data))
+        except Exception:
+            # skip bad entries
+            continue
+
+    results: List[ServiceHealth] = []
+
+    async def check(reg: ServiceRegistration) -> ServiceHealth:
+        path = reg.health_path or "/v1/ops/health"
+        url = reg.base_url.rstrip("/") + path
+        start = time.time()
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                resp = await client.get(url)
+                elapsed_ms = int((time.time() - start) * 1000)
+                try:
+                    body = resp.json()
+                except Exception:
+                    body = {"text": resp.text[:500]}
+                ok = resp.status_code == 200 and bool(body.get("ok", True))
+                return ServiceHealth(
+                    name=reg.name,
+                    url=url,
+                    ok=ok,
+                    status_code=resp.status_code,
+                    elapsed_ms=elapsed_ms,
+                    body=body,
+                )
+        except Exception as e:
+            elapsed_ms = int((time.time() - start) * 1000)
+            return ServiceHealth(
+                name=reg.name,
+                url=url,
+                ok=False,
+                status_code=0,
+                elapsed_ms=elapsed_ms,
+                error=str(e)[:400] or "error",
+            )
+
+    import asyncio
+    if services:
+        results = await asyncio.gather(*(check(s) for s in services))
+
+    overall_ok = all(r.ok for r in results) if results else True
+    audit("external_health", {"ok": overall_ok, "count": len(results)})
+    return {"ok": overall_ok, "services": [r.dict() for r in results]}
