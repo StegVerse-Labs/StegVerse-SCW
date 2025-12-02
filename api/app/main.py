@@ -1,3 +1,7 @@
+# [SCW-API-APP v2025-12-02-01] LINES≈540
+# Canonical SCW API app (lives at api/app/main.py)
+# Loaded via stub api/main.py -> from app.main import app
+
 import os
 import hmac
 import hashlib
@@ -15,7 +19,7 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------
 USE_MEMORY_ONLY: bool = False
 _mem_kv: Dict[str, str] = {}
-_mem_list: List[str] = []  # single audit / log stream in memory
+_mem_lists: Dict[str, List[str]] = {}  # per-key in-memory lists
 
 
 def _mem_get(key: str) -> Optional[str]:
@@ -27,7 +31,10 @@ def _mem_set(key: str, val: str) -> None:
 
 
 def _mem_lpush(key: str, val: str) -> None:
-    _mem_list.insert(0, val)
+    """Append to a per-key in-memory list (used when Redis is not available)."""
+    if key not in _mem_lists:
+        _mem_lists[key] = []
+    _mem_lists[key].insert(0, val)
 
 
 def _mem_hset(name: str, key: str, val: str) -> None:
@@ -36,7 +43,7 @@ def _mem_hset(name: str, key: str, val: str) -> None:
 
 def _mem_hgetall(name: str) -> Dict[str, str]:
     prefix = f"{name}:"
-    return {k[len(prefix) :]: v for k, v in _mem_kv.items() if k.startswith(prefix)}
+    return {k[len(prefix):]: v for k, v in _mem_kv.items() if k.startswith(prefix)}
 
 
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
@@ -161,9 +168,9 @@ class RotateBody(BaseModel):
 
 
 class BrandWebhooks(BaseModel):
-    render: List[str] = []
-    netlify: List[str] = []
-    vercel: List[str] = []
+    render: List[str] = Field(default_factory=list)
+    netlify: List[str] = Field(default_factory=list)
+    vercel: List[str] = Field(default_factory=list)
 
 
 class BrandManifest(BaseModel):
@@ -173,9 +180,9 @@ class BrandManifest(BaseModel):
     primary_hex: str
     logo_url: str
     domain: str = ""
-    env_overrides: Dict[str, str] = {}
+    env_overrides: Dict[str, str] = Field(default_factory=dict)
     # additive; server env remains source of truth
-    webhooks: BrandWebhooks = BrandWebhooks()
+    webhooks: BrandWebhooks = Field(default_factory=BrandWebhooks)
 
 
 class ServiceRegistration(BaseModel):
@@ -193,7 +200,7 @@ class DeployReport(BaseModel):
     branch: str
     status: str  # "success" | "failure" | "cancelled"
     health_code: int
-    health_body: Dict[str, Any] = {}
+    health_body: Dict[str, Any] = Field(default_factory=dict)
     ts: int
 
 
@@ -225,7 +232,7 @@ class HookResult(BaseModel):
 # ---------------------------------------------------------
 app = FastAPI(
     title="SCW-API",
-    version="1.3.0",
+    version="1.3.1",
     docs_url="/docs",
     openapi_url="/openapi.json",
 )
@@ -514,9 +521,9 @@ def deploy_summary(limit: int = 10) -> Dict[str, Any]:
         if redis_client:
             raw = redis_client.lrange(K_DEPLOY_LOG, 0, limit - 1)
         else:
-            raw = _mem_list[:limit]
+            raw = _mem_lists.get(K_DEPLOY_LOG, [])[:limit]
     except Exception:
-        raw = _mem_list[:limit]
+        raw = _mem_lists.get(K_DEPLOY_LOG, [])[:limit]
 
     items: List[Dict[str, Any]] = []
     for line in raw:
@@ -525,3 +532,5 @@ def deploy_summary(limit: int = 10) -> Dict[str, Any]:
         except Exception:
             continue
     return {"ok": True, "items": items}
+
+# END [SCW-API-APP v2025-12-02-01]
