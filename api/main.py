@@ -1,7 +1,14 @@
-# SCW-STUB api/main.py v2025-12-02-01
-# This file is a simple stub so that `uvicorn main:app` works.
-# The real FastAPI app lives in app/main.py.
+from fastapi import FastAPI
+from app.main import app as real_app
 
-from app.main import app  # noqa: F401
+# Create a wrapper app just to expose /healthz
+wrapper = FastAPI()
 
-# END SCW-STUB v2025-12-02-01
+@wrapper.get("/healthz")
+def healthz():
+    return {"ok": True}
+
+# Mount your real app at root
+wrapper.mount("/", real_app)
+
+app = wrapper
