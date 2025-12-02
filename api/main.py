@@ -1,14 +1,18 @@
-from fastapi import FastAPI
-from app.main import app as real_app
+# SCW-STUB api/main.py v2025-12-02-02
+"""
+Entry stub so that `uvicorn main:app` (used by Render) loads the real SCW API
+from `api/app/main.py`, and exposes `/healthz` for Render's health checks.
+"""
 
-# Create a wrapper app just to expose /healthz
-wrapper = FastAPI()
+from app.main import app  # noqa: F401
 
-@wrapper.get("/healthz")
+
+@app.get("/healthz")
 def healthz():
-    return {"ok": True}
+    """
+    Lightweight health endpoint for Render.
 
-# Mount your real app at root
-wrapper.mount("/", real_app)
-
-app = wrapper
+    Returns 200 OK with a simple payload. The real internal health remains
+    at `/v1/ops/health` inside the SCW app.
+    """
+    return {"ok": True, "source": "scw-stub"}
