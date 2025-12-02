@@ -1,9 +1,27 @@
+# [SCW-API-DOCKER v2025-12-02-01]
+# Canonical Dockerfile for the SCW API service on Render.
+
 FROM python:3.11-slim
+
+# Work inside /app
 WORKDIR /app
-# context is the repo root; copy from api/
-COPY api/requirements.txt .
+
+# Optional (but helpful) build tools, then clean up
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
+  && rm -rf /var/lib/apt/lists/*
+
+# Copy ONLY the api directory from the repo into the container
+# (Because Docker build context is the repo root ".")
+COPY api/ /app/
+
+# Install Python dependencies
+# (expects api/requirements.txt in the repo -> /app/requirements.txt in the image)
 RUN pip install --no-cache-dir -r requirements.txt
-COPY api/ ./
-# Render sets PORT dynamically
-ENV PORT=8080
-CMD sh -lc "uvicorn main:app --host 0.0.0.0 --port ${PORT}"
+
+ENV PYTHONUNBUFFERED=1
+
+# Start the FastAPI app via the stub api/main.py
+# Render provides $PORT; fall back to 8080 locally.
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+
+# END [SCW-API-DOCKER v2025-12-02-01]
