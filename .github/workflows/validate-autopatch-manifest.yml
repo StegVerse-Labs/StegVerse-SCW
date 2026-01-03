@@ -3,7 +3,7 @@ name: validate-autopatch-manifest
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "0 9 * * 1"   # Mondays 09:00 UTC
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC
 
 permissions:
   contents: read
@@ -85,7 +85,7 @@ jobs:
       # Create or update a single rolling issue to track warnings/errors
       - name: Open/Update tracking issue
         if: ${{ steps.validate.outputs.exit_code != '0' }}
-        uses: peter-evans/create-issue-from-file@v4
+        uses: peter-evans/create-issue-from-file@v5
         with:
           title: "AutoPatch manifest validation ❗"
           content-filepath: issue_body.md
