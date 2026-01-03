@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2025-11-24 21:33 UTC**_
+_Last updated: **2026-01-03 06:40 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **109**
+- ➖ No dispatch: **110**
 - ❌ Broken: **40**
-- Total: **149**
+- Total: **150**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -66,6 +66,7 @@ _Last updated: **2025-11-24 21:33 UTC**_
 | `hybrid_bridge_ci.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hybrid_bridge_ci.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hybrid_bridge_ci.yml) · [File](.github/workflows/hybrid_bridge_ci.yml) |
 | `hybrid_bridge_functional.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hybrid_bridge_functional.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/hybrid_bridge_functional.yml) · [File](.github/workflows/hybrid_bridge_functional.yml) |
 | `ingest_conversation.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ingest_conversation.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ingest_conversation.yml) · [File](.github/workflows/ingest_conversation.yml) |
+| `ingestion-orchestrator.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ingestion-orchestrator.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ingestion-orchestrator.yml) · [File](.github/workflows/ingestion-orchestrator.yml) |
 | `install_self_healing_pack.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/install_self_healing_pack.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/install_self_healing_pack.yml) · [File](.github/workflows/install_self_healing_pack.yml) |
 | `intent_guard.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/intent_guard.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/intent_guard.yml) · [File](.github/workflows/intent_guard.yml) |
 | `kick-autopatch-apply.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-autopatch-apply.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-autopatch-apply.yml) · [File](.github/workflows/kick-autopatch-apply.yml) |
