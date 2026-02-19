@@ -1,7 +1,7 @@
 # StegVerse Repo Alignment Report
 
-- Run: 2026-02-18T08:07:31Z
-- RID: `22131632082`
+- Run: 2026-02-19T08:07:02Z
+- RID: `22173566196`
 
 ## Summary
 - Total repos: **4**
@@ -13,93 +13,83 @@
 ### ❌ StegVerse-Labs/TVC
 
 **Required files:**
-- ✅ `.github/workflows/autopatch.yml` — present
-- ✅ `.github/workflows/workflows-status-badges.yml` — present
-- ✅ `data/stegtvc_config.json` — present
-- ✅ `app/resolver.py` — present
-- ❌ `.github/stegtvc_client.py` — missing
+- ❌ `.github/workflows/autopatch.yml` — error:401
+- ❌ `.github/workflows/workflows-status-badges.yml` — error:401
+- ❌ `data/stegtvc_config.json` — error:401
+- ❌ `app/resolver.py` — error:401
+- ❌ `.github/stegtvc_client.py` — error:401
 
 **Required workflows:**
-- ✅ `.github/workflows/autopatch.yml` — present
+- ❌ `.github/workflows/autopatch.yml` — missing
 - ❌ `.github/workflows/guardian_omni_guardian.yml` — missing
 - ❌ `.github/workflows/guardian_worker_readmes.yml` — missing
 
 **Optional:** workflow_dispatch present in all workflows.
 
-**Optional secrets check:** ok
-- ❌ missing secret name `PAT_WORKFLOW`
-- ❌ missing secret name `GH_STEGVERSE_PAT`
+**Optional secrets check:** unknown:401
+
+**Notes:**
+- workflow_list:error:401
 
 ### ❌ StegVerse-Labs/hybrid-collab-bridge
 
 **Required files:**
-- ✅ `.github/workflows/autopatch.yml` — present
-- ✅ `.github/workflows/workflows-status-badges.yml` — present
-- ✅ `data/stegtvc_config.json` — present
-- ✅ `app/resolver.py` — present
-- ✅ `.github/stegtvc_client.py` — present
+- ❌ `.github/workflows/autopatch.yml` — error:401
+- ❌ `.github/workflows/workflows-status-badges.yml` — error:401
+- ❌ `data/stegtvc_config.json` — error:401
+- ❌ `app/resolver.py` — error:401
+- ❌ `.github/stegtvc_client.py` — error:401
 
 **Required workflows:**
-- ✅ `.github/workflows/autopatch.yml` — present
+- ❌ `.github/workflows/autopatch.yml` — missing
 - ❌ `.github/workflows/guardian_omni_guardian.yml` — missing
 - ❌ `.github/workflows/guardian_worker_readmes.yml` — missing
 
-**Optional:** workflow_dispatch missing in:
-- ⚠️ `.github/workflows/ci.yml`
+**Optional:** workflow_dispatch present in all workflows.
 
-**Optional secrets check:** ok
-- ✅ all required secret names present
+**Optional secrets check:** unknown:401
+
+**Notes:**
+- workflow_list:error:401
 
 ### ❌ StegVerse-Labs/TV
 
 **Required files:**
-- ✅ `.github/workflows/autopatch.yml` — present
-- ✅ `.github/workflows/workflows-status-badges.yml` — present
-- ✅ `data/stegtvc_config.json` — present
-- ✅ `app/resolver.py` — present
-- ❌ `.github/stegtvc_client.py` — missing
+- ❌ `.github/workflows/autopatch.yml` — error:401
+- ❌ `.github/workflows/workflows-status-badges.yml` — error:401
+- ❌ `data/stegtvc_config.json` — error:401
+- ❌ `app/resolver.py` — error:401
+- ❌ `.github/stegtvc_client.py` — error:401
 
 **Required workflows:**
-- ✅ `.github/workflows/autopatch.yml` — present
+- ❌ `.github/workflows/autopatch.yml` — missing
 - ❌ `.github/workflows/guardian_omni_guardian.yml` — missing
 - ❌ `.github/workflows/guardian_worker_readmes.yml` — missing
 
-**Optional:** workflow_dispatch missing in:
-- ⚠️ `.github/workflows/forward-to-bridge.yml`
-- ⚠️ `.github/workflows/tv_apply_reusable.yml`
-- ⚠️ `.github/workflows/tv_auto_heal.yml`
-- ⚠️ `.github/workflows/tv_self_heal_on_push.yml`
-- ⚠️ `.github/workflows/tv_verify_reusable.yml`
+**Optional:** workflow_dispatch present in all workflows.
 
-**Optional secrets check:** ok
-- ❌ missing secret name `PAT_WORKFLOW`
-- ❌ missing secret name `GH_STEGVERSE_PAT`
+**Optional secrets check:** unknown:401
+
+**Notes:**
+- workflow_list:error:401
 
 ### ❌ StegVerse-Labs/StegVerse-SCW
 
 **Required files:**
-- ✅ `.github/workflows/autopatch.yml` — present
-- ✅ `.github/workflows/workflows-status-badges.yml` — present
-- ✅ `data/stegtvc_config.json` — present
-- ✅ `app/resolver.py` — present
-- ❌ `.github/stegtvc_client.py` — missing
+- ❌ `.github/workflows/autopatch.yml` — error:401
+- ❌ `.github/workflows/workflows-status-badges.yml` — error:401
+- ❌ `data/stegtvc_config.json` — error:401
+- ❌ `app/resolver.py` — error:401
+- ❌ `.github/stegtvc_client.py` — error:401
 
 **Required workflows:**
-- ✅ `.github/workflows/autopatch.yml` — present
+- ❌ `.github/workflows/autopatch.yml` — missing
 - ❌ `.github/workflows/guardian_omni_guardian.yml` — missing
 - ❌ `.github/workflows/guardian_worker_readmes.yml` — missing
 
-**Optional:** workflow_dispatch missing in:
-- ⚠️ `.github/workflows/autopatch_dryrun.yml`
-- ⚠️ `.github/workflows/ci.yml`
-- ⚠️ `.github/workflows/ci_governance.yml`
-- ⚠️ `.github/workflows/docs-suite-on-complete.yml`
-- ⚠️ `.github/workflows/forward-to-bridge.yml`
-- ⚠️ `.github/workflows/setup-common-python.yml`
-- ⚠️ `.github/workflows/taskops-export-weekly.yml`
-- ⚠️ `.github/workflows/taskops-first-run-update.yml`
-- ⚠️ `.github/workflows/yaml_corrector.yml`
-- ⚠️ `.github/workflows/yaml_corrector_v2.yml`
+**Optional:** workflow_dispatch present in all workflows.
 
-**Optional secrets check:** ok
-- ✅ all required secret names present
+**Optional secrets check:** unknown:401
+
+**Notes:**
+- workflow_list:error:401
