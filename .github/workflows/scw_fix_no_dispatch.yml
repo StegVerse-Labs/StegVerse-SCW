@@ -1,0 +1,68 @@
+name: SCW - Fix Missing workflow_dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "If true, write changes + commit back to repo"
+        required: true
+        default: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  fix-no-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: python -m pip install --upgrade pip pyyaml
+
+      - name: Run fixer
+        run: |
+          set -euo pipefail
+          APPLY="${{ inputs.apply }}"
+          if [[ "$APPLY" == "true" ]]; then
+            python tools/fix_no_dispatch.py --root . --apply
+          else
+            python tools/fix_no_dispatch.py --root .
+          fi
+
+      - name: Upload patchlogs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scw_no_dispatch_patchlogs
+          path: reports/guardians/patchlogs
+          if-no-files-found: warn
+
+      - name: Commit changes (if apply)
+        if: inputs.apply == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .github/workflows/*.yml .github/workflows/*.yaml reports/guardians/patchlogs/*.json* 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(scw): add missing workflow_dispatch to workflows [skip ci]"
+          git push
+
+      - name: Append canonical receipts
+        uses: ./.github/workflows/_reusables/append-stegdb-receipts.yml
+        with:
+          stegdb_repo: "stegverse-labs/StegDB"
+          note: "This run corrected missing `workflow_dispatch` triggers in SCW workflows. Canonical receipts are stored in StegDB."
