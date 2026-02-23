@@ -1,0 +1,43 @@
+name: append-stegdb-receipts
+
+on:
+  workflow_call:
+    inputs:
+      stegdb_repo:
+        required: true
+        type: string
+      receipts_path_md:
+        required: false
+        type: string
+        default: "meta/guardian/GUARDIAN_GLOBAL_LATEST.md"
+      receipts_path_json:
+        required: false
+        type: string
+        default: "meta/guardian/guardian_global_latest.json"
+      note:
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  append:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Append canonical receipt links
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo ""
+            echo "## Canonical Receipt (StegDB)"
+            if [[ -n "${{ inputs.note }}" ]]; then
+              echo ""
+              echo "${{ inputs.note }}"
+            fi
+            echo ""
+            echo "- StegDB repo: \`${{ inputs.stegdb_repo }}\`"
+            echo "- Latest global receipt (MD): https://github.com/${{ inputs.stegdb_repo }}/blob/main/${{ inputs.receipts_path_md }}"
+            echo "- Latest global receipt (JSON): https://github.com/${{ inputs.stegdb_repo }}/blob/main/${{ inputs.receipts_path_json }}"
+            echo ""
+            echo "> SCW is the command plane; StegDB is the truth plane."
+          } >> "$GITHUB_STEP_SUMMARY"
