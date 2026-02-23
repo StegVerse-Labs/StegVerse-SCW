@@ -1,0 +1,44 @@
+name: SCW - Workflow Runnability Audit (API-aware)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout SCW
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: python -m pip install --upgrade pip pyyaml
+
+      - name: Run audit
+        run: |
+          set -euo pipefail
+          python tools/workflow_runnability_audit.py --repo-root .
+
+      - name: Upload audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scw_workflow_runnability_audit
+          path: reports/guardians/workflow_runnability_latest.*
+          if-no-files-found: warn
+
+      - name: Append canonical receipts
+        if: always()
+        uses: ./.github/workflows/_reusables/append-stegdb-receipts.yml
+        with:
+          stegdb_repo: "stegverse-labs/StegDB"
+          note: "This run produced an API-aware workflow runnability report. Canonical receipts are stored in StegDB."
