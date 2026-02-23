@@ -3,41 +3,56 @@ name: append-stegdb-receipts
 on:
   workflow_call:
     inputs:
-      stegdb_repo:
+      receipt_file:
+        description: "Path to JSON receipt file to append"
         required: true
         type: string
-      receipts_path_md:
+    secrets:
+      GH_TOKEN:
         required: false
-        type: string
-        default: "meta/guardian/GUARDIAN_GLOBAL_LATEST.md"
-      receipts_path_json:
-        required: false
-        type: string
-        default: "meta/guardian/guardian_global_latest.json"
-      note:
-        required: false
-        type: string
-        default: ""
+
+permissions:
+  contents: write
 
 jobs:
   append:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Append canonical receipt links
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure StegDB meta directory exists
+        run: |
+          mkdir -p meta
+
+      - name: Append receipt to canonical ledger
         shell: bash
         run: |
           set -euo pipefail
-          {
-            echo ""
-            echo "## Canonical Receipt (StegDB)"
-            if [[ -n "${{ inputs.note }}" ]]; then
-              echo ""
-              echo "${{ inputs.note }}"
-            fi
-            echo ""
-            echo "- StegDB repo: \`${{ inputs.stegdb_repo }}\`"
-            echo "- Latest global receipt (MD): https://github.com/${{ inputs.stegdb_repo }}/blob/main/${{ inputs.receipts_path_md }}"
-            echo "- Latest global receipt (JSON): https://github.com/${{ inputs.stegdb_repo }}/blob/main/${{ inputs.receipts_path_json }}"
-            echo ""
-            echo "> SCW is the command plane; StegDB is the truth plane."
-          } >> "$GITHUB_STEP_SUMMARY"
+
+          RECEIPT="${{ inputs.receipt_file }}"
+          TARGET="meta/stegdb_receipts.jsonl"
+
+          if [[ ! -f "$RECEIPT" ]]; then
+            echo "Receipt file not found: $RECEIPT"
+            exit 1
+          fi
+
+          touch "$TARGET"
+          cat "$RECEIPT" >> "$TARGET"
+
+      - name: Commit receipt update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add meta/stegdb_receipts.jsonl
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(stegdb): append canonical receipt [skip ci]"
+          git push
