@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2026-02-23 06:29 UTC**_
+_Last updated: **2026-02-23 11:14 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **110**
+- ➖ No dispatch: **112**
 - ❌ Broken: **40**
-- Total: **150**
+- Total: **152**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -114,7 +114,9 @@ _Last updated: **2026-02-23 06:29 UTC**_
 | `scw-api-config-and-deploy.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-config-and-deploy.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-config-and-deploy.yml) · [File](.github/workflows/scw-api-config-and-deploy.yml) |
 | `scw-api-health-and-report.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-health-and-report.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-health-and-report.yml) · [File](.github/workflows/scw-api-health-and-report.yml) |
 | `scw_bridge.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_bridge.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_bridge.yml) · [File](.github/workflows/scw_bridge.yml) |
+| `scw_fix_no_dispatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_fix_no_dispatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_fix_no_dispatch.yml) · [File](.github/workflows/scw_fix_no_dispatch.yml) |
 | `scw_orchestrator.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_orchestrator.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_orchestrator.yml) · [File](.github/workflows/scw_orchestrator.yml) |
+| `scw_workflow_runnability_audit.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_workflow_runnability_audit.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_workflow_runnability_audit.yml) · [File](.github/workflows/scw_workflow_runnability_audit.yml) |
 | `seed-autodocs-verify.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-autodocs-verify.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-autodocs-verify.yml) · [File](.github/workflows/seed-autodocs-verify.yml) |
 | `seed-steg-config.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-steg-config.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-steg-config.yml) · [File](.github/workflows/seed-steg-config.yml) |
 | `seed_config.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed_config.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed_config.yml) · [File](.github/workflows/seed_config.yml) |
