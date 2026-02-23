@@ -49,18 +49,19 @@ jobs:
             "source_ref": "${{ github.ref }}",
             "source_sha": "${{ github.sha }}",
             "run_id": "${{ github.run_id }}",
+            "run_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "artifact_name": "scw_workflow_runnability_audit",
-            "report_glob": "reports/guardians/workflow_runnability_latest.*"
+            "report_glob": "reports/guardians/workflow_runnability_latest.*",
+            "generated_at_utc": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           }
           EOF
 
       - name: Append canonical receipts to StegDB (always)
         if: always()
-        uses: ./.github/workflows/_reusables/append-stegdb-receipts.yml
+        uses: ./.github/actions/append-stegdb-receipts
         with:
           stegdb_repo: "stegverse-labs/StegDB"
           receipt_file: "meta/workflow_runnability_receipt.json"
           note: "API-aware workflow runnability audit receipt from SCW."
           target_jsonl: "meta/receipts.jsonl"
-        secrets:
-          STEGVERSE_TOKEN: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
+          token: "${{ secrets.GH_STEGVERSE_AI_TOKEN }}"
