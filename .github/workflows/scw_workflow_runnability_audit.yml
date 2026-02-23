@@ -1,44 +1,126 @@
-name: SCW - Workflow Runnability Audit (API-aware)
+name: append-stegdb-receipts
 
 on:
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      stegdb_repo:
+        description: "owner/repo for StegDB"
+        required: true
+        type: string
+      receipt_file:
+        description: "Path (in caller repo workspace) to JSON receipt file"
+        required: true
+        type: string
+      note:
+        description: "Optional human note stored in the receipt line"
+        required: false
+        type: string
+        default: ""
+      target_jsonl:
+        description: "Target JSONL path inside StegDB"
+        required: false
+        type: string
+        default: "meta/receipts.jsonl"
+      target_branch:
+        description: "Branch in StegDB to push to"
+        required: false
+        type: string
+        default: "main"
+    secrets:
+      STEGVERSE_TOKEN:
+        description: "Token with write access to StegDB (classic PAT or fine-grained token)"
+        required: true
 
 permissions:
   contents: read
 
 jobs:
-  audit:
+  append:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout SCW
+      - name: Checkout caller repo (for receipt_file)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install deps
-        run: python -m pip install --upgrade pip pyyaml
-
-      - name: Run audit
+      - name: Validate receipt exists
+        shell: bash
         run: |
           set -euo pipefail
-          python tools/workflow_runnability_audit.py --repo-root .
+          if [[ ! -f "${{ inputs.receipt_file }}" ]]; then
+            echo "Receipt file not found: ${{ inputs.receipt_file }}"
+            echo "Tip: ensure the caller workflow creates it before calling this reusable."
+            exit 1
+          fi
 
-      - name: Upload audit artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Checkout StegDB
+        uses: actions/checkout@v4
         with:
-          name: scw_workflow_runnability_audit
-          path: reports/guardians/workflow_runnability_latest.*
-          if-no-files-found: warn
+          repository: ${{ inputs.stegdb_repo }}
+          ref: ${{ inputs.target_branch }}
+          token: ${{ secrets.STEGVERSE_TOKEN }}
+          path: stegdb
+          fetch-depth: 0
 
-      - name: Append canonical receipts
-        if: always()
-        uses: ./.github/workflows/_reusables/append-stegdb-receipts.yml
-        with:
-          stegdb_repo: "stegverse-labs/StegDB"
-          note: "This run produced an API-aware workflow runnability report. Canonical receipts are stored in StegDB."
+      - name: Append receipt to StegDB JSONL
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TARGET="stegdb/${{ inputs.target_jsonl }}"
+          mkdir -p "$(dirname "$TARGET")"
+          touch "$TARGET"
+
+          # Build an enriched receipt line: receipt JSON + context + optional note
+          python - <<'PY'
+          import json, os, sys, datetime
+
+          receipt_path = os.environ["RECEIPT_PATH"]
+          target_path  = os.environ["TARGET_PATH"]
+          note         = os.environ.get("NOTE", "")
+
+          with open(receipt_path, "r", encoding="utf-8") as f:
+            base = json.load(f)
+
+          enriched = dict(base)
+          enriched.setdefault("note", note)
+          enriched.setdefault("appended_at_utc", datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+          # GitHub context
+          enriched.setdefault("github", {})
+          enriched["github"].update({
+            "repository": os.environ.get("GITHUB_REPOSITORY"),
+            "workflow": os.environ.get("GITHUB_WORKFLOW"),
+            "run_id": os.environ.get("GITHUB_RUN_ID"),
+            "run_number": os.environ.get("GITHUB_RUN_NUMBER"),
+            "job": os.environ.get("GITHUB_JOB"),
+            "ref": os.environ.get("GITHUB_REF"),
+            "sha": os.environ.get("GITHUB_SHA"),
+          })
+
+          with open(target_path, "a", encoding="utf-8") as out:
+            out.write(json.dumps(enriched, sort_keys=True) + "\n")
+          PY
+        env:
+          RECEIPT_PATH: ${{ inputs.receipt_file }}
+          TARGET_PATH: stegdb/${{ inputs.target_jsonl }}
+          NOTE: ${{ inputs.note }}
+
+      - name: Commit & push StegDB receipt update
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd stegdb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add "${{ inputs.target_jsonl }}" || true
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(receipts): append SCW receipt [skip ci]"
+          git push
