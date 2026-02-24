@@ -1,0 +1,37 @@
+name: constitutional-audit-public
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout SCW
+        uses: actions/checkout@v4
+
+      - name: Run public audit
+        env:
+          ORG: StegVerse-Labs
+          REQUIREMENTS_URL: https://raw.githubusercontent.com/StegVerse-Labs/StegDB/main/registry/requirements_catalog.json
+        run: |
+          python3 scripts/constitutional_audit_public.py
+          echo "---- matrix summary ----"
+          python3 - <<'PY'
+          import json
+          d=json.load(open("matrix.json","r",encoding="utf-8"))
+          print(json.dumps(d["summary"], indent=2))
+          PY
+          echo "---- first 40 lines of matrix.md ----"
+          head -n 40 matrix.md || true
+
+      - name: Upload matrix artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-compliance-matrix-public
+          path: |
+            matrix.json
+            matrix.md
