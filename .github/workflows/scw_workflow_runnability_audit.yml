@@ -1,7 +1,7 @@
 name: SCW - Workflow Runnability Audit (API-aware)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -9,6 +9,7 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout SCW
         uses: actions/checkout@v4
@@ -49,7 +50,7 @@ jobs:
             "source_ref": "${{ github.ref }}",
             "source_sha": "${{ github.sha }}",
             "run_id": "${{ github.run_id }}",
-            "run_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "run_attempt": "${{ github.run_attempt }}",
             "artifact_name": "scw_workflow_runnability_audit",
             "report_glob": "reports/guardians/workflow_runnability_latest.*",
             "generated_at_utc": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -64,4 +65,4 @@ jobs:
           receipt_file: "meta/workflow_runnability_receipt.json"
           note: "API-aware workflow runnability audit receipt from SCW."
           target_jsonl: "meta/receipts.jsonl"
-          token: "${{ secrets.GH_STEGVERSE_AI_TOKEN }}"
+          token: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
