@@ -1,0 +1,46 @@
+name: "Append StegDB Receipts"
+description: "Append canonical receipts JSON to StegDB repository"
+
+inputs:
+  stegdb_repo:
+    description: "Target StegDB repo (org/name)"
+    required: true
+  receipt_file:
+    description: "Path to receipt JSON file"
+    required: true
+  note:
+    description: "Optional note"
+    required: false
+  target_jsonl:
+    description: "Target JSONL file inside StegDB"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout StegDB
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.stegdb_repo }}
+        token: ${{ secrets.STEGVERSE_TOKEN }}
+        path: stegdb
+
+    - name: Append receipt
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        mkdir -p "stegdb/$(dirname "${{ inputs.target_jsonl }}")"
+
+        cat "${{ inputs.receipt_file }}" >> "stegdb/${{ inputs.target_jsonl }}"
+
+    - name: Commit changes
+      shell: bash
+      run: |
+        cd stegdb
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+
+        git add "${{ inputs.target_jsonl }}"
+        git commit -m "Append receipt from ${{ github.repository }} run ${{ github.run_id }}" || echo "No changes"
+        git push
