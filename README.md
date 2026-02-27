@@ -31,6 +31,7 @@ Phase 2 will add real template syncing and autopatch PR generation.
 
 | Workflow | State | Actions |
 |---|---|---|
+| `00_repo_scanner.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/00_repo_scanner.yml) · [File](.github/workflows/00_repo_scanner.yml) |
 | `AutoPatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/AutoPatch.yml) · [File](.github/workflows/AutoPatch.yml) |
 | `actions-permission-check.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/actions-permission-check.yml) · [File](.github/workflows/actions-permission-check.yml) |
 | `alignment_check.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/alignment_check.yml) · [File](.github/workflows/alignment_check.yml) |
@@ -42,7 +43,6 @@ Phase 2 will add real template syncing and autopatch PR generation.
 | `autopatch-readme-quickcontrols.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-readme-quickcontrols.yml) · [File](.github/workflows/autopatch-readme-quickcontrols.yml) |
 | `autopatch-reindex.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-reindex.yml) · [File](.github/workflows/autopatch-reindex.yml) |
 | `autopatch-repotree-and-supercheck.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-repotree-and-supercheck.yml) · [File](.github/workflows/autopatch-repotree-and-supercheck.yml) |
-| `autopatch-wire-ops-table-links.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-ops-table-links.yml) · [File](.github/workflows/autopatch-wire-ops-table-links.yml) |
 
 _See the full table for all workflows → [.github/docs/WORKFLOWS_CONSOLE.md](.github/docs/WORKFLOWS_CONSOLE.md)._
 <!-- /ops:console -->

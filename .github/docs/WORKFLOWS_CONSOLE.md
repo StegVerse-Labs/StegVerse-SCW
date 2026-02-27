@@ -1,14 +1,15 @@
 # Ops Console
 
-_Last updated: **2026-02-23 11:29 UTC**_
+_Last updated: **2026-02-27 03:54 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **112**
+- ➖ No dispatch: **114**
 - ❌ Broken: **40**
-- Total: **152**
+- Total: **154**
 
 | Workflow | State | Actions |
 |---|---|---|
+| `00_repo_scanner.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/00_repo_scanner.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/00_repo_scanner.yml) · [File](.github/workflows/00_repo_scanner.yml) |
 | `AutoPatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/AutoPatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/AutoPatch.yml) · [File](.github/workflows/AutoPatch.yml) |
 | `actions-permission-check.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/actions-permission-check.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/actions-permission-check.yml) · [File](.github/workflows/actions-permission-check.yml) |
 | `alignment_check.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/alignment_check.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/alignment_check.yml) · [File](.github/workflows/alignment_check.yml) |
@@ -31,6 +32,7 @@ _Last updated: **2026-02-23 11:29 UTC**_
 | `ci.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci.yml) · [File](.github/workflows/ci.yml) |
 | `ci_governance.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci_governance.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci_governance.yml) · [File](.github/workflows/ci_governance.yml) |
 | `codeql.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/codeql.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/codeql.yml) · [File](.github/workflows/codeql.yml) |
+| `constitutional-audit-public.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/constitutional-audit-public.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/constitutional-audit-public.yml) · [File](.github/workflows/constitutional-audit-public.yml) |
 | `deploy_multi.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/deploy_multi.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/deploy_multi.yml) · [File](.github/workflows/deploy_multi.yml) |
 | `direct_apply_fixes.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/direct_apply_fixes.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/direct_apply_fixes.yml) · [File](.github/workflows/direct_apply_fixes.yml) |
 | `dispatch-proxy.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/dispatch-proxy.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/dispatch-proxy.yml) · [File](.github/workflows/dispatch-proxy.yml) |
