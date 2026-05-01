@@ -1,18 +1,18 @@
 # StegVerse Multi-Repo Autopatch Report
 
-- Run: 2026-04-29 10:24:46 UTC
-- Run ID: `25103604425`
+- Run: 2026-05-01 10:04:54 UTC
+- Run ID: `25210573097`
 - Task: `scheduled`
 
 ## Summary
 - Total repos: **4**
 - Updated: **0**
-- No changes: **4**
-- Clone failed: **0**
+- No changes: **0**
+- Clone failed: **4**
 - Errors: **0**
 
 ## Per-repo results
-- ℹ️ `StegVerse-Labs/TVC` — no_changes — Already up to date.
-- ℹ️ `StegVerse-Labs/hybrid-collab-bridge` — no_changes — Already up to date.
-- ℹ️ `StegVerse-Labs/TV` — no_changes — Already up to date.
-- ℹ️ `StegVerse-Labs/StegVerse-SCW` — no_changes — Already up to date.
+- ❌ `StegVerse-Labs/TVC` — clone_failed — clone failed: Command failed (128): git clone --depth 1 https://github.com/StegVerse-Labs/TVC.git /home/runner/work/StegVerse-SCW/StegVerse-SCW/work/multi_autopatch/StegVerse-Labs__TVC
+- ❌ `StegVerse-Labs/hybrid-collab-bridge` — clone_failed — clone failed: Command failed (128): git clone --depth 1 https://github.com/StegVerse-Labs/hybrid-collab-bridge.git /home/runner/work/StegVerse-SCW/StegVerse-SCW/work/multi_autopatch/StegVerse-Labs__hybrid-collab-bridge
+- ❌ `StegVerse-Labs/TV` — clone_failed — clone failed: Command failed (128): git clone --depth 1 https://github.com/StegVerse-Labs/TV.git /home/runner/work/StegVerse-SCW/StegVerse-SCW/work/multi_autopatch/StegVerse-Labs__TV
+- ❌ `StegVerse-Labs/StegVerse-SCW` — clone_failed — clone failed: Command failed (128): git clone --depth 1 https://github.com/StegVerse-Labs/StegVerse-SCW.git /home/runner/work/StegVerse-SCW/StegVerse-SCW/work/multi_autopatch/StegVerse-Labs__StegVerse-SCW
