@@ -160,11 +160,27 @@ def call_runner(payload: DemoRun, local_decision: Dict[str, Any]) -> Dict[str, A
         with httpx.Client(timeout=8.0) as client:
             response = client.post(runner_url, headers=headers, json=body)
 
+        try:
+            data = response.json()
+        except Exception:
+            data = {}
+
+        runner_receipt = data.get("receipt")
+
+        if runner_receipt:
+            return {
+                "attempted": True,
+                "ok": response.is_success,
+                "status_code": response.status_code,
+                "runner_receipt": runner_receipt,
+                "runner_receipt_hash": hash_obj(runner_receipt),
+            }
+
         return {
             "attempted": True,
-            "url": runner_url,
-            "status_code": response.status_code,
             "ok": response.is_success,
+            "status_code": response.status_code,
+            "non_compliant": True,
             "response_hash": hash_obj(response.text),
             "response_preview": response.text[:500],
         }
@@ -172,7 +188,6 @@ def call_runner(payload: DemoRun, local_decision: Dict[str, Any]) -> Dict[str, A
     except Exception as exc:
         return {
             "attempted": True,
-            "url": runner_url,
             "ok": False,
             "error": str(exc),
         }
