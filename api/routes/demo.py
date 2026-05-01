@@ -46,7 +46,7 @@ def distance(a: List[float], b: List[float]) -> float:
     return sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
 
 
-def fail_closed_receipt(
+def build_fail_closed_response(
     payload: Any,
     reason: str,
     runner_attempt: Optional[Dict[str, Any]] = None,
@@ -54,26 +54,33 @@ def fail_closed_receipt(
     evaluated_at = utc_now()
     input_hash = hash_obj(payload)
 
-    decision = {
+    decision_record = {
         "decision": "FAIL-CLOSED",
         "reason": reason,
         "evaluated_at": evaluated_at,
         "input_hash": input_hash,
     }
 
-    decision_hash = hash_obj(decision)
+    decision_hash = hash_obj(decision_record)
 
-    receipt = {
+    receipt_body = {
         "receipt_version": "stegverse.demo.v1",
         "receipt_type": "commit_boundary_decision",
         "decision_id": f"dec_{uuid.uuid4().hex}",
         "previous_receipt_hash": None,
+        "source": "unknown",
+        "demo_id": "unknown",
         "decision": "FAIL-CLOSED",
         "reason": reason,
         "input_hash": input_hash,
         "decision_hash": decision_hash,
         "runner_attempt": runner_attempt or {"attempted": False},
         "evaluated_at": evaluated_at,
+    }
+
+    receipt_full = {
+        **receipt_body,
+        "receipt_hash": hash_obj(receipt_body),
     }
 
     return {
@@ -85,10 +92,13 @@ def fail_closed_receipt(
             "radius": 0.0,
             "epsilon": 0.0,
         },
-        "receipt": {
-            **receipt,
-            "receipt_hash": hash_obj(receipt),
-        },
+
+        # Backward-compatible contract:
+        # old consumers expect receipt to be a string hash.
+        "receipt": receipt_full["receipt_hash"],
+
+        # New structured receipt contract.
+        "receipt_full": receipt_full,
     }
 
 
@@ -98,13 +108,22 @@ def evaluate_boundary(payload: DemoRun) -> Dict[str, Any]:
     proposed = payload.proposed_state
 
     if len(states) < 2:
-        return fail_closed_receipt(payload_dict, "At least two commit states are required.")
+        return build_fail_closed_response(
+            payload_dict,
+            "At least two commit states are required.",
+        )
 
     if not proposed:
-        return fail_closed_receipt(payload_dict, "Proposed state is empty.")
+        return build_fail_closed_response(
+            payload_dict,
+            "Proposed state is empty.",
+        )
 
     if any(len(s) != len(proposed) for s in states):
-        return fail_closed_receipt(payload_dict, "Commit state dimensions do not match proposed state.")
+        return build_fail_closed_response(
+            payload_dict,
+            "Commit state dimensions do not match proposed state.",
+        )
 
     dims = len(proposed)
     centroid = [sum(s[i] for s in states) / len(states) for i in range(dims)]
@@ -198,6 +217,7 @@ def demo_health() -> Dict[str, Any]:
     return {
         "ok": True,
         "service": "stegverse-demo-tier1",
+        "receipt_contract": "receipt:string, receipt_full:object",
         "runner_configured": bool(os.getenv("STEGVERSE_RUNNER_URL", "")),
     }
 
@@ -205,6 +225,9 @@ def demo_health() -> Dict[str, Any]:
 @router.post("/v1/demo/run")
 def run_demo(payload: DemoRun) -> Dict[str, Any]:
     local_decision = evaluate_boundary(payload)
+
+    if "receipt_full" in local_decision:
+        return local_decision
 
     if local_decision["verdict"] != "ALLOW":
         runner_attempt = {
@@ -230,7 +253,7 @@ def run_demo(payload: DemoRun) -> Dict[str, Any]:
 
     decision_hash = hash_obj(decision_record)
 
-    receipt = {
+    receipt_body = {
         "receipt_version": "stegverse.demo.v1",
         "receipt_type": "commit_boundary_decision",
         "decision_id": f"dec_{uuid.uuid4().hex}",
@@ -245,13 +268,20 @@ def run_demo(payload: DemoRun) -> Dict[str, Any]:
         "evaluated_at": evaluated_at,
     }
 
+    receipt_full = {
+        **receipt_body,
+        "receipt_hash": hash_obj(receipt_body),
+    }
+
     return {
         "verdict": local_decision["verdict"],
         "god": local_decision["god"],
         "confidence": local_decision["confidence"],
         "boundary": local_decision["boundary"],
-        "receipt": {
-            **receipt,
-            "receipt_hash": hash_obj(receipt),
-        },
+
+        # Backward-compatible API contract.
+        "receipt": receipt_full["receipt_hash"],
+
+        # Full StegVerse-style receipt.
+        "receipt_full": receipt_full,
     }
