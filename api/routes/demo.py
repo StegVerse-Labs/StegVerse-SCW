@@ -3,12 +3,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from hashlib import sha256
 from math import sqrt
-from typing import Any
+from typing import Any, Dict, List, Optional
 import json
 import os
 import uuid
 
-import requests
+import httpx
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
@@ -19,9 +19,15 @@ router = APIRouter()
 class DemoRun(BaseModel):
     source: str = Field(default="unknown")
     demo_id: str = Field(default_factory=lambda: f"demo_{uuid.uuid4().hex[:12]}")
-    commit_states: list[list[float]]
-    proposed_state: list[float]
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    commit_states: List[List[float]]
+    proposed_state: List[float]
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+def model_to_dict(model: BaseModel) -> Dict[str, Any]:
+    if hasattr(model, "model_dump"):
+        return model.model_dump()  # type: ignore[attr-defined]
+    return model.dict()
 
 
 def utc_now() -> str:
@@ -36,11 +42,15 @@ def hash_obj(obj: Any) -> str:
     return sha256(canonical_json(obj).encode("utf-8")).hexdigest()
 
 
-def distance(a: list[float], b: list[float]) -> float:
+def distance(a: List[float], b: List[float]) -> float:
     return sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
 
 
-def fail_closed_receipt(payload: Any, reason: str, runner_attempt: dict[str, Any] | None = None):
+def fail_closed_receipt(
+    payload: Any,
+    reason: str,
+    runner_attempt: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     evaluated_at = utc_now()
     input_hash = hash_obj(payload)
 
@@ -82,18 +92,19 @@ def fail_closed_receipt(payload: Any, reason: str, runner_attempt: dict[str, Any
     }
 
 
-def evaluate_boundary(payload: DemoRun) -> dict[str, Any]:
+def evaluate_boundary(payload: DemoRun) -> Dict[str, Any]:
+    payload_dict = model_to_dict(payload)
     states = payload.commit_states
     proposed = payload.proposed_state
 
     if len(states) < 2:
-        return fail_closed_receipt(payload.model_dump(), "At least two commit states are required.")
+        return fail_closed_receipt(payload_dict, "At least two commit states are required.")
 
     if not proposed:
-        return fail_closed_receipt(payload.model_dump(), "Proposed state is empty.")
+        return fail_closed_receipt(payload_dict, "Proposed state is empty.")
 
     if any(len(s) != len(proposed) for s in states):
-        return fail_closed_receipt(payload.model_dump(), "Commit state dimensions do not match proposed state.")
+        return fail_closed_receipt(payload_dict, "Commit state dimensions do not match proposed state.")
 
     dims = len(proposed)
     centroid = [sum(s[i] for s in states) / len(states) for i in range(dims)]
@@ -124,7 +135,7 @@ def evaluate_boundary(payload: DemoRun) -> dict[str, Any]:
     }
 
 
-def call_runner(payload: DemoRun, local_decision: dict[str, Any]) -> dict[str, Any]:
+def call_runner(payload: DemoRun, local_decision: Dict[str, Any]) -> Dict[str, Any]:
     runner_url = os.getenv("STEGVERSE_RUNNER_URL", "").rstrip("/")
     runner_token = os.getenv("STEGVERSE_RUNNER_TOKEN", "")
 
@@ -137,7 +148,7 @@ def call_runner(payload: DemoRun, local_decision: dict[str, Any]) -> dict[str, A
     body = {
         "source": "scw_demo_api",
         "demo_id": payload.demo_id,
-        "input": payload.model_dump(),
+        "input": model_to_dict(payload),
         "local_decision": local_decision,
     }
 
@@ -146,18 +157,14 @@ def call_runner(payload: DemoRun, local_decision: dict[str, Any]) -> dict[str, A
         headers["Authorization"] = f"Bearer {runner_token}"
 
     try:
-        response = requests.post(
-            runner_url,
-            headers=headers,
-            json=body,
-            timeout=8,
-        )
+        with httpx.Client(timeout=8.0) as client:
+            response = client.post(runner_url, headers=headers, json=body)
 
         return {
             "attempted": True,
             "url": runner_url,
             "status_code": response.status_code,
-            "ok": response.ok,
+            "ok": response.is_success,
             "response_hash": hash_obj(response.text),
             "response_preview": response.text[:500],
         }
@@ -172,7 +179,7 @@ def call_runner(payload: DemoRun, local_decision: dict[str, Any]) -> dict[str, A
 
 
 @router.get("/v1/demo/health")
-def demo_health():
+def demo_health() -> Dict[str, Any]:
     return {
         "ok": True,
         "service": "stegverse-demo-tier1",
@@ -181,7 +188,7 @@ def demo_health():
 
 
 @router.post("/v1/demo/run")
-def run_demo(payload: DemoRun):
+def run_demo(payload: DemoRun) -> Dict[str, Any]:
     local_decision = evaluate_boundary(payload)
 
     if local_decision["verdict"] != "ALLOW":
@@ -193,7 +200,8 @@ def run_demo(payload: DemoRun):
         runner_attempt = call_runner(payload, local_decision)
 
     evaluated_at = utc_now()
-    input_hash = hash_obj(payload.model_dump())
+    payload_dict = model_to_dict(payload)
+    input_hash = hash_obj(payload_dict)
 
     decision_record = {
         "decision": local_decision["verdict"],
