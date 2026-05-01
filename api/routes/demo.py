@@ -58,6 +58,7 @@ def build_receipt(
         "previous_receipt_hash": previous_receipt_hash,
         "body": body,
     }
+
     return {
         **envelope,
         "receipt_hash": hash_obj(envelope),
@@ -68,13 +69,19 @@ def evaluate_boundary(payload: DemoRun) -> Dict[str, Any]:
     states = payload.commit_states
     proposed = payload.proposed_state
 
+    empty_boundary = {
+        "centroid": [],
+        "radius": 0.0,
+        "epsilon": 0.0,
+    }
+
     if len(states) < 2:
         return {
             "verdict": "FAIL-CLOSED",
             "reason": "At least two commit states are required.",
             "god": 999.0,
             "confidence": 0.0,
-            "boundary": {"centroid": [], "radius": 0.0, "epsilon": 0.0},
+            "boundary": empty_boundary,
         }
 
     if not proposed:
@@ -83,7 +90,7 @@ def evaluate_boundary(payload: DemoRun) -> Dict[str, Any]:
             "reason": "Proposed state is empty.",
             "god": 999.0,
             "confidence": 0.0,
-            "boundary": {"centroid": [], "radius": 0.0, "epsilon": 0.0},
+            "boundary": empty_boundary,
         }
 
     if any(len(s) != len(proposed) for s in states):
@@ -92,7 +99,7 @@ def evaluate_boundary(payload: DemoRun) -> Dict[str, Any]:
             "reason": "Commit state dimensions do not match proposed state.",
             "god": 999.0,
             "confidence": 0.0,
-            "boundary": {"centroid": [], "radius": 0.0, "epsilon": 0.0},
+            "boundary": empty_boundary,
         }
 
     dims = len(proposed)
@@ -218,23 +225,39 @@ def run_demo(payload: DemoRun) -> Dict[str, Any]:
         },
     )
 
+    if tier1["verdict"] == "ALLOW":
+        tier2_placeholder = {
+            "attempted": True,
+            "mode": "local_test_runner",
+            "pending_receipt_link": True,
+        }
+    else:
+        tier2_placeholder = {
+            "attempted": False,
+            "reason": "Tier 2 execution is only invoked after Tier 1 ALLOW.",
+        }
+
+    receipt_v2_body = {
+        "decision_id": decision_id,
+        "decision": tier1["verdict"],
+        "reason": tier1["reason"],
+        "source": payload.source,
+        "demo_id": payload.demo_id,
+        "input_hash": input_hash,
+        "decision_hash": decision_hash,
+        "boundary_hash": hash_obj(tier1["boundary"]),
+        "god": round(tier1["god"], 12),
+        "confidence": round(tier1["confidence"], 12),
+        "tier2_attempt_hash": hash_obj(tier2_placeholder),
+        "tier2_runner_receipt_hash": None,
+        "evaluated_at": evaluated_at,
+    }
+
     receipt_v2 = build_receipt(
         version=2,
         kind="commit_boundary_decision",
         previous_receipt_hash=None,
-        body={
-            "decision_id": decision_id,
-            "decision": tier1["verdict"],
-            "reason": tier1["reason"],
-            "source": payload.source,
-            "demo_id": payload.demo_id,
-            "input_hash": input_hash,
-            "decision_hash": decision_hash,
-            "boundary_hash": hash_obj(tier1["boundary"]),
-            "god": round(tier1["god"], 12),
-            "confidence": round(tier1["confidence"], 12),
-            "evaluated_at": evaluated_at,
-        },
+        body=receipt_v2_body,
     )
 
     if tier1["verdict"] == "ALLOW":
@@ -262,14 +285,17 @@ def run_demo(payload: DemoRun) -> Dict[str, Any]:
         "god": tier1["god"],
         "confidence": tier1["confidence"],
         "boundary": tier1["boundary"],
+
         "receipt": receipt_v2["receipt_hash"],
         "receipt_full": receipt_v2,
         "receipt_v1": receipt_v1,
+
         "tier1": {
             "decision_hash": decision_hash,
             "receipt_hash": receipt_v2["receipt_hash"],
             "receipt": receipt_v2,
         },
+
         "tier2": tier2,
         "receipts": receipts,
     }
