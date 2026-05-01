@@ -46,6 +46,122 @@ def distance(a: List[float], b: List[float]) -> float:
     return sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
 
 
+def build_receipt_v1(
+    *,
+    decision_id: str,
+    decision: str,
+    reason: str,
+    source: str,
+    demo_id: str,
+    input_hash: str,
+    decision_hash: str,
+    runner_attempt: Dict[str, Any],
+    evaluated_at: str,
+) -> Dict[str, Any]:
+    body = {
+        "decision_id": decision_id,
+        "decision": decision,
+        "reason": reason,
+        "source": source,
+        "demo_id": demo_id,
+        "input_hash": input_hash,
+        "decision_hash": decision_hash,
+        "runner_attempt": runner_attempt,
+        "evaluated_at": evaluated_at,
+    }
+
+    envelope = {
+        "schema": "stegverse.receipt",
+        "version": 1,
+        "kind": "commit_boundary_decision",
+        "previous_receipt_hash": None,
+        "body": body,
+    }
+
+    return {
+        **envelope,
+        "receipt_hash": hash_obj(envelope),
+    }
+
+
+def build_receipt_v2(
+    *,
+    decision_id: str,
+    decision: str,
+    reason: str,
+    source: str,
+    demo_id: str,
+    input_hash: str,
+    decision_hash: str,
+    runner_attempt: Dict[str, Any],
+    boundary: Dict[str, Any],
+    god: float,
+    confidence: float,
+    evaluated_at: str,
+) -> Dict[str, Any]:
+    runner_receipt_hash = runner_attempt.get("runner_receipt_hash")
+    if not runner_receipt_hash:
+        runner_receipt_hash = hash_obj(runner_attempt)
+
+    body = {
+        "decision_id": decision_id,
+        "decision": decision,
+        "reason": reason,
+        "source": source,
+        "demo_id": demo_id,
+        "input_hash": input_hash,
+        "decision_hash": decision_hash,
+        "boundary_hash": hash_obj(boundary),
+        "runner_attempt_hash": hash_obj(runner_attempt),
+        "runner_receipt_hash": runner_receipt_hash,
+        "god": round(god, 12),
+        "confidence": round(confidence, 12),
+        "evaluated_at": evaluated_at,
+    }
+
+    envelope = {
+        "schema": "stegverse.receipt",
+        "version": 2,
+        "kind": "commit_boundary_decision",
+        "previous_receipt_hash": None,
+        "body": body,
+    }
+
+    return {
+        **envelope,
+        "receipt_hash": hash_obj(envelope),
+    }
+
+
+def build_response(
+    *,
+    verdict: str,
+    god: float,
+    confidence: float,
+    boundary: Dict[str, Any],
+    receipt_v2: Dict[str, Any],
+    receipt_v1: Dict[str, Any],
+) -> Dict[str, Any]:
+    return {
+        "verdict": verdict,
+        "god": god,
+        "confidence": confidence,
+        "boundary": boundary,
+
+        # Permanent legacy contract: always a string hash.
+        "receipt": receipt_v2["receipt_hash"],
+
+        # Primary modern receipt.
+        "receipt_full": receipt_v2,
+
+        # Compatibility projection.
+        "receipt_v1": receipt_v1,
+
+        # Future-safe multi-receipt surface.
+        "receipts": [receipt_v2, receipt_v1],
+    }
+
+
 def build_fail_closed_response(
     payload: Any,
     reason: str,
@@ -53,53 +169,62 @@ def build_fail_closed_response(
 ) -> Dict[str, Any]:
     evaluated_at = utc_now()
     input_hash = hash_obj(payload)
+    decision_id = f"dec_{uuid.uuid4().hex}"
+
+    boundary = {
+        "centroid": [],
+        "radius": 0.0,
+        "epsilon": 0.0,
+    }
+
+    runner_attempt_final = runner_attempt or {"attempted": False}
 
     decision_record = {
         "decision": "FAIL-CLOSED",
         "reason": reason,
-        "evaluated_at": evaluated_at,
         "input_hash": input_hash,
+        "boundary": boundary,
+        "runner_attempt_hash": hash_obj(runner_attempt_final),
+        "evaluated_at": evaluated_at,
     }
 
     decision_hash = hash_obj(decision_record)
 
-    receipt_body = {
-        "receipt_version": "stegverse.demo.v1",
-        "receipt_type": "commit_boundary_decision",
-        "decision_id": f"dec_{uuid.uuid4().hex}",
-        "previous_receipt_hash": None,
-        "source": "unknown",
-        "demo_id": "unknown",
-        "decision": "FAIL-CLOSED",
-        "reason": reason,
-        "input_hash": input_hash,
-        "decision_hash": decision_hash,
-        "runner_attempt": runner_attempt or {"attempted": False},
-        "evaluated_at": evaluated_at,
-    }
+    receipt_v1 = build_receipt_v1(
+        decision_id=decision_id,
+        decision="FAIL-CLOSED",
+        reason=reason,
+        source="unknown",
+        demo_id="unknown",
+        input_hash=input_hash,
+        decision_hash=decision_hash,
+        runner_attempt=runner_attempt_final,
+        evaluated_at=evaluated_at,
+    )
 
-    receipt_full = {
-        **receipt_body,
-        "receipt_hash": hash_obj(receipt_body),
-    }
+    receipt_v2 = build_receipt_v2(
+        decision_id=decision_id,
+        decision="FAIL-CLOSED",
+        reason=reason,
+        source="unknown",
+        demo_id="unknown",
+        input_hash=input_hash,
+        decision_hash=decision_hash,
+        runner_attempt=runner_attempt_final,
+        boundary=boundary,
+        god=999.0,
+        confidence=0.0,
+        evaluated_at=evaluated_at,
+    )
 
-    return {
-        "verdict": "FAIL-CLOSED",
-        "god": 999.0,
-        "confidence": 0.0,
-        "boundary": {
-            "centroid": [],
-            "radius": 0.0,
-            "epsilon": 0.0,
-        },
-
-        # Backward-compatible contract:
-        # old consumers expect receipt to be a string hash.
-        "receipt": receipt_full["receipt_hash"],
-
-        # New structured receipt contract.
-        "receipt_full": receipt_full,
-    }
+    return build_response(
+        verdict="FAIL-CLOSED",
+        god=999.0,
+        confidence=0.0,
+        boundary=boundary,
+        receipt_v2=receipt_v2,
+        receipt_v1=receipt_v1,
+    )
 
 
 def evaluate_boundary(payload: DemoRun) -> Dict[str, Any]:
@@ -184,7 +309,7 @@ def call_runner(payload: DemoRun, local_decision: Dict[str, Any]) -> Dict[str, A
         except Exception:
             data = {}
 
-        runner_receipt = data.get("receipt")
+        runner_receipt = data.get("receipt") or data.get("receipt_full")
 
         if runner_receipt:
             return {
@@ -217,7 +342,13 @@ def demo_health() -> Dict[str, Any]:
     return {
         "ok": True,
         "service": "stegverse-demo-tier1",
-        "receipt_contract": "receipt:string, receipt_full:object",
+        "receipt_contract": {
+            "receipt": "string hash, stable legacy field",
+            "receipt_full": "primary receipt envelope",
+            "receipt_v1": "v1 compatibility projection",
+            "receipts": "array of available receipt envelopes",
+        },
+        "primary_receipt_version": 2,
         "runner_configured": bool(os.getenv("STEGVERSE_RUNNER_URL", "")),
     }
 
@@ -226,6 +357,7 @@ def demo_health() -> Dict[str, Any]:
 def run_demo(payload: DemoRun) -> Dict[str, Any]:
     local_decision = evaluate_boundary(payload)
 
+    # Malformed input already produced a complete fail-closed response.
     if "receipt_full" in local_decision:
         return local_decision
 
@@ -240,6 +372,7 @@ def run_demo(payload: DemoRun) -> Dict[str, Any]:
     evaluated_at = utc_now()
     payload_dict = model_to_dict(payload)
     input_hash = hash_obj(payload_dict)
+    decision_id = f"dec_{uuid.uuid4().hex}"
 
     decision_record = {
         "decision": local_decision["verdict"],
@@ -253,35 +386,40 @@ def run_demo(payload: DemoRun) -> Dict[str, Any]:
 
     decision_hash = hash_obj(decision_record)
 
-    receipt_body = {
-        "receipt_version": "stegverse.demo.v1",
-        "receipt_type": "commit_boundary_decision",
-        "decision_id": f"dec_{uuid.uuid4().hex}",
-        "previous_receipt_hash": None,
-        "source": payload.source,
-        "demo_id": payload.demo_id,
-        "decision": local_decision["verdict"],
-        "reason": "Commit-boundary admissibility evaluated before runner invocation.",
-        "input_hash": input_hash,
-        "decision_hash": decision_hash,
-        "runner_attempt": runner_attempt,
-        "evaluated_at": evaluated_at,
-    }
+    reason = "Commit-boundary admissibility evaluated before runner invocation."
 
-    receipt_full = {
-        **receipt_body,
-        "receipt_hash": hash_obj(receipt_body),
-    }
+    receipt_v1 = build_receipt_v1(
+        decision_id=decision_id,
+        decision=local_decision["verdict"],
+        reason=reason,
+        source=payload.source,
+        demo_id=payload.demo_id,
+        input_hash=input_hash,
+        decision_hash=decision_hash,
+        runner_attempt=runner_attempt,
+        evaluated_at=evaluated_at,
+    )
 
-    return {
-        "verdict": local_decision["verdict"],
-        "god": local_decision["god"],
-        "confidence": local_decision["confidence"],
-        "boundary": local_decision["boundary"],
+    receipt_v2 = build_receipt_v2(
+        decision_id=decision_id,
+        decision=local_decision["verdict"],
+        reason=reason,
+        source=payload.source,
+        demo_id=payload.demo_id,
+        input_hash=input_hash,
+        decision_hash=decision_hash,
+        runner_attempt=runner_attempt,
+        boundary=local_decision["boundary"],
+        god=local_decision["god"],
+        confidence=local_decision["confidence"],
+        evaluated_at=evaluated_at,
+    )
 
-        # Backward-compatible API contract.
-        "receipt": receipt_full["receipt_hash"],
-
-        # Full StegVerse-style receipt.
-        "receipt_full": receipt_full,
-    }
+    return build_response(
+        verdict=local_decision["verdict"],
+        god=local_decision["god"],
+        confidence=local_decision["confidence"],
+        boundary=local_decision["boundary"],
+        receipt_v2=receipt_v2,
+        receipt_v1=receipt_v1,
+    )
