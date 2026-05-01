@@ -8,6 +8,8 @@ import hashlib
 import json
 import time
 from typing import Optional, Dict, Any, List
+from install.api.execute import router as execute_router
+app.include_router(execute_router)
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
