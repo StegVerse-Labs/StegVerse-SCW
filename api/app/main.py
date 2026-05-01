@@ -1,4 +1,4 @@
-# [SCW-API-APP v2025-12-02-01] LINES≈540
+# [SCW-API-APP v2026-05-01-demo-tier1]
 # Canonical SCW API app (lives at api/app/main.py)
 # Loaded via stub api/main.py -> from app.main import app
 
@@ -14,12 +14,18 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+try:
+    from routes import demo
+except ModuleNotFoundError:
+    from api.routes import demo
+
+
 # ---------------------------------------------------------
 # Storage: Redis with memory fallback (never crash)
 # ---------------------------------------------------------
 USE_MEMORY_ONLY: bool = False
 _mem_kv: Dict[str, str] = {}
-_mem_lists: Dict[str, List[str]] = {}  # per-key in-memory lists
+_mem_lists: Dict[str, List[str]] = {}
 
 
 def _mem_get(key: str) -> Optional[str]:
@@ -31,7 +37,6 @@ def _mem_set(key: str, val: str) -> None:
 
 
 def _mem_lpush(key: str, val: str) -> None:
-    """Append to a per-key in-memory list (used when Redis is not available)."""
     if key not in _mem_lists:
         _mem_lists[key] = []
     _mem_lists[key].insert(0, val)
@@ -51,7 +56,6 @@ redis_client = None
 if REDIS_URL:
     try:
         import redis  # type: ignore
-
         redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
     except Exception:
         USE_MEMORY_ONLY = True
@@ -60,7 +64,6 @@ else:
 
 
 def _get(key: str) -> Optional[str]:
-    """Get a scalar value from Redis / memory."""
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_get(key)
     try:
@@ -70,7 +73,6 @@ def _get(key: str) -> Optional[str]:
 
 
 def _set(key: str, val: str) -> None:
-    """Set a scalar value in Redis / memory."""
     if USE_MEMORY_ONLY or not redis_client:
         _mem_set(key, val)
         return
@@ -81,7 +83,6 @@ def _set(key: str, val: str) -> None:
 
 
 def _lpush(key: str, val: str) -> None:
-    """Append a value to a Redis / memory list (used for audit + deploy logs)."""
     if USE_MEMORY_ONLY or not redis_client:
         _mem_lpush(key, val)
         return
@@ -92,7 +93,6 @@ def _lpush(key: str, val: str) -> None:
 
 
 def _hset(name: str, key: str, val: str) -> None:
-    """Set a hash field in Redis / memory."""
     if USE_MEMORY_ONLY or not redis_client:
         _mem_hset(name, key, val)
         return
@@ -103,7 +103,6 @@ def _hset(name: str, key: str, val: str) -> None:
 
 
 def _hgetall(name: str) -> Dict[str, str]:
-    """Return a hash from Redis / memory."""
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_hgetall(name)
     try:
@@ -117,7 +116,6 @@ def now_ts() -> int:
 
 
 def audit(event: str, payload: Dict[str, Any]) -> None:
-    """Append an audit entry to the rolling log."""
     entry = {"ts": now_ts(), "event": event, "payload": payload}
     _lpush("scw:audit", json.dumps(entry))
 
@@ -141,7 +139,6 @@ MAX_DEPLOY_LOG = 50
 
 
 def sig(body: bytes) -> str:
-    """HMAC helper (currently not wired externally, kept for future use)."""
     if not HMAC_SECRET:
         return ""
     return hmac.new(HMAC_SECRET.encode(), body, hashlib.sha256).hexdigest()
@@ -181,7 +178,6 @@ class BrandManifest(BaseModel):
     logo_url: str
     domain: str = ""
     env_overrides: Dict[str, str] = Field(default_factory=dict)
-    # additive; server env remains source of truth
     webhooks: BrandWebhooks = Field(default_factory=BrandWebhooks)
 
 
@@ -192,20 +188,19 @@ class ServiceRegistration(BaseModel):
 
 
 class DeployReport(BaseModel):
-    source: str  # e.g. "github-actions"
+    source: str
     workflow: str
     run_id: str
     run_url: str
     commit_sha: str
     branch: str
-    status: str  # "success" | "failure" | "cancelled"
+    status: str
     health_code: int
     health_body: Dict[str, Any] = Field(default_factory=dict)
     ts: int
 
 
 class ExternalTarget(BaseModel):
-    """One concrete URL to hit for a registered service."""
     name: str
     url: str
 
@@ -232,7 +227,7 @@ class HookResult(BaseModel):
 # ---------------------------------------------------------
 app = FastAPI(
     title="SCW-API",
-    version="1.3.1",
+    version="1.3.2-demo-tier1",
     docs_url="/docs",
     openapi_url="/openapi.json",
 )
@@ -245,13 +240,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(demo.router)
+
 
 # ---------------------------------------------------------
 # Core ops / config endpoints
 # ---------------------------------------------------------
 @app.get("/v1/ops/health")
 def health() -> Dict[str, Any]:
-    """Cheap internal health probe used by Render."""
     return {
         "ok": True,
         "env": ENV_NAME,
@@ -263,7 +259,6 @@ def health() -> Dict[str, Any]:
 
 @app.get("/v1/ops/config/status")
 def status() -> Dict[str, Any]:
-    """Show bootstrap / rotation info plus storage mode."""
     return {
         "admin_set": bool(_get(K_ADMIN)),
         "bootstrapped_at": _get(K_BOOTSTRAP_TS),
@@ -274,7 +269,6 @@ def status() -> Dict[str, Any]:
 
 @app.get("/v1/ops/env/required")
 def env_required() -> Dict[str, Any]:
-    """Show presence (not values) of critical env vars for quick diagnosis."""
     keys = ["ENV_NAME", "ALLOW_ORIGINS", "HMAC_SECRET", "DEPLOY_REPORT_TOKEN", "REDIS_URL"]
     present = {k: bool(os.getenv(k)) for k in keys}
     return {"ok": True, "present": present}
@@ -314,12 +308,6 @@ def svc_register(
     body: ServiceRegistration,
     x_admin_token: Optional[str] = Header(None, convert_underscores=False),
 ) -> Dict[str, Any]:
-    """
-    Register a dependent service so SCW can health-check and fan out builds.
-
-    name      – logical name, e.g. "scw-ui" or "stegverse-site"
-    base_url  – root URL of the service, e.g. "https://scw-ui.onrender.com"
-    """
     require_admin(x_admin_token)
     _hset(K_SERVICE_REG, body.name, json.dumps(body.dict()))
     audit("service_register", {"name": body.name})
@@ -330,7 +318,6 @@ def svc_register(
 # External health check fan-out
 # ---------------------------------------------------------
 def _build_external_targets() -> List[ExternalTarget]:
-    """Expand registered services into concrete URLs to probe."""
     raw_services = _hgetall(K_SERVICE_REG)
     targets: List[ExternalTarget] = []
 
@@ -340,12 +327,11 @@ def _build_external_targets() -> List[ExternalTarget]:
             svc = ServiceRegistration(**data)
             base = svc.base_url.rstrip("/")
         except Exception:
-            # legacy: value is just the URL
             base = str(raw).rstrip("/")
+
         if not base:
             continue
 
-        # Try explicit health first, then root as a fallback.
         targets.append(ExternalTarget(name=name, url=f"{base}/v1/ops/health"))
         targets.append(ExternalTarget(name=name, url=f"{base}/"))
 
@@ -398,13 +384,6 @@ async def _run_external_checks() -> List[ExternalResult]:
 
 @app.get("/v1/ops/health/external")
 async def external_health() -> Dict[str, Any]:
-    """
-    External health for all registered services.
-
-    This is the endpoint the UI should call when you hit "Full external health check".
-    It intentionally does NOT require the admin token so it can be probed from
-    dashboards, but only returns non-sensitive data.
-    """
     results = await _run_external_checks()
     return {
         "ok": all(r.ok for r in results) if results else True,
@@ -414,11 +393,6 @@ async def external_health() -> Dict[str, Any]:
 
 @app.get("/v1/ops/health/full")
 async def full_health() -> Dict[str, Any]:
-    """
-    Combined view: internal + external.
-
-    Useful for a one-shot "is everything green?" probe for SCW itself.
-    """
     internal = health()
     ext = await external_health()
     return {
@@ -429,19 +403,13 @@ async def full_health() -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------
-# Build trigger (fan-out via env webhooks)
+# Build trigger
 # ---------------------------------------------------------
 @app.post("/v1/ops/build/trigger")
 async def build_trigger(
     manifest: BrandManifest,
     x_admin_token: Optional[str] = Header(None, convert_underscores=False),
 ) -> Dict[str, Any]:
-    """
-    Fan out build/deploy webhooks to Render / Netlify / Vercel for a given brand.
-
-    This is what your GitHub Actions or SCW UI should call after a successful
-    pipeline run when you want everything to rebuild.
-    """
     import asyncio
 
     require_admin(x_admin_token)
@@ -475,36 +443,33 @@ async def build_trigger(
         "build_trigger",
         {"brand_id": manifest.brand_id, "results": [r.dict() for r in results]},
     )
+
     return {"ok": True, "brand_id": manifest.brand_id, "hook_results": [r.dict() for r in results]}
 
 
 # ---------------------------------------------------------
-# Deploy summary receiver + listing (for Actions to report)
+# Deploy summary receiver + listing
 # ---------------------------------------------------------
 @app.post("/v1/ops/deploy/report")
 def deploy_report(
     report: DeployReport,
     authorization: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
-    """
-    GitHub Actions calls this after a deployment with a short JSON summary.
-
-    Authorization: Bearer <DEPLOY_REPORT_TOKEN>
-    """
     if not DEPLOY_REPORT_TOKEN:
         raise HTTPException(status_code=503, detail="DEPLOY_REPORT_TOKEN not configured.")
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token.")
+
     token = authorization.split(" ", 1)[1]
     if token != DEPLOY_REPORT_TOKEN:
         raise HTTPException(status_code=403, detail="Invalid token.")
 
     _lpush(K_DEPLOY_LOG, json.dumps(report.dict()))
+
     try:
         if redis_client:
             redis_client.ltrim(K_DEPLOY_LOG, 0, MAX_DEPLOY_LOG - 1)
     except Exception:
-        # keep going even if Redis trim fails
         pass
 
     audit("deploy_report", {"status": report.status, "sha": report.commit_sha})
@@ -513,10 +478,8 @@ def deploy_report(
 
 @app.get("/v1/ops/deploy/summary")
 def deploy_summary(limit: int = 10) -> Dict[str, Any]:
-    """
-    Return the last N deploy summaries for dashboards / UI.
-    """
     limit = max(1, min(limit, MAX_DEPLOY_LOG))
+
     try:
         if redis_client:
             raw = redis_client.lrange(K_DEPLOY_LOG, 0, limit - 1)
@@ -531,6 +494,8 @@ def deploy_summary(limit: int = 10) -> Dict[str, Any]:
             items.append(json.loads(line))
         except Exception:
             continue
+
     return {"ok": True, "items": items}
 
-# END [SCW-API-APP v2025-12-02-01]
+
+# END [SCW-API-APP v2026-05-01-demo-tier1]
