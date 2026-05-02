@@ -1,4 +1,4 @@
-# [SCW-API-APP v2026-05-01-demo-tier1]
+# [SCW-API-APP v2026-05-01-demo-tier2-local]
 # Canonical SCW API app (lives at api/app/main.py)
 # Loaded via stub api/main.py -> from app.main import app
 
@@ -8,8 +8,6 @@ import hashlib
 import json
 import time
 from typing import Optional, Dict, Any, List
-from install.api.execute import router as execute_router
-app.include_router(execute_router)
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
@@ -22,9 +20,6 @@ except ModuleNotFoundError:
     from api.routes import demo
 
 
-# ---------------------------------------------------------
-# Storage: Redis with memory fallback (never crash)
-# ---------------------------------------------------------
 USE_MEMORY_ONLY: bool = False
 _mem_kv: Dict[str, str] = {}
 _mem_lists: Dict[str, List[str]] = {}
@@ -122,9 +117,6 @@ def audit(event: str, payload: Dict[str, Any]) -> None:
     _lpush("scw:audit", json.dumps(entry))
 
 
-# ---------------------------------------------------------
-# Config / Security
-# ---------------------------------------------------------
 HMAC_SECRET = os.getenv("HMAC_SECRET", "")
 ENV_NAME = os.getenv("ENV_NAME", "prod")
 ALLOW_ORIGINS = os.getenv("ALLOW_ORIGINS", "*")
@@ -154,9 +146,6 @@ def require_admin(x_admin_token: Optional[str]) -> None:
         raise HTTPException(status_code=403, detail="Invalid admin token.")
 
 
-# ---------------------------------------------------------
-# Models
-# ---------------------------------------------------------
 class BootstrapBody(BaseModel):
     admin_token: str = Field(min_length=16)
 
@@ -224,12 +213,9 @@ class HookResult(BaseModel):
     error: Optional[str] = None
 
 
-# ---------------------------------------------------------
-# App
-# ---------------------------------------------------------
 app = FastAPI(
     title="SCW-API",
-    version="1.3.2-demo-tier1",
+    version="1.3.3-demo-tier2-local",
     docs_url="/docs",
     openapi_url="/openapi.json",
 )
@@ -245,9 +231,6 @@ app.add_middleware(
 app.include_router(demo.router)
 
 
-# ---------------------------------------------------------
-# Core ops / config endpoints
-# ---------------------------------------------------------
 @app.get("/v1/ops/health")
 def health() -> Dict[str, Any]:
     return {
@@ -316,9 +299,6 @@ def svc_register(
     return {"ok": True, "message": "Service registered."}
 
 
-# ---------------------------------------------------------
-# External health check fan-out
-# ---------------------------------------------------------
 def _build_external_targets() -> List[ExternalTarget]:
     raw_services = _hgetall(K_SERVICE_REG)
     targets: List[ExternalTarget] = []
@@ -404,9 +384,6 @@ async def full_health() -> Dict[str, Any]:
     }
 
 
-# ---------------------------------------------------------
-# Build trigger
-# ---------------------------------------------------------
 @app.post("/v1/ops/build/trigger")
 async def build_trigger(
     manifest: BrandManifest,
@@ -449,9 +426,6 @@ async def build_trigger(
     return {"ok": True, "brand_id": manifest.brand_id, "hook_results": [r.dict() for r in results]}
 
 
-# ---------------------------------------------------------
-# Deploy summary receiver + listing
-# ---------------------------------------------------------
 @app.post("/v1/ops/deploy/report")
 def deploy_report(
     report: DeployReport,
@@ -500,4 +474,4 @@ def deploy_summary(limit: int = 10) -> Dict[str, Any]:
     return {"ok": True, "items": items}
 
 
-# END [SCW-API-APP v2026-05-01-demo-tier1]
+# END [SCW-API-APP v2026-05-01-demo-tier2-local]
