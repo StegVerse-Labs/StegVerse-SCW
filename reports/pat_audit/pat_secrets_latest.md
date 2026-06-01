@@ -1,6 +1,6 @@
 # StegVerse PAT Secrets Guardian Report
 
-- Generated at (UTC): `2026-05-31T10:26:24.562329+00:00`
+- Generated at (UTC): `2026-06-01T13:48:26.614746+00:00`
 - Expected secrets: `3`
 - Missing secrets: `3`
 
