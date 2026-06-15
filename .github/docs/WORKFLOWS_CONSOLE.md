@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2026-02-27 03:54 UTC**_
+_Last updated: **2026-06-15 00:12 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **114**
+- ➖ No dispatch: **115**
 - ❌ Broken: **40**
-- Total: **154**
+- Total: **155**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -141,6 +141,7 @@ _Last updated: **2026-02-27 03:54 UTC**_
 | `taskops-first-run-regression.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-regression.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-regression.yml) · [File](.github/workflows/taskops-first-run-regression.yml) |
 | `taskops-first-run-update.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-update.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-update.yml) · [File](.github/workflows/taskops-first-run-update.yml) |
 | `taskops-nightly.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-nightly.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-nightly.yml) · [File](.github/workflows/taskops-nightly.yml) |
+| `test-readiness.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/test-readiness.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/test-readiness.yml) · [File](.github/workflows/test-readiness.yml) |
 | `token_smoke_test.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/token_smoke_test.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/token_smoke_test.yml) · [File](.github/workflows/token_smoke_test.yml) |
 | `universal_fixit.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/universal_fixit.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/universal_fixit.yml) · [File](.github/workflows/universal_fixit.yml) |
 | `validate-autopatch-manifest.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-autopatch-manifest.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-autopatch-manifest.yml) · [File](.github/workflows/validate-autopatch-manifest.yml) |
