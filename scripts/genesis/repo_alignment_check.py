@@ -21,7 +21,9 @@ def main() -> int:
     if not HANDOFF.exists():
         errors.append("missing_STEGVERSE_SCW_MIRROR_HANDOFF.md")
     workflows = ROOT / ".github" / "workflows"
-    if workflows.exists() and not any(workflows.glob("*.yml")) and not any(workflows.glob("*.yaml")):
+    has_yml = any(workflows.glob("*.yml"))
+    has_yaml = any(workflows.glob("*.yaml"))
+    if workflows.exists() and not (has_yml or has_yaml):
         errors.append("workflows_directory_has_no_workflows")
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -36,7 +38,8 @@ def main() -> int:
             "force_push_allowed": False,
         },
     }
-    REPORT.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    report_text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+    REPORT.write_text(report_text, encoding="utf-8")
     if errors:
         print("SCW_REPO_ALIGNMENT_CHECK_FAIL: " + ", ".join(errors))
         return 1
