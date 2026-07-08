@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-HANDOFF = ROOT / "STEGVERSE_SCW_MIRROR_HANDOFF.md"
+HANDOFF = ROOT / "docs" / "STEGVERSE_SCW_MIRROR_HANDOFF.md"
 REPORT_DIR = ROOT / "reports" / "genesis"
 REPORT = REPORT_DIR / "repo_alignment_check.json"
 
@@ -18,7 +18,7 @@ REPORT = REPORT_DIR / "repo_alignment_check.json"
 def main() -> int:
     errors: list[str] = []
     if not HANDOFF.exists():
-        errors.append("missing_STEGVERSE_SCW_MIRROR_HANDOFF.md")
+        errors.append("missing_docs_STEGVERSE_SCW_MIRROR_HANDOFF.md")
 
     workflows = ROOT / ".github" / "workflows"
     has_yml = any(workflows.glob("*.yml"))
