@@ -26,6 +26,15 @@ jobs:
 
           root = Path('.')
           failures = []
+          skipped_parts = {
+              '.git',
+              '.mypy_cache',
+              '.pytest_cache',
+              '.ruff_cache',
+              '.venv',
+              'node_modules',
+              'venv',
+          }
 
           if not any((root / name).exists() for name in ('README.md', 'README.MD')):
               failures.append('missing README.md')
@@ -37,7 +46,7 @@ jobs:
                   failures.append('workflow files must end in .yml or .yaml: ' + ', '.join(bad))
 
           for path in sorted(root.rglob('*.json')):
-              if any(part in {'.git', 'node_modules', '.venv', 'venv'} for part in path.parts):
+              if any(part in skipped_parts for part in path.parts):
                   continue
               try:
                   json.loads(path.read_text(encoding='utf-8'))
