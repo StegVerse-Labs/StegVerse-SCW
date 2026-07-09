@@ -31,11 +31,19 @@ jobs:
         id: parse
         run: |
           TEXT="${{ github.event.inputs.instructions || github.event.issue.body || github.event.comment.body }}"
-          # Accept commands like: /scw self-test or /scw autopatch {"target_repo":"StegVerse-Labs/TVC"}
           CMD=$(echo "$TEXT" | sed -n 's/^\/scw[ ]\+\([^ ]\+\).*$/\1/p' | head -n1)
           ARGS=$(echo "$TEXT" | sed -n 's/^\/scw[ ]\+[^ ]\+[ ]\+\(.*\)$/\1/p' | head -n1)
-          echo "cmd=$CMD" >> $GITHUB_OUTPUT
-          echo "args=$ARGS" >> $GITHUB_OUTPUT
+          echo "cmd=$CMD" >> "$GITHUB_OUTPUT"
+          echo "args=$ARGS" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve source issue
+        id: source
+        run: |
+          NUMBER="${{ github.event.issue.number || github.event.comment.issue_url }}"
+          if echo "$NUMBER" | grep -q '/issues/'; then
+            NUMBER="${NUMBER##*/}"
+          fi
+          echo "issue_number=$NUMBER" >> "$GITHUB_OUTPUT"
 
       - name: Dispatch to SCW orchestrator
         if: steps.parse.outputs.cmd != ''
@@ -44,7 +52,9 @@ jobs:
             --arg cmd "${{ steps.parse.outputs.cmd }}" \
             --arg target "${{ github.event.inputs.target_repo }}" \
             --arg args "${{ steps.parse.outputs.args }}" \
-            '{command:$cmd,target_repo:($target|select(.!="")),args_text:$args,source:{repo:"'${{ github.repository }}'",issue_number:"'${{ github.event.issue.number || github.event.issue.pull_request.number || github.event.issue.number }}'"}}')
+            --arg repo "${{ github.repository }}" \
+            --arg issue "${{ steps.source.outputs.issue_number }}" \
+            '{command:$cmd,target_repo:($target|select(.!="")),args_text:$args,source:{repo:$repo,issue_number:$issue}}')
           gh api repos/$SCW_REPO/dispatches \
             -f event_type='scw-command' \
             -f client_payload="$payload"
