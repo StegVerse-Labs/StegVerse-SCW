@@ -12,10 +12,13 @@ Restore stable repository operations without adding workflows.
 - preserved `taskops-nightly` as the existing declared task surface
 - made `.github/workflows/stegverse-multi-autopatch.yml` concurrency-safe for report publication
 - added fetch/rebase-before-push handling for `reports/stegverse_multi_autopatch_report.md`
+- serialized `.github/workflows/stegtvc_connectivity_autopatch.yml`
+- made connectivity report publication empty-diff safe and fetch/rebase-before-push safe
+- removed silent dependency-install success from the connectivity workflow
 
 ## Current Priority
 
-Inspect the StegTV connectivity execution failure and determine whether it is a local script defect, destination-reference drift, or token-scope boundary.
+Inspect the ASL-1 alignment failure and identify the exact missing or stale alignment artifact before changing repository policy.
 
 ## Known Remaining Work
 
@@ -23,7 +26,7 @@ Destination: `StegVerse-Labs/StegVerse-SCW`
 
 - verify `taskops-nightly` passes after restoring the AutoDocs probe
 - verify multi-repo autopatch report publication passes after concurrency repair
-- inspect StegTV connectivity execution failure
+- verify StegTV connectivity execution and report publication pass after workflow hardening
 - inspect ASL-1 alignment failure
 - inspect backup repository checkout failure
 - inspect `export-hcb-nightly` failure
