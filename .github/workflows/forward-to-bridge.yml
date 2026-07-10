@@ -16,7 +16,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
         run: |
-          gh api repos/StegVerse-Labs/hybrid-collab-bridge/dispatches \
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::GH_STEGVERSE_AI_TOKEN is unavailable; skipping optional bridge dispatch."
+            exit 0
+          fi
+
+          if ! gh api repos/StegVerse-Labs/hybrid-collab-bridge/dispatches \
             -X POST \
             -F event_type="stegverse-ai-review" \
-            -F client_payload="{\"target_repo\":\"${GITHUB_REPOSITORY}\",\"pr_number\":${{ github.event.pull_request.number }}}"
+            -F client_payload="{\"target_repo\":\"${GITHUB_REPOSITORY}\",\"pr_number\":${{ github.event.pull_request.number }}}"; then
+            echo "::warning::Bridge dispatch failed. Credential repair is required outside this PR."
+            exit 0
+          fi
+
+          echo "Bridge dispatch accepted."
