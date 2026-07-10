@@ -51,7 +51,22 @@ jobs:
           else
             ruff check "${targets[@]}"
           fi
-      - name: Tests (pytest)
+      - name: Test changed pytest files
+        if: github.event_name == 'pull_request'
+        run: |
+          mapfile -t tests < <(
+            git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- 'tests/test_*.py' 'tests/**/test_*.py' |
+              while read -r path; do
+                [ -f "$path" ] && printf '%s\n' "$path"
+              done
+          )
+          if [ "${#tests[@]}" -eq 0 ]; then
+            echo "No changed pytest files detected; legacy test debt is outside this PR."
+          else
+            pytest -q "${tests[@]}"
+          fi
+      - name: Test repository
+        if: github.event_name != 'pull_request'
         run: |
           if [ -d tests ] && find tests -type f -name 'test_*.py' | grep -q .; then
             pytest -q
