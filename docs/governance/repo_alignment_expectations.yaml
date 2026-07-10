@@ -1,28 +1,24 @@
-version: 1
-description: "Cross-repo communication + file-sharing alignment baseline"
+version: 2
+description: "Cross-repo StegTVC connectivity and file-sharing alignment baseline"
+source_manifest: "scripts/stegtvc_connectivity_manifest.json"
 
-# Repos to scan. Add more here anytime.
 targets:
   - repo: "StegVerse-Labs/TVC"
   - repo: "StegVerse-Labs/hybrid-collab-bridge"
   - repo: "StegVerse-Labs/TV"
   - repo: "StegVerse-Labs/StegVerse-SCW"
 
-# Files that MUST exist in each repo for connectivity & file-sharing.
+# Canonical connectivity files are defined by scripts/stegtvc_connectivity_manifest.json.
 required_files:
-  - ".github/workflows/autopatch.yml"
-  - ".github/workflows/workflows-status-badges.yml"
   - "data/stegtvc_config.json"
-  - "app/resolver.py"
-  - ".github/stegtvc_client.py"
+  - "app/stegtvc_resolver.py"
+  - "stegtvc_client.py"
 
-# Workflows that should exist (names are matched loosely by file path).
-required_workflows:
-  - ".github/workflows/autopatch.yml"
-  - ".github/workflows/guardian_omni_guardian.yml"
-  - ".github/workflows/guardian_worker_readmes.yml"
+# Local workflow names vary by repository. Required workflow enforcement is
+# intentionally empty until a cross-repo workflow contract is declared by a
+# governed manifest rather than inferred from SCW-local filenames.
+required_workflows: []
 
-# Optional checks. If API access doesn't allow them, they become "unknown" not fail.
 optional_checks:
   ensure_workflow_dispatch: true
   check_repo_secrets_names:
