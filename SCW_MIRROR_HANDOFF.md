@@ -19,10 +19,28 @@ Restore stable repository operations without adding workflows.
 - removed undeclared cross-repo workflow filename assumptions from ASL-1 enforcement
 - preflighted `.github/workflows/backup_triggers.yml` so an absent or inaccessible backup destination records a clean skip instead of failing the repository
 - added rebase-before-push handling to the trigger backup publication step
+- repaired `.github/workflows/export-hcb-nightly.yml` so the scheduled profile dispatches the existing `export-hcb.yml` workflow instead of attempting to call a workflow that does not declare `workflow_call`
+
+## Latest Failure Handling
+
+```text
+Event: GitHub Actions failure notification
+Repository: StegVerse-Labs/StegVerse-SCW
+Branch: main
+Workflow: .github/workflows/export-hcb-nightly.yml
+Run: 29141761848
+Commit: 2ea9fcdcddbc63cae6a1f8c2d4ace0c792c5a88d
+Failure class: workflow configuration / no jobs were run
+Observed cause: export-hcb-nightly attempted to invoke ./.github/workflows/export-hcb.yml as a reusable workflow, but export-hcb.yml exposes workflow_dispatch only and does not declare workflow_call
+Repair commit: 56a6f3e260474897358a0192d2473daf8b86bdf4
+Repair behavior: the existing nightly workflow now uses the repository-scoped GITHUB_TOKEN with actions:write to dispatch the existing export-hcb.yml workflow in dry-run mode
+Authority effect: none; no external repository write, release, tag, merge, deployment, or non-dry-run export was authorized
+Verification: pending the next scheduled or explicitly authorized workflow execution
+```
 
 ## Current Priority
 
-Inspect `export-hcb-nightly` and identify whether its failure is a missing local dependency, destination-reference drift, or report-publication race.
+Verify that `export-hcb-nightly` creates a job and successfully dispatches the dry-run `export-hcb.yml` workflow. Then inspect the dispatched dry-run result before declaring the export path repaired.
 
 ## Known Remaining Work
 
@@ -33,7 +51,8 @@ Destination: `StegVerse-Labs/StegVerse-SCW`
 - verify StegTV connectivity execution and report publication pass after workflow hardening
 - verify ASL-1 alignment uses the canonical StegTVC file contract
 - verify backup workflow records a clean skip when destination access is absent
-- inspect and repair `export-hcb-nightly`
+- verify `export-hcb-nightly` produces a job and dispatches the dry-run export workflow
+- inspect the dispatched `export-hcb.yml` dry-run for local dependency, token, or payload-validation failures
 - inspect repository-wide CodeQL and validation cascade separately from operational workflow repairs
 
 ## Build Rule
