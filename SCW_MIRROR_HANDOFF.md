@@ -20,8 +20,27 @@ Restore stable repository operations without adding workflows.
 - preflighted `.github/workflows/backup_triggers.yml` so an absent or inaccessible backup destination records a clean skip instead of failing the repository
 - added rebase-before-push handling to the trigger backup publication step
 - repaired `.github/workflows/export-hcb-nightly.yml` so the scheduled profile dispatches the existing `export-hcb.yml` workflow instead of attempting to call a workflow that does not declare `workflow_call`
+- removed the stale `scripts/taskops_autodocs_link.py` invocation from `taskops-nightly`; the script does not exist anywhere in the repository and the existing AutoDocs probe is the declared refresh surface
 
 ## Latest Failure Handling
+
+```text
+Event: GitHub Actions failure notification
+Repository: StegVerse-Labs/StegVerse-SCW
+Branch: main
+Workflow: taskops-nightly
+Job: refresh
+Run: 29143978376
+Commit: 8c4da5f13427321d1250323f1dd527b366eb6e82
+Failure class: missing local script / stale workflow reference
+Observed cause: scripts/autodocs_probe_pr_safe.py completed and updated AutoDocs outputs, then the job attempted to execute scripts/taskops_autodocs_link.py, which is absent from the repository and has no current repository reference implementation
+Repair commit: 79f4455f81e321a028e899dea71b3b2a9051aa29
+Repair behavior: taskops-nightly now runs the existing AutoDocs probe and continues to the existing commit and CI-dashboard refresh steps without calling the nonexistent linker
+Authority effect: none; no workflow was added, no external repository was modified, and no deployment, release, tag, merge, or cross-repository authority was exercised
+Verification: static workflow verification complete; next scheduled run required to verify execution and publication behavior
+```
+
+## Prior Failure Handling
 
 ```text
 Event: GitHub Actions failure notification
@@ -40,13 +59,13 @@ Verification: pending the next scheduled or explicitly authorized workflow execu
 
 ## Current Priority
 
-Verify that `export-hcb-nightly` creates a job and successfully dispatches the dry-run `export-hcb.yml` workflow. Then inspect the dispatched dry-run result before declaring the export path repaired.
+Verify that `taskops-nightly` completes after removal of the stale linker reference. Then verify that `export-hcb-nightly` creates a job and successfully dispatches the dry-run `export-hcb.yml` workflow before declaring either operational path repaired.
 
 ## Known Remaining Work
 
 Destination: `StegVerse-Labs/StegVerse-SCW`
 
-- verify `taskops-nightly` passes after restoring the AutoDocs probe
+- verify `taskops-nightly` passes and safely publishes AutoDocs/CI-dashboard updates
 - verify multi-repo autopatch report publication passes after concurrency repair
 - verify StegTV connectivity execution and report publication pass after workflow hardening
 - verify ASL-1 alignment uses the canonical StegTVC file contract
