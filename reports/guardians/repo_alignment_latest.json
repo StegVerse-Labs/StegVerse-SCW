@@ -4,49 +4,28 @@
     "repos_pass": 0,
     "repos_fail": 4,
     "repos_error": 0,
-    "ts_utc": "2026-07-10T10:36:49Z",
-    "rid": "29086870923"
+    "ts_utc": "2026-07-11T09:08:59Z",
+    "rid": "29147258443"
   },
   "results": [
     {
       "repo": "StegVerse-Labs/TVC",
       "status": "fail",
       "required_files": {
-        ".github/workflows/autopatch.yml": {
-          "ok": false,
-          "msg": "error:401"
-        },
-        ".github/workflows/workflows-status-badges.yml": {
-          "ok": false,
-          "msg": "error:401"
-        },
         "data/stegtvc_config.json": {
           "ok": false,
           "msg": "error:401"
         },
-        "app/resolver.py": {
+        "app/stegtvc_resolver.py": {
           "ok": false,
           "msg": "error:401"
         },
-        ".github/stegtvc_client.py": {
+        "stegtvc_client.py": {
           "ok": false,
           "msg": "error:401"
         }
       },
-      "required_workflows": {
-        ".github/workflows/autopatch.yml": {
-          "ok": false,
-          "msg": "missing"
-        },
-        ".github/workflows/guardian_omni_guardian.yml": {
-          "ok": false,
-          "msg": "missing"
-        },
-        ".github/workflows/guardian_worker_readmes.yml": {
-          "ok": false,
-          "msg": "missing"
-        }
-      },
+      "required_workflows": {},
       "optional": {
         "workflow_dispatch_missing_in": [],
         "secrets_status": "unknown:401",
@@ -60,41 +39,20 @@
       "repo": "StegVerse-Labs/hybrid-collab-bridge",
       "status": "fail",
       "required_files": {
-        ".github/workflows/autopatch.yml": {
-          "ok": false,
-          "msg": "error:401"
-        },
-        ".github/workflows/workflows-status-badges.yml": {
-          "ok": false,
-          "msg": "error:401"
-        },
         "data/stegtvc_config.json": {
           "ok": false,
           "msg": "error:401"
         },
-        "app/resolver.py": {
+        "app/stegtvc_resolver.py": {
           "ok": false,
           "msg": "error:401"
         },
-        ".github/stegtvc_client.py": {
+        "stegtvc_client.py": {
           "ok": false,
           "msg": "error:401"
         }
       },
-      "required_workflows": {
-        ".github/workflows/autopatch.yml": {
-          "ok": false,
-          "msg": "missing"
-        },
-        ".github/workflows/guardian_omni_guardian.yml": {
-          "ok": false,
-          "msg": "missing"
-        },
-        ".github/workflows/guardian_worker_readmes.yml": {
-          "ok": false,
-          "msg": "missing"
-        }
-      },
+      "required_workflows": {},
       "optional": {
         "workflow_dispatch_missing_in": [],
         "secrets_status": "unknown:401",
@@ -108,41 +66,20 @@
       "repo": "StegVerse-Labs/TV",
       "status": "fail",
       "required_files": {
-        ".github/workflows/autopatch.yml": {
-          "ok": false,
-          "msg": "error:401"
-        },
-        ".github/workflows/workflows-status-badges.yml": {
-          "ok": false,
-          "msg": "error:401"
-        },
         "data/stegtvc_config.json": {
           "ok": false,
           "msg": "error:401"
         },
-        "app/resolver.py": {
+        "app/stegtvc_resolver.py": {
           "ok": false,
           "msg": "error:401"
         },
-        ".github/stegtvc_client.py": {
+        "stegtvc_client.py": {
           "ok": false,
           "msg": "error:401"
         }
       },
-      "required_workflows": {
-        ".github/workflows/autopatch.yml": {
-          "ok": false,
-          "msg": "missing"
-        },
-        ".github/workflows/guardian_omni_guardian.yml": {
-          "ok": false,
-          "msg": "missing"
-        },
-        ".github/workflows/guardian_worker_readmes.yml": {
-          "ok": false,
-          "msg": "missing"
-        }
-      },
+      "required_workflows": {},
       "optional": {
         "workflow_dispatch_missing_in": [],
         "secrets_status": "unknown:401",
@@ -156,41 +93,20 @@
       "repo": "StegVerse-Labs/StegVerse-SCW",
       "status": "fail",
       "required_files": {
-        ".github/workflows/autopatch.yml": {
-          "ok": false,
-          "msg": "error:401"
-        },
-        ".github/workflows/workflows-status-badges.yml": {
-          "ok": false,
-          "msg": "error:401"
-        },
         "data/stegtvc_config.json": {
           "ok": false,
           "msg": "error:401"
         },
-        "app/resolver.py": {
+        "app/stegtvc_resolver.py": {
           "ok": false,
           "msg": "error:401"
         },
-        ".github/stegtvc_client.py": {
+        "stegtvc_client.py": {
           "ok": false,
           "msg": "error:401"
         }
       },
-      "required_workflows": {
-        ".github/workflows/autopatch.yml": {
-          "ok": false,
-          "msg": "missing"
-        },
-        ".github/workflows/guardian_omni_guardian.yml": {
-          "ok": false,
-          "msg": "missing"
-        },
-        ".github/workflows/guardian_worker_readmes.yml": {
-          "ok": false,
-          "msg": "missing"
-        }
-      },
+      "required_workflows": {},
       "optional": {
         "workflow_dispatch_missing_in": [],
         "secrets_status": "unknown:401",
