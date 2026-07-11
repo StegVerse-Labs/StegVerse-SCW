@@ -28,6 +28,40 @@ Restore stable repository operations without adding workflows.
 Event: GitHub Actions failure notification
 Repository: StegVerse-Labs/StegVerse-SCW
 Branch: main
+Workflow: StegTV Connectivity Autopatch
+Job: stegtvc-connectivity
+Run: 29148766401
+Commit: abcfdd5fdc875eca8bdb71fbbae462ebe6de57fe
+Failure class: external repository authentication failure
+Observed cause: scripts/stegtvc_connectivity_autopatch.py invoked `gh repo clone StegVerse-Labs/TVC`; GitHub CLI returned HTTP 401 Bad credentials before any target repository mutation occurred
+Evidence: checkout, token-resolution, Python setup, and dependency installation succeeded; the first source-repository clone failed and the report was written locally before the job exited
+Repair status: blocked; changing credential scope, substituting authority, or mutating external repositories is not authorized by this handoff
+Authority effect: none; no external repository was modified, no report commit was pushed, and no deployment, release, tag, merge, or authority expansion occurred
+Next task: verify the configured PAT or replace the cross-repository mutation design with an explicitly authorized read-only/preflight contract before retrying
+```
+
+```text
+Event: GitHub Actions failure notification
+Repository: StegVerse-Labs/StegVerse-SCW
+Branch: main
+Workflow: StegVerse Guardian Worker – Repo Alignment Check
+Job: alignment_check
+Run: 29148507073
+Commit: 715ce6b948f0283833f5cdd40d1a271a73977f19
+Failure class: missing local declared script
+Observed cause: .github/workflows/alignment_check.yml invokes scripts/genesis/repo_alignment_check.py, but that path is absent from the current repository; the job exited before alignment evaluation or report publication
+Evidence: checkout, PAT resolution, Python setup, and dependency installation succeeded; Python returned Errno 2 for the declared script path
+Repair status: blocked; no canonical replacement implementation or explicitly declared source path is present in the current handoff
+Authority effect: none; no report was changed, no issue was created, no external repository was modified, and no deployment, release, tag, or merge occurred
+Next task: identify or restore the canonical ASL-1 implementation and manifest as an existing declared repository surface, then verify locally before re-enabling report publication
+```
+
+## Prior Failure Handling
+
+```text
+Event: GitHub Actions failure notification
+Repository: StegVerse-Labs/StegVerse-SCW
+Branch: main
 Workflow: taskops-nightly
 Job: refresh
 Run: 29143978376
@@ -39,8 +73,6 @@ Repair behavior: taskops-nightly now runs the existing AutoDocs probe and contin
 Authority effect: none; no workflow was added, no external repository was modified, and no deployment, release, tag, merge, or cross-repository authority was exercised
 Verification: static workflow verification complete; next scheduled run required to verify execution and publication behavior
 ```
-
-## Prior Failure Handling
 
 ```text
 Event: GitHub Actions failure notification
@@ -59,16 +91,19 @@ Verification: pending the next scheduled or explicitly authorized workflow execu
 
 ## Current Priority
 
-Verify that `taskops-nightly` completes after removal of the stale linker reference. Then verify that `export-hcb-nightly` creates a job and successfully dispatches the dry-run `export-hcb.yml` workflow before declaring either operational path repaired.
+Restore or locate the canonical ASL-1 alignment implementation without inventing a new authority surface. Separately resolve the StegTVC source-read credential boundary before any cross-repository synchronization attempt. Then continue the previously declared verification sequence for `taskops-nightly` and `export-hcb-nightly`.
 
 ## Known Remaining Work
 
 Destination: `StegVerse-Labs/StegVerse-SCW`
 
+- restore or locate the canonical `scripts/genesis/repo_alignment_check.py` implementation and matching manifest
+- verify ASL-1 locally before allowing report publication
+- verify the StegTVC source repository can be read with explicitly authorized credentials
+- ensure unavailable cross-repository authority produces a bounded preflight result rather than an attempted mutation
 - verify `taskops-nightly` passes and safely publishes AutoDocs/CI-dashboard updates
 - verify multi-repo autopatch report publication passes after concurrency repair
-- verify StegTV connectivity execution and report publication pass after workflow hardening
-- verify ASL-1 alignment uses the canonical StegTVC file contract
+- verify StegTV connectivity execution and report publication pass after credential and authority preflight
 - verify backup workflow records a clean skip when destination access is absent
 - verify `export-hcb-nightly` produces a job and dispatches the dry-run export workflow
 - inspect the dispatched `export-hcb.yml` dry-run for local dependency, token, or payload-validation failures
