@@ -30,6 +30,40 @@ Repository: StegVerse-Labs/StegVerse-SCW
 Branch: main
 Workflow: StegTV Connectivity Autopatch
 Job: stegtvc-connectivity
+Run: 29188787382
+Commit: f1b160304924ef9ae80a7061e5d9109c09c3bb1d
+Failure class: recurring external repository authentication failure
+Observed cause: scripts/stegtvc_connectivity_autopatch.py invoked `gh repo clone StegVerse-Labs/TVC`; GitHub CLI returned HTTP 401 Bad credentials before any target repository mutation occurred
+Evidence: checkout, token resolution, Python setup, and dependency installation succeeded; the first source-repository clone failed, a local report was written, and the commit step was skipped
+Repair status: blocked; changing token scope, substituting credentials, or authorizing cross-repository mutation is outside the current handoff
+Authority effect: none; no external repository was modified, no report commit was pushed, and no deployment, release, tag, merge, or authority expansion occurred
+Next task: establish an explicitly authorized read-only credential/preflight contract for `StegVerse-Labs/TVC`; do not retry mutation-capable synchronization until that boundary is verified
+```
+
+```text
+Event: GitHub Actions failure notification
+Repository: StegVerse-Labs/StegVerse-SCW
+Branch: main
+Workflow: StegVerse Guardian Worker – Repo Alignment Check
+Job: alignment_check
+Run: 29188553744
+Commit: 7611f5158c73a4db5704abf6fc8d78927fe872c0
+Failure class: recurring missing local declared script
+Observed cause: the workflow invoked `scripts/genesis/repo_alignment_check.py --manifest scripts/genesis/repo_alignment_manifest.json --write-latest`; the script path is absent and Python exited with Errno 2 before alignment evaluation or report publication
+Evidence: checkout, PAT resolution, Python setup, and dependency installation succeeded; the first failing step was the declared ASL-1 script invocation
+Repair status: blocked; no canonical replacement implementation or matching manifest is declared by this handoff, and inventing one would create a new authority surface
+Authority effect: none; no report was changed, no issue was created, no external repository was modified, and no deployment, release, tag, or merge occurred
+Next task: restore or identify the canonical ASL-1 implementation and manifest from an existing authorized repository artifact, verify locally, then re-enable report publication
+```
+
+## Prior Failure Handling
+
+```text
+Event: GitHub Actions failure notification
+Repository: StegVerse-Labs/StegVerse-SCW
+Branch: main
+Workflow: StegTV Connectivity Autopatch
+Job: stegtvc-connectivity
 Run: 29148766401
 Commit: abcfdd5fdc875eca8bdb71fbbae462ebe6de57fe
 Failure class: external repository authentication failure
@@ -55,8 +89,6 @@ Repair status: blocked; no canonical replacement implementation or explicitly de
 Authority effect: none; no report was changed, no issue was created, no external repository was modified, and no deployment, release, tag, or merge occurred
 Next task: identify or restore the canonical ASL-1 implementation and manifest as an existing declared repository surface, then verify locally before re-enabling report publication
 ```
-
-## Prior Failure Handling
 
 ```text
 Event: GitHub Actions failure notification
