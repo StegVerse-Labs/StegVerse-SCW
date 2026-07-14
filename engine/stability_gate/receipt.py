@@ -8,6 +8,7 @@ from dataclasses import asdict, dataclass
 
 from .model import GateInput
 from .policy import GatePolicy, GateResult
+from .provenance import GateProvenance
 
 
 def canonical_json(value: object) -> str:
@@ -23,6 +24,7 @@ class GateReceipt:
     schema: str
     node_id: str
     gate_input: dict[str, object]
+    provenance: dict[str, object]
     policy: dict[str, object]
     result: dict[str, object]
     previous_hash: str
@@ -39,6 +41,7 @@ def create_receipt(
     *,
     node_id: str,
     gate_input: GateInput,
+    provenance: GateProvenance,
     policy: GatePolicy,
     result: GateResult,
     previous_hash: str = "",
@@ -52,9 +55,10 @@ def create_receipt(
         raise ValueError("previous_hash must be an empty string or SHA-256 hex")
 
     unsigned = {
-        "schema": "stegverse.stability-gate.receipt.v1",
+        "schema": "stegverse.stability-gate.receipt.v2",
         "node_id": node_id,
         "gate_input": gate_input.canonical_dict(),
+        "provenance": provenance.canonical_dict(),
         "policy": {
             "allow_threshold": policy.allow_threshold,
             "delay_threshold": policy.delay_threshold,
