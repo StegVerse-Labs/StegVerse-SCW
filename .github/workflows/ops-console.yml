@@ -1,16 +1,28 @@
-name: Ops Console (dispatch reviewed workflow)
+name: Ops Console (reviewed control workflows)
 
 on:
   workflow_dispatch:
     inputs:
       workflow:
-        description: "Top-level workflow filename in .github/workflows"
+        description: "Reviewed control workflow"
         required: true
         default: "workflows-sanity-check.yml"
+        type: choice
+        options:
+          - workflows-sanity-check.yml
+          - setup-common-python.yml
+          - workflow_preflight.yml
+          - repair-bad-yaml.yml
       ref:
         description: "Existing Git ref to run on"
         required: true
         default: "main"
+        type: string
+      reason:
+        description: "Operator reason recorded in the dispatch summary"
+        required: true
+        default: "control-plane validation"
+        type: string
 
 permissions:
   contents: read
@@ -27,51 +39,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: List manually dispatchable workflows
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "### Manually dispatchable workflows" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| file | workflow_dispatch |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---|:--:|" >> "$GITHUB_STEP_SUMMARY"
-          found_any=false
-          shopt -s nullglob
-          for f in .github/workflows/*.yml .github/workflows/*.yaml; do
-            found_any=true
-            if grep -qE '^[[:space:]]*workflow_dispatch[[:space:]]*:' "$f"; then
-              mark="✓"
-            else
-              mark="—"
-            fi
-            echo "| \`$(basename "$f")\` | $mark |" >> "$GITHUB_STEP_SUMMARY"
-          done
-          if [ "$found_any" = false ]; then
-            echo "_No top-level workflow files found._" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Validate dispatch request
+      - name: Validate reviewed dispatch request
         id: validate
         shell: bash
         env:
           REQUESTED_WORKFLOW: ${{ inputs.workflow }}
           REQUESTED_REF: ${{ inputs.ref }}
+          REQUEST_REASON: ${{ inputs.reason }}
         run: |
           set -euo pipefail
-          WF="${REQUESTED_WORKFLOW}"
-          REF="${REQUESTED_REF}"
+          WF="$REQUESTED_WORKFLOW"
+          REF="$REQUESTED_REF"
+          REASON="$REQUEST_REASON"
 
-          if [ -z "$WF" ] || [ "$(basename "$WF")" != "$WF" ]; then
-            echo "::error title=Invalid workflow::Provide one top-level workflow filename without path components."
-            exit 1
-          fi
           case "$WF" in
-            *.yml|*.yaml) ;;
+            workflows-sanity-check.yml|setup-common-python.yml|workflow_preflight.yml|repair-bad-yaml.yml)
+              ;;
             *)
-              echo "::error title=Invalid workflow::Workflow filename must end in .yml or .yaml."
+              echo "::error title=Workflow not reviewed::$WF is outside the control-nucleus allowlist."
               exit 1
               ;;
           esac
+
+          if [ -z "$REF" ]; then
+            echo "::error title=Missing ref::Provide an existing branch, tag, or commit ref."
+            exit 1
+          fi
+          if [ -z "$REASON" ]; then
+            echo "::error title=Missing reason::Provide an operator reason for this dispatch."
+            exit 1
+          fi
 
           TARGET=".github/workflows/$WF"
           if [ ! -f "$TARGET" ]; then
@@ -79,18 +76,25 @@ jobs:
             exit 1
           fi
           if ! grep -qE '^[[:space:]]*workflow_dispatch[[:space:]]*:' "$TARGET"; then
-            echo "::error title=Not dispatchable::$WF does not declare workflow_dispatch and cannot be dispatched through this console."
-            exit 1
-          fi
-          if [ -z "$REF" ]; then
-            echo "::error title=Missing ref::Provide an existing branch, tag, or commit ref."
+            echo "::error title=Not dispatchable::$WF does not declare workflow_dispatch."
             exit 1
           fi
 
           echo "workflow=$WF" >> "$GITHUB_OUTPUT"
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
 
-      - name: Dispatch target workflow
+          {
+            echo "### Reviewed dispatch request"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Workflow | \`$WF\` |"
+            echo "| Ref | \`$REF\` |"
+            echo "| Actor | \`$GITHUB_ACTOR\` |"
+            echo "| Reason | $REASON |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dispatch reviewed workflow with safe defaults
         uses: actions/github-script@v7
         env:
           TARGET_WORKFLOW: ${{ steps.validate.outputs.workflow }}
@@ -99,7 +103,7 @@ jobs:
           script: |
             const workflow = process.env.TARGET_WORKFLOW;
             const ref = process.env.TARGET_REF;
-            core.info(`Dispatching ${workflow} on ref ${ref}`);
+            core.info(`Dispatching reviewed workflow ${workflow} on ${ref}`);
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -107,9 +111,7 @@ jobs:
               ref,
             });
             await core.summary
-              .addHeading('Dispatch created')
-              .addTable([
-                [{ data: 'workflow', header: true }, { data: 'ref', header: true }],
-                [workflow, ref],
-              ])
+              .addHeading('Dispatch accepted')
+              .addRaw(`GitHub accepted the dispatch request for \`${workflow}\` on \`${ref}\`.\n`)
+              .addRaw('Execution success must be verified from the resulting workflow run.\n')
               .write();
