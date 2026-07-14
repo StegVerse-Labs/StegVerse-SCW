@@ -1,0 +1,88 @@
+name: Reusable Telemetry Last-Two
+
+on:
+  workflow_call:
+    inputs:
+      basename:
+        description: Safe slug used for telemetry filenames and artifacts
+        required: true
+        type: string
+      status:
+        description: Caller job result
+        required: true
+        type: string
+    outputs:
+      json_path:
+        description: Generated JSON summary path
+        value: ${{ jobs.telemetry.outputs.json_path }}
+      md_path:
+        description: Generated Markdown summary path
+        value: ${{ jobs.telemetry.outputs.md_path }}
+
+permissions:
+  contents: read
+
+jobs:
+  telemetry:
+    runs-on: ubuntu-latest
+    outputs:
+      json_path: ${{ steps.paths.outputs.json_path }}
+      md_path: ${{ steps.paths.outputs.md_path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build telemetry summary
+        id: build
+        env:
+          BASENAME: ${{ inputs.basename }}
+          STATUS: ${{ inputs.status }}
+        run: |
+          set -euo pipefail
+          mkdir -p self_healing_out
+
+          case "$BASENAME" in
+            *[!A-Za-z0-9._-]*|'')
+              echo "Invalid basename: $BASENAME" >&2
+              exit 2
+              ;;
+          esac
+
+          timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          sha="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          ledger="self_healing_out/TRIGGER_EVENTS_${BASENAME}.jsonl"
+          json_path="self_healing_out/LAST_TWO_${BASENAME}.json"
+          md_path="self_healing_out/LAST_TWO_${BASENAME}.md"
+
+          jq -cn \
+            --arg ts "$timestamp" \
+            --arg status "$STATUS" \
+            --arg sha "$sha" \
+            --arg run_url "$run_url" \
+            --arg actor "$GITHUB_ACTOR" \
+            '{ts:$ts,status:$status,sha:$sha,run_url:$run_url,actor:$actor}' >> "$ledger"
+
+          tail -n 2 "$ledger" | jq -s '.' > "$json_path"
+          {
+            echo "### Last two ${BASENAME} outcomes"
+            jq -r '.[] | "- **\(.status | ascii_upcase)** — \(.ts) — `\(.sha)` [(run)](\(.run_url)) by \(.actor)"' "$json_path"
+          } > "$md_path"
+
+      - name: Publish output paths
+        id: paths
+        env:
+          BASENAME: ${{ inputs.basename }}
+        run: |
+          echo "json_path=self_healing_out/LAST_TWO_${BASENAME}.json" >> "$GITHUB_OUTPUT"
+          echo "md_path=self_healing_out/LAST_TWO_${BASENAME}.md" >> "$GITHUB_OUTPUT"
+
+      - name: Upload telemetry summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-two-${{ inputs.basename }}
+          path: |
+            self_healing_out/LAST_TWO_${{ inputs.basename }}.json
+            self_healing_out/LAST_TWO_${{ inputs.basename }}.md
+          if-no-files-found: error
+          retention-days: 14
