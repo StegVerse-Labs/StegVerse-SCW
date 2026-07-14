@@ -1,0 +1,38 @@
+{
+  "schema": "stegverse.stability-gate.provenance-policy.v1",
+  "mode": "dry-run",
+  "allow_caller_asserted_in_dry_run": true,
+  "enforcement_enabled": false,
+  "rules": {
+    "deliberation_capacity": {
+      "allowed_classes": ["DERIVED", "RECONSTRUCTED"],
+      "allowed_producers": [],
+      "allowed_methods": [],
+      "require_evidence_refs": true
+    },
+    "model_fidelity": {
+      "allowed_classes": ["DERIVED", "RECONSTRUCTED"],
+      "allowed_producers": [],
+      "allowed_methods": [],
+      "require_evidence_refs": true
+    },
+    "environmental_volatility": {
+      "allowed_classes": ["DERIVED", "RECONSTRUCTED"],
+      "allowed_producers": [],
+      "allowed_methods": [],
+      "require_evidence_refs": true
+    },
+    "action_magnitude": {
+      "allowed_classes": ["DERIVED", "RECONSTRUCTED"],
+      "allowed_producers": [],
+      "allowed_methods": [],
+      "require_evidence_refs": true
+    }
+  },
+  "non_claims": {
+    "authorized_producers_defined": false,
+    "authorized_methods_defined": false,
+    "measurement_algorithms_validated": false,
+    "enforcement_eligible": false
+  }
+}
