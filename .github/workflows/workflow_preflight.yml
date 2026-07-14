@@ -4,21 +4,26 @@ on:
   workflow_dispatch:
     inputs:
       apply_fixes:
-        description: "Apply fixes in-place (otherwise: dry run only)"
+        description: Apply fixes in-place; false performs a read-only report
         required: false
-        default: "true"
+        default: false
+        type: boolean
       auto_commit:
-        description: "Commit/push normalized workflows to main"
+        description: Commit normalized workflows when apply_fixes is true
         required: false
-        default: "true"
+        default: false
+        type: boolean
   push:
-    branches: [ "main" ]
+    branches: [main]
     paths:
       - ".github/trigger/preflight/**"
 
 permissions:
   contents: write
-  pull-requests: write
+
+concurrency:
+  group: workflow-preflight-${{ github.ref }}
+  cancel-in-progress: false
 
 defaults:
   run:
@@ -33,82 +38,109 @@ jobs:
 
       - name: Ensure tools
         run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get install -y jq curl
+          set -euo pipefail
           python3 -V
+          jq --version
 
-      # Fallback validator (ensures we always emit a report)
       - name: Seed fallback validator if missing
         run: |
-          set -e
-          mkdir -p scripts self_healing_out .github/workflows
+          set -euo pipefail
+          mkdir -p scripts self_healing_out
           if [ ! -f scripts/validate_and_fix.py ]; then
             cat > scripts/validate_and_fix.py <<'PY'
-#\!/usr/bin/env python3
-import os, json, sys
-from pathlib import Path
-ROOT = Path(__file__).resolve().parents[1]
-WF   = ROOT / ".github" / "workflows"
-OUT  = ROOT / "self_healing_out"; OUT.mkdir(parents=True, exist_ok=True)
-files = sorted([p.as_posix() for p in WF.glob("*.y*ml")]) if WF.exists() else []
-summary = {"files": len(files), "changed": 0, "invalid_before": 0, "invalid_after": 0, "applied": "--apply" in sys.argv, "note": "fallback stub ran (real validator not yet committed)"}
-(OUT/"WORKFLOW_FIX_REPORT.json").write_text(json.dumps({"summary": summary, "results": [{"path":f, "changed": False, "before_valid": True, "after_valid": True, "text_stats":{}, "yaml_stats":{}} for f in files]}, indent=2), encoding="utf-8")
-(OUT/"WORKFLOW_FIX_REPORT.md").write_text("# Workflow Fix Report\n\n- Fallback stub executed (real validator missing)\n- Files found: **{}**\n".format(len(files)), encoding="utf-8")
-print(json.dumps(summary, indent=2))
-PY
+          #!/usr/bin/env python3
+          import json
+          import sys
+          from pathlib import Path
+
+          root = Path(__file__).resolve().parents[1]
+          workflows = root / ".github" / "workflows"
+          output = root / "self_healing_out"
+          output.mkdir(parents=True, exist_ok=True)
+          files = sorted(path.as_posix() for path in workflows.glob("*.y*ml"))
+          applied = "--apply" in sys.argv
+          summary = {
+              "files": len(files),
+              "changed": 0,
+              "invalid_before": 0,
+              "invalid_after": 0,
+              "applied": applied,
+              "note": "fallback inventory only; real validator not installed",
+          }
+          results = [
+              {
+                  "path": path,
+                  "changed": False,
+                  "before_valid": None,
+                  "after_valid": None,
+                  "classification": "unvalidated",
+              }
+              for path in files
+          ]
+          (output / "WORKFLOW_FIX_REPORT.json").write_text(
+              json.dumps({"summary": summary, "results": results}, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          (output / "WORKFLOW_FIX_REPORT.md").write_text(
+              "# Workflow Preflight Report\n\n"
+              "- Fallback inventory executed; no YAML validity claim was made.\n"
+              f"- Top-level workflow files found: **{len(files)}**\n"
+              f"- Apply requested: **{applied}**\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(summary, indent=2))
+          PY
             chmod +x scripts/validate_and_fix.py
           fi
 
-      - name: Validate & (optionally) Auto-Fix Workflows
+      - name: Validate workflows
         env:
-          APPLY: ${{ github.event.inputs.apply_fixes }}
+          APPLY_FIXES: ${{ inputs.apply_fixes || false }}
         run: |
-          set -e
-          if [ "$APPLY" = "true" ]; then
-            python3 scripts/validate_and_fix.py --apply || true
+          set -euo pipefail
+          if [ "$APPLY_FIXES" = "true" ]; then
+            python3 scripts/validate_and_fix.py --apply
           else
-            python3 scripts/validate_and_fix.py || true
+            python3 scripts/validate_and_fix.py
           fi
 
-      - name: Commit Fixed Workflows (if auto_commit=true AND apply_fixes=true)
-        if: ${{ github.event.inputs.auto_commit == 'true' && github.event.inputs.apply_fixes == 'true' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Commit fixed workflows
+        if: ${{ inputs.apply_fixes == true && inputs.auto_commit == true }}
         run: |
-          set -e
+          set -euo pipefail
           git config user.name "workflow-fix-bot"
           git config user.email "bot@stegverse.local"
-          git add .github/workflows/*.yml .github/workflows/*.yaml || true
+          git add .github/workflows scripts/validate_and_fix.py
           if git diff --cached --quiet; then
             echo "No workflow changes to commit."
           else
-            git commit -m "chore: normalize workflows (auto-fix common YAML issues)"
-            git push origin HEAD:main || true
+            git commit -m "chore: normalize workflows"
+            git push origin HEAD:main
           fi
 
-      - name: Ensure report dir even on failure
+      - name: Ensure report files
         if: always()
         run: |
-          set -e
+          set -euo pipefail
           mkdir -p self_healing_out
-          [ -f self_healing_out/WORKFLOW_FIX_REPORT.md ] || echo "# Workflow Fix Report\n\n(no report generated—validator likely failed early)" > self_healing_out/WORKFLOW_FIX_REPORT.md
-          echo "== workflows ==" > self_healing_out/TREE_WORKFLOWS.txt
-          ls -la .github/workflows >> self_healing_out/TREE_WORKFLOWS.txt 2>&1 || true
+          if [ ! -f self_healing_out/WORKFLOW_FIX_REPORT.md ]; then
+            printf '# Workflow Preflight Report\n\nValidator failed before producing a report.\n' > self_healing_out/WORKFLOW_FIX_REPORT.md
+          fi
+          find .github/workflows -maxdepth 2 -type f -print | sort > self_healing_out/TREE_WORKFLOWS.txt
 
-      - name: Upload Fix Report (always)
+      - name: Upload preflight report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: workflow_fix_report
-          path: |
-            self_healing_out/**
-          if-no-files-found: warn
+          name: workflow-preflight-report
+          path: self_healing_out/**
+          if-no-files-found: error
+          retention-days: 14
 
   telemetry:
-    needs: [preflight]
+    needs: preflight
     if: always()
-    uses: ./.github/workflows/_reusables/telemetry.yml
+    uses: ./.github/workflows/telemetry-reusable.yml
     with:
       basename: preflight
       status: ${{ needs.preflight.result }}
