@@ -8,6 +8,7 @@ from typing import Any
 from .failure_receipt import GateFailureReceipt, create_failure_receipt
 from .model import GateInput
 from .policy import Decision, GatePolicy, GateResult, evaluate
+from .provenance import GateProvenance, ProvenanceError, provenance_from_dict
 from .receipt import GateReceipt, create_receipt
 
 
@@ -22,11 +23,7 @@ def gate_input_from_context(
     args: dict[str, Any],
     observed_at: int | None = None,
 ) -> GateInput:
-    """Build a gate input only from explicit runtime measurements.
-
-    No inferred defaults are used for D, M, E, or A. Missing values are
-    intentionally rejected so dry-run evidence exposes unresolved schemas.
-    """
+    """Build a gate input only from explicit runtime measurements."""
 
     metrics = args.get("stability_gate")
     if not isinstance(metrics, dict):
@@ -55,6 +52,16 @@ def gate_input_from_context(
     )
 
 
+def provenance_from_context(args: dict[str, Any]) -> GateProvenance:
+    payload = args.get("stability_gate_provenance")
+    if payload is None:
+        raise GateContextError("args.stability_gate_provenance must be an object")
+    try:
+        return provenance_from_dict(payload)
+    except ProvenanceError as exc:
+        raise GateContextError(str(exc)) from exc
+
+
 def evaluate_context_dry_run(
     *,
     command: str,
@@ -73,6 +80,7 @@ def evaluate_context_dry_run(
             args=args,
             observed_at=observed_at,
         )
+        provenance = provenance_from_context(args)
     except (GateContextError, TypeError, ValueError) as exc:
         result = GateResult(Decision.FAIL_CLOSED, None, str(exc))
         receipt = create_failure_receipt(
@@ -90,6 +98,7 @@ def evaluate_context_dry_run(
     receipt = create_receipt(
         node_id=node_id,
         gate_input=gate_input,
+        provenance=provenance,
         policy=active_policy,
         result=result,
         previous_hash=previous_hash,
