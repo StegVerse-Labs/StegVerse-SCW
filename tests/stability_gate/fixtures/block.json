@@ -1,0 +1,10 @@
+{
+  "stability_gate": {
+    "deliberation_capacity": 0.2,
+    "model_fidelity": 1.0,
+    "environmental_volatility": 1.0,
+    "action_magnitude": 1.0,
+    "source": "fixture:block"
+  },
+  "expected_decision": "BLOCK"
+}
