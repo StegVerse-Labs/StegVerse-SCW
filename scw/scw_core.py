@@ -1,6 +1,10 @@
 import os, json, sys, textwrap, datetime, subprocess
 
-from engine.stability_gate.adapter import evaluate_context_dry_run
+from engine.stability_gate.adapter import (
+    GateContextError,
+    assess_context_provenance,
+    evaluate_context_dry_run,
+)
 from engine.stability_gate.storage import write_receipt
 
 ORG = os.getenv("ORG_GITHUB", "StegVerse-Labs")
@@ -32,7 +36,7 @@ def run_stability_gate_dry_run(command, target_repo, args):
     """Observe the verified command-dispatch boundary without enforcing it.
 
     The gate is intentionally dry-run only. Existing SCW command outcomes are
-    unchanged while authoritative D/M/E/A input schemas are being established.
+    unchanged while authoritative D/M/E/A measurement rules are established.
     """
 
     result, receipt = evaluate_context_dry_run(
@@ -45,9 +49,24 @@ def run_stability_gate_dry_run(command, target_repo, args):
         "Stability Gate dry-run: "
         f"decision={result.decision.value} score={result.score} reason={result.reason}"
     )
-    if receipt is not None:
-        path = write_receipt(receipt)
-        log(f"Stability Gate receipt: {path}")
+
+    try:
+        provenance_result = assess_context_provenance(args)
+        reasons = "; ".join(provenance_result.reasons) or "none"
+        log(
+            "Stability Gate provenance: "
+            f"posture={provenance_result.decision.value} "
+            f"enforcement_eligible={provenance_result.eligible_for_enforcement} "
+            f"reasons={reasons}"
+        )
+    except GateContextError as exc:
+        log(
+            "Stability Gate provenance: "
+            f"posture=FAIL_CLOSED enforcement_eligible=False reason={exc}"
+        )
+
+    path = write_receipt(receipt)
+    log(f"Stability Gate receipt: {path}")
 
 
 def cmd_self_test(target_repo=None):
