@@ -9,6 +9,11 @@ from .failure_receipt import GateFailureReceipt, create_failure_receipt
 from .model import GateInput
 from .policy import Decision, GatePolicy, GateResult, evaluate
 from .provenance import GateProvenance, ProvenanceError, provenance_from_dict
+from .provenance_policy import (
+    ProvenancePolicyResult,
+    default_dry_run_policy,
+    evaluate_provenance,
+)
 from .receipt import GateReceipt, create_receipt
 
 
@@ -60,6 +65,15 @@ def provenance_from_context(args: dict[str, Any]) -> GateProvenance:
         return provenance_from_dict(payload)
     except ProvenanceError as exc:
         raise GateContextError(str(exc)) from exc
+
+
+def assess_context_provenance(args: dict[str, Any]) -> ProvenancePolicyResult:
+    provenance = provenance_from_context(args)
+    return evaluate_provenance(
+        provenance,
+        default_dry_run_policy(),
+        dry_run=True,
+    )
 
 
 def evaluate_context_dry_run(
