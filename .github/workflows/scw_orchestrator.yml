@@ -48,6 +48,10 @@ jobs:
         run: |
           pytest -q tests/stability_gate
 
+      - name: Generate representative Stability Gate evidence
+        run: |
+          python scripts/stability_gate_fixture_run.py
+
       - name: Run SCW core
         env:
           SCW_EVENT_NAME: ${{ github.event_name }}
@@ -59,11 +63,13 @@ jobs:
         run: |
           python scw/scw_core.py
 
-      - name: Upload Stability Gate receipts
+      - name: Upload Stability Gate evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: stability-gate-receipts-${{ github.run_id }}
-          path: artifacts/receipts/stability_gate/
+          name: stability-gate-evidence-${{ github.run_id }}
+          path: |
+            artifacts/receipts/stability_gate/
+            artifacts/reports/stability_gate/
           if-no-files-found: ignore
           retention-days: 30
