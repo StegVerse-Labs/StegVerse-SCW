@@ -1,15 +1,43 @@
-- name: Setup common Python
-description: Standard Python setup with YAML libs
-  id: py
-runs:
-  uses: /.github/actions/setup-common-python
-  using: "composite"
-    with:
-  steps:
-    python-version: "3.11"
-    - uses: actions/setup-python@v5
-  cache: "true"
-      with:
-  # optional: add frequently used packages here
-        python-version: "3.x"
-  extra-packages: "requests"
+name: Validate Setup Common Python
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/actions/setup-common-python/action.yml"
+      - ".github/workflows/setup-common-python.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate composite action
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run setup-common-python action
+        uses: ./.github/actions/setup-common-python
+        with:
+          python-version: "3.11"
+          cache: ""
+          ensure-pyyaml: "true"
+          extra-packages: "requests"
+
+      - name: Verify runtime imports
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import sys
+          import requests
+          import yaml
+
+          print(f"python={sys.version.split()[0]}")
+          print(f"requests={requests.__version__}")
+          print(f"pyyaml={yaml.__version__}")
+          PY
