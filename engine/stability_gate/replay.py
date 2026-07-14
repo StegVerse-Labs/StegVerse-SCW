@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from .model import GateInput
-from .policy import Decision, GatePolicy, evaluate
+from .policy import GatePolicy, evaluate
+from .provenance import ProvenanceError, provenance_from_dict
 from .receipt import GateReceipt, verify_receipt_hash
 
 
@@ -11,10 +12,14 @@ def replay(receipt: GateReceipt) -> bool:
     if not verify_receipt_hash(receipt):
         return False
 
-    gate_input = GateInput(**receipt.gate_input)
-    policy = GatePolicy(**receipt.policy)
-    result = evaluate(gate_input, policy, now=gate_input.observed_at)
+    try:
+        gate_input = GateInput(**receipt.gate_input)
+        policy = GatePolicy(**receipt.policy)
+        provenance_from_dict(receipt.provenance)
+    except (TypeError, ValueError, ProvenanceError):
+        return False
 
+    result = evaluate(gate_input, policy, now=gate_input.observed_at)
     stored = receipt.result
     return (
         result.decision.value == stored.get("decision")
