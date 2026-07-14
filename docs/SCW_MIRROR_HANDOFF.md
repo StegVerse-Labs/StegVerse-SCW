@@ -42,7 +42,12 @@ The broken workflows were labeled primarily with YAML `ScannerError` or `ParserE
 - Rewired `workflow_preflight.yml` to the top-level reusable telemetry workflow, changed manual mutation defaults to false, removed swallowed validator and push failures, and made fallback output explicitly unvalidated in commit `aab8e268a819860eccecc18a2aa8d9b1535dedc6`.
 - Inspected `.github/workflows/neutralize_secrets_if.yml`; current blob `976265cdefe48767ab1799926d6671195e514495` is structured and manually dispatchable, but remains a high-risk bulk mutator and has not been run.
 - Upgraded `.github/workflows/workflows-sanity-check.yml` from a shallow parse loop into a recursive, read-only workflow inventory gate producing JSON and Markdown artifacts in commit `ecf7ec713de2b1846eb9af72dc14fd86a18cd4f7`.
-- No bulk stubbing, PAT rotation, release, or tag has been performed.
+- Inspected `scripts/patches/repair_workflow_yaml.py`; prior blob `8eef282036ce5be54d4c3052fda6b87f411ff679` used PyYAML parsing followed by full-file dumping. That could reinterpret GitHub's `on` key as boolean false, remove comments, alter quoting, and rewrite expressions.
+- Replaced the repair script with a loss-minimizing engine in commit `247542dcb14883ac568309909642b6fe11a8c587`. It reports parser failures using a GitHub-aware loader and only applies line-ending, trailing-space, and final-newline normalization. It never automatically replaces tabs or structurally re-dumps YAML.
+- Rebuilt `.github/workflows/repair-bad-yaml.yml` in commit `f7ab3277c73e29df8f639f07481f21b535e16638`. Apply mode now requires exactly one reviewed top-level target, default mode is report-only, reports are uploaded, and only the selected file can be staged.
+- Inspected `.github/workflows/ops-console.yml`; prior blob `634697b55984d6f2e2200515a90cad53f0d23f95` could dispatch any top-level manually dispatchable workflow.
+- Restricted `.github/workflows/ops-console.yml` to the reviewed control nucleus in commit `34dc85b5d0a91b13a2c84bba1154b741a2e46f16`. It records actor, ref, workflow, and reason, and dispatches targets with their safe defaults.
+- No bulk stubbing, bulk mutation, PAT rotation, release, or tag has been performed.
 
 ## Active goal
 
@@ -61,12 +66,10 @@ Restore a trustworthy workflow control plane without destroying recoverable work
 
 ## Initial control nucleus
 
-Priority candidates:
-
-- `.github/workflows/ops-console.yml`
+- `.github/workflows/ops-console.yml` — restricted to reviewed control workflows; execution validation pending.
 - `.github/workflows/workflow_preflight.yml` — repaired; execution validation pending.
 - `.github/workflows/workflows-sanity-check.yml` — repaired into inventory gate; execution validation pending.
-- `.github/workflows/repair-bad-yaml.yml`
+- `.github/workflows/repair-bad-yaml.yml` — rebuilt as bounded report/safe-normalization workflow; execution validation pending.
 - `.github/workflows/neutralize_secrets_if.yml` — parse-structured; quarantined from execution pending inventory results and review.
 - `.github/workflows/setup-common-python.yml` — repaired; execution validation pending.
 - `.github/workflows/telemetry-reusable.yml` — installed; caller validation pending.
@@ -80,15 +83,19 @@ Priority candidates:
 - Preserve iPhone-friendly recovery paths and complete-file replacements.
 - Do not run `neutralize_secrets_if.yml` or another bulk mutator until the read-only inventory has identified exact targets and a reviewed mutation plan exists.
 - Do not rely on `.github/workflows/_reusables/telemetry.yml`; use `.github/workflows/telemetry-reusable.yml`.
+- Do not restore full-document PyYAML dumping as a repair mechanism.
+- Apply-mode YAML repair must name exactly one reviewed top-level workflow file.
+- The Ops Console allowlist must not be expanded to bulk mutators without review and a recorded reason.
 
 ## Known remaining work
 
 - Execute and inspect `Workflows Sanity Check`; persist its artifact summary or failure evidence.
 - Execute and inspect `Validate Setup Common Python`.
 - Execute and inspect `Workflow Preflight` in its default read-only mode.
+- Execute and inspect `Repair Bad Workflow YAML` in default report-only mode.
+- Execute and inspect the restricted `Ops Console`, initially dispatching `workflows-sanity-check.yml`.
 - Decide whether to delete, archive, or convert the malformed nested `_reusables/telemetry.yml` after all callers are migrated.
 - Verify the current contents and parse status of workflows historically labeled broken using the generated inventory.
-- Inspect and repair `ops-console.yml` and `repair-bad-yaml.yml` next.
 - Identify duplicate workflows and naming collisions such as multiple autopatch variants.
 - Run separate PAT health validation after parse-valid same-repository workflows have executed.
 - Recompute Ops Console counts from current repository state.
@@ -102,13 +109,16 @@ Priority candidates:
 - Read-only inventory gate: `.github/workflows/workflows-sanity-check.yml`
 - Top-level reusable telemetry workflow: `.github/workflows/telemetry-reusable.yml`
 - Rewired preflight workflow: `.github/workflows/workflow_preflight.yml`
+- Bounded repair engine: `scripts/patches/repair_workflow_yaml.py`
+- Bounded repair workflow: `.github/workflows/repair-bad-yaml.yml`
+- Reviewed control dispatcher: `.github/workflows/ops-console.yml`
 
 ### Pending verification or repair
 
-- Execution receipts for the three repaired control workflows.
+- Execution receipts for the repaired control workflows.
 - Full current workflow inventory artifact.
-- `ops-console.yml` and `repair-bad-yaml.yml` inspection and repair.
 - Malformed nested telemetry file disposition.
+- Duplicate and obsolete workflow classification.
 - PAT-dependent cross-repository dispatch and write pathways.
 
 Destination: `StegVerse-Labs/StegVerse-SCW`.
