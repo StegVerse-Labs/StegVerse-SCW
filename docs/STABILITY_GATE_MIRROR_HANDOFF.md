@@ -23,32 +23,60 @@ The score is an experimental policy signal, not a proven universal control-law s
 
 Primary repository: `StegVerse-Labs/StegVerse-SCW`
 
-Planned code location:
+Installed code locations:
 
 - `engine/stability_gate/`
 - tests: `tests/stability_gate/`
 - runtime evidence: `artifacts/receipts/stability_gate/`
 
-The actual SCW execution insertion point must be identified from the repository's current orchestrator and ingestion paths before enforcement is connected. No generic `apply_bundle()` location is assumed.
+## Verified SCW boundary
 
-## Work completed in the originating session
+The current SCW command path is:
 
-Prototype bundles v1 through v16 were generated outside GitHub. The last prototype introduced:
+1. `.github/workflows/scw_orchestrator.yml` checks out the repository and runs `python scw/scw_core.py`.
+2. `scw/scw_core.py` normalizes the workflow or repository-dispatch command, target repository, and JSON arguments.
+3. The Stability Gate dry-run executes immediately after context normalization and before command dispatch in `main()`.
+4. Existing command handlers then execute unchanged.
 
-- a typed state model;
-- score computation;
-- ALLOW/BLOCK evaluation;
-- canonical JSON hashing;
-- receipt chaining through `previous_hash`;
-- deterministic receipt verification;
-- score replay and drift detection;
-- proposed install paths under `engine/stability_gate/` and `artifacts/receipts/`.
+This is the verified pre-dispatch boundary for the current SCW core. The current handlers are predominantly stubs, so this is not yet proof of a real repository mutation boundary. Enforcement remains prohibited until a concrete mutating handler is implemented and separately reviewed.
 
-These sandbox ZIPs are not authoritative releases and are not retained as the production source.
+The repository also contains `.github/workflows/ingestion-orchestrator.yml`, but its run job currently contains only a TODO echo rather than real ingestion or mutation logic. It is therefore not an active mutation boundary.
 
-## Accuracy correction
+## Work completed
 
-Earlier prototype descriptions overstated implementation maturity. The following are not production implementations in the generated bundles:
+Prototype bundles v1 through v16 were generated outside GitHub. They are not authoritative releases and are not retained as the production source.
+
+The authoritative repository implementation now includes:
+
+- `engine/stability_gate/__init__.py`
+- `engine/stability_gate/model.py`
+- `engine/stability_gate/policy.py`
+- `engine/stability_gate/receipt.py`
+- `engine/stability_gate/replay.py`
+- `engine/stability_gate/adapter.py`
+- `engine/stability_gate/storage.py`
+- `tests/stability_gate/test_policy.py`
+- `tests/stability_gate/test_receipt.py`
+- `tests/stability_gate/test_adapter.py`
+- `tests/stability_gate/test_storage.py`
+- ALLOW, DELAY, BLOCK, and FAIL_CLOSED JSON fixtures
+
+Implemented behavior:
+
+- typed and validated runtime input;
+- explicit ALLOW, DELAY, BLOCK, and FAIL_CLOSED decisions;
+- stale, malformed, invalid-range, NaN, and infinite inputs fail closed;
+- canonical JSON serialization and SHA-256 receipt hashes;
+- receipt parent chaining;
+- deterministic replay and chain verification;
+- idempotent local receipt persistence;
+- SCW dry-run evaluation before command dispatch;
+- workflow unit-test step;
+- 30-day GitHub Actions artifact retention for generated dry-run receipts.
+
+## Accuracy boundary
+
+The following are not production implementations and must not be claimed:
 
 - zero-knowledge proofs;
 - PBFT or Byzantine-fault-tolerant consensus;
@@ -60,11 +88,11 @@ Earlier prototype descriptions overstated implementation maturity. The following
 - economic settlement or slashing;
 - cross-network federation.
 
-Any such feature must be implemented, tested, reviewed, and documented independently before being claimed.
+Any such feature must be implemented, tested, reviewed, and documented independently.
 
 ## Current build scope
 
-The authorized first integration slice is local and deterministic:
+The authorized integration slice remains local and deterministic:
 
 1. canonical state validation;
 2. score computation with explicit threshold policy;
@@ -72,53 +100,58 @@ The authorized first integration slice is local and deterministic:
 4. chained receipt generation;
 5. deterministic replay verification;
 6. unit tests and fixtures;
-7. discovery of the real SCW pre-mutation boundary;
-8. dry-run integration before enforcement.
+7. dry-run integration at the verified command-dispatch boundary;
+8. observation before any enforcement activation.
 
-## Required files/modules
+## Runtime input contract
 
-Destination: `StegVerse-Labs/StegVerse-SCW`
+SCW accepts explicit metrics only through `args.stability_gate`:
 
-- `engine/stability_gate/__init__.py`
-- `engine/stability_gate/model.py`
-- `engine/stability_gate/policy.py`
-- `engine/stability_gate/receipt.py`
-- `engine/stability_gate/replay.py`
-- `tests/stability_gate/test_policy.py`
-- `tests/stability_gate/test_receipt.py`
-- an integration adapter at the verified SCW pre-mutation boundary
-- fixtures for ALLOW, DELAY, BLOCK, and FAIL_CLOSED
+- `deliberation_capacity`
+- `model_fidelity`
+- `environmental_volatility`
+- `action_magnitude`
+- optional `source`
 
-## Blockers
+No values are inferred. Missing metrics produce FAIL_CLOSED in dry-run output and do not block existing SCW execution.
 
-- Repository code search did not identify an existing Stability Gate handoff.
-- Repository code search did not identify a literal `apply_bundle()` integration point.
-- The real pre-mutation boundary remains to be located and documented.
-- Runtime input derivation for D, M, E, and A is not yet defined by authoritative schemas.
+Authoritative derivation schemas for D, M, E, and A remain unresolved. Until those schemas exist, the inputs are caller assertions rather than independently reconstructed measurements.
+
+## Remaining work and blockers
+
+- Execute the Stability Gate test suite in GitHub Actions and retain run evidence.
+- Dispatch representative SCW runs for ALLOW, DELAY, BLOCK, and FAIL_CLOSED inputs.
+- Confirm receipt artifacts are uploaded and replayable after download.
+- Define authoritative schemas and provenance rules for D, M, E, and A.
+- Identify the first concrete SCW handler that performs a mutation.
+- Place a second dry-run observation immediately before that handler's irreversible boundary.
+- Verify no alternate mutation path bypasses the gate.
+- Keep enforcement disabled until representative observations and schema review are complete.
 
 ## Ownership
 
-Current owner: Stability Gate integration task in `StegVerse-Labs/StegVerse-SCW`.
+Current owner: Issue #21, Stability Gate integration in `StegVerse-Labs/StegVerse-SCW`.
 
-The next session may modify only the local deterministic slice above until the pre-mutation boundary and input schemas are verified.
+Continuation may modify only this local deterministic slice until input schemas and a concrete mutation boundary are verified.
 
 ## Validation requirements
 
 Before enforcement activation:
 
-- all unit tests pass;
+- all unit tests pass in GitHub Actions;
 - canonical serialization reproduces hashes;
 - malformed, missing, stale, NaN, and infinite inputs fail closed;
 - receipt chains verify from genesis to head;
 - replay reproduces the stored score and decision;
 - dry-run output is observed on representative SCW tasks;
+- receipt artifacts survive the workflow run;
 - no existing mutation path is bypassed unintentionally.
 
 ## Release state
 
-Status: pre-alpha integration scaffold.
+Status: pre-alpha dry-run integration.
 
-Do not tag a release until the local deterministic slice is integrated, tested, and verified in dry-run mode.
+Do not tag a release until the local deterministic slice is tested and representative dry-run evidence is retained. Do not activate enforcement until authoritative input derivation and the first concrete mutation boundary are verified.
 
 ## Ecosystem follow-through after release readiness
 
@@ -131,4 +164,4 @@ When release criteria are met, create a verification task to determine whether r
 
 ## Archival continuity
 
-This handoff preserves the originating session's decisions, completed prototype work, known overclaims, blockers, permitted continuation scope, ownership, and validation requirements.
+This handoff preserves the decisions, completed implementation, verified command boundary, accuracy limits, blockers, permitted continuation scope, ownership, and validation requirements.
