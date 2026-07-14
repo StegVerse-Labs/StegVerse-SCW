@@ -4,15 +4,22 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Protocol
 
-from .receipt import GateReceipt, canonical_json
+from .receipt import canonical_json
+
+
+class ReceiptLike(Protocol):
+    receipt_hash: str
+
+    def canonical_dict(self, *, include_hash: bool = True) -> dict[str, object]: ...
 
 
 DEFAULT_RECEIPT_DIR = Path("artifacts/receipts/stability_gate")
 
 
 def write_receipt(
-    receipt: GateReceipt,
+    receipt: ReceiptLike,
     *,
     receipt_dir: Path = DEFAULT_RECEIPT_DIR,
 ) -> Path:
