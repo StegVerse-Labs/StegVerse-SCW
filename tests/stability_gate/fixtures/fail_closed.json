@@ -1,0 +1,9 @@
+{
+  "stability_gate": {
+    "deliberation_capacity": 1.0,
+    "model_fidelity": 1.0,
+    "environmental_volatility": 1.0,
+    "source": "fixture:fail-closed"
+  },
+  "expected_decision": "FAIL_CLOSED"
+}
