@@ -41,6 +41,11 @@ def test_non_finite_input_fails_closed():
     assert result.decision is Decision.FAIL_CLOSED
 
 
+def test_zero_volatility_fails_closed():
+    result = evaluate(sample(environmental_volatility=0.0), now=NOW)
+    assert result.decision is Decision.FAIL_CLOSED
+
+
 def test_invalid_policy_fails_closed():
     policy = GatePolicy(allow_threshold=0.5, delay_threshold=0.7)
     assert evaluate(sample(), policy, now=NOW).decision is Decision.FAIL_CLOSED
