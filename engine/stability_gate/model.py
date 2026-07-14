@@ -39,8 +39,8 @@ class GateInput:
             raise GateInputError("deliberation_capacity must be non-negative")
         if not 0 <= self.model_fidelity <= 1:
             raise GateInputError("model_fidelity must be within [0, 1]")
-        if self.environmental_volatility < 0:
-            raise GateInputError("environmental_volatility must be non-negative")
+        if self.environmental_volatility <= 0:
+            raise GateInputError("environmental_volatility must be greater than zero")
         if self.action_magnitude <= 0:
             raise GateInputError("action_magnitude must be greater than zero")
         if not isinstance(self.observed_at, int) or isinstance(self.observed_at, bool):
