@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/stability_gate_input_provenance.schema.json",
+  "title": "StegVerse Stability Gate Input Provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deliberation_capacity",
+    "model_fidelity",
+    "environmental_volatility",
+    "action_magnitude"
+  ],
+  "properties": {
+    "deliberation_capacity": { "$ref": "#/$defs/metricProvenance" },
+    "model_fidelity": { "$ref": "#/$defs/metricProvenance" },
+    "environmental_volatility": { "$ref": "#/$defs/metricProvenance" },
+    "action_magnitude": { "$ref": "#/$defs/metricProvenance" }
+  },
+  "$defs": {
+    "metricProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derivation_class", "producer", "method", "evidence_refs"],
+      "properties": {
+        "derivation_class": {
+          "type": "string",
+          "enum": ["CALLER_ASSERTED", "DERIVED", "RECONSTRUCTED"]
+        },
+        "producer": { "type": "string", "minLength": 1 },
+        "method": { "type": "string", "minLength": 1 },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}
