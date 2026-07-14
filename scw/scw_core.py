@@ -1,10 +1,15 @@
 import os, json, sys, textwrap, datetime, subprocess
 
+from engine.stability_gate.adapter import evaluate_context_dry_run
+from engine.stability_gate.storage import write_receipt
+
 ORG = os.getenv("ORG_GITHUB", "StegVerse-Labs")
 SCW_REPO = os.getenv("SCW_REPO", "")
 
+
 def log(msg):
     print(f"[SCW] {msg}", flush=True)
+
 
 def gh(*args):
     cmd = ["gh"] + list(args)
@@ -13,12 +18,37 @@ def gh(*args):
         raise RuntimeError(res.stderr.strip() or res.stdout.strip())
     return res.stdout.strip()
 
+
 def get_default_branch(repo_full):
     return gh("api", f"repos/{repo_full}", "--jq", ".default_branch")
+
 
 def list_org_repos():
     out = gh("api", f"orgs/{ORG}/repos", "--paginate", "--jq", ".[].full_name")
     return [line for line in out.splitlines() if line.strip()]
+
+
+def run_stability_gate_dry_run(command, target_repo, args):
+    """Observe the verified command-dispatch boundary without enforcing it.
+
+    The gate is intentionally dry-run only. Existing SCW command outcomes are
+    unchanged while authoritative D/M/E/A input schemas are being established.
+    """
+
+    result, receipt = evaluate_context_dry_run(
+        command=command,
+        target_repo=target_repo,
+        args=args,
+        node_id=SCW_REPO or "StegVerse-Labs/StegVerse-SCW",
+    )
+    log(
+        "Stability Gate dry-run: "
+        f"decision={result.decision.value} score={result.score} reason={result.reason}"
+    )
+    if receipt is not None:
+        path = write_receipt(receipt)
+        log(f"Stability Gate receipt: {path}")
+
 
 def cmd_self_test(target_repo=None):
     log("Running self-test...")
@@ -31,18 +61,22 @@ def cmd_self_test(target_repo=None):
         log(f"Target repo default branch: {branch}")
     log("Self-test PASS.")
 
+
 def cmd_autopatch(target_repo):
     # placeholder - real autopatch comes next phase
     log(f"Autopatch requested for {target_repo}. (stub)")
     log("Autopatch stub PASS.")
 
+
 def cmd_sync_templates(target_repo=None):
     log("Sync-templates (stub). We'll wire templates next.")
     log("Sync-templates stub PASS.")
 
+
 def cmd_standardize_readme(target_repo):
     log(f"Standardize README for {target_repo} (stub).")
     log("Standardize README stub PASS.")
+
 
 def main():
     event = os.getenv("SCW_EVENT_NAME", "")
@@ -76,6 +110,10 @@ def main():
     log(f"Target repo: {target_repo or '(none)'}")
     log(f"Args: {args or '{}'}")
 
+    # Verified boundary: immediately after command context normalization and
+    # before command dispatch. Dry-run mode cannot block or alter execution.
+    run_stability_gate_dry_run(cmd, target_repo, args)
+
     if cmd in ("self-test", "selftest"):
         cmd_self_test(target_repo)
     elif cmd in ("autopatch",):
@@ -90,6 +128,7 @@ def main():
         cmd_standardize_readme(target_repo)
     else:
         raise SystemExit(f"Unknown command: {cmd}")
+
 
 if __name__ == "__main__":
     main()
