@@ -17,6 +17,23 @@ FIXTURE_NAMES = ("allow.json", "delay.json", "block.json", "fail_closed.json")
 OBSERVED_AT = 2_000_000_000
 
 
+def caller_asserted_provenance():
+    return {
+        name: {
+            "derivation_class": "CALLER_ASSERTED",
+            "producer": "StegVerse-Labs/StegVerse-SCW:fixture-runner",
+            "method": "representative-fixture",
+            "evidence_refs": [],
+        }
+        for name in (
+            "deliberation_capacity",
+            "model_fidelity",
+            "environmental_volatility",
+            "action_magnitude",
+        )
+    }
+
+
 def main() -> int:
     cases = []
     failures = []
@@ -26,15 +43,21 @@ def main() -> int:
         result, receipt = evaluate_context_dry_run(
             command="fixture-validation",
             target_repo="StegVerse-Labs/StegVerse-SCW",
-            args={"stability_gate": fixture["stability_gate"]},
+            args={
+                "stability_gate": fixture["stability_gate"],
+                "stability_gate_provenance": caller_asserted_provenance(),
+            },
             node_id="StegVerse-Labs/StegVerse-SCW:fixture-runner",
             observed_at=OBSERVED_AT,
         )
         expected = fixture["expected_decision"]
         passed = result.decision.value == expected
-        receipt_path = None
-        if receipt is not None:
-            receipt_path = str(write_receipt(receipt, receipt_dir=ROOT / "artifacts" / "receipts" / "stability_gate"))
+        receipt_path = str(
+            write_receipt(
+                receipt,
+                receipt_dir=ROOT / "artifacts" / "receipts" / "stability_gate",
+            )
+        )
 
         case = {
             "fixture": name,
@@ -43,6 +66,9 @@ def main() -> int:
             "score": result.score,
             "reason": result.reason,
             "receipt_path": receipt_path,
+            "receipt_hash": receipt.receipt_hash,
+            "receipt_schema": receipt.schema,
+            "provenance_class": "CALLER_ASSERTED",
             "passed": passed,
         }
         cases.append(case)
@@ -51,11 +77,15 @@ def main() -> int:
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     payload = {
-        "schema": "stegverse.stability-gate.representative-cases.v1",
+        "schema": "stegverse.stability-gate.representative-cases.v2",
         "observed_at": OBSERVED_AT,
         "cases": cases,
         "status": "FAIL" if failures else "PASS",
         "failures": failures,
+        "non_claims": {
+            "inputs_independently_reconstructed": False,
+            "enforcement_ready": False,
+        },
     }
     REPORT.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(payload, indent=2, sort_keys=True))
