@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}  # Classic PAT (Option B)
+      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
+      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
 
     steps:
       - name: Check out StegVerse-SCW
@@ -22,12 +23,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve Classic PAT & configure git
+      - name: Resolve token & configure git
         run: |
           set -euo pipefail
-          TOKEN="${PAT_WORKFLOW:-}"
+          TOKEN="${PAT_WORKFLOW:-${GH_STEGVERSE_PAT:-}}"
           if [ -z "$TOKEN" ]; then
-            echo "ERROR: PAT_WORKFLOW (Classic PAT) is required for Option B."
+            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
             exit 1
           fi
 
@@ -56,17 +57,17 @@ jobs:
       - name: Run Repo Alignment Check (ASL-1)
         run: |
           set -euo pipefail
-          echo "=== Repo Alignment Check (Genesis v0.2) ==="
-          python scripts/genesis/repo_alignment_check.py \
-            --manifest scripts/genesis/repo_alignment_manifest.json \
-            --write-latest
+          echo "=== Repo Alignment Check (ASL-1) ==="
+          python scripts/genesis/guardian_repo_alignment_check.py
 
       - name: Commit alignment reports (if changed)
         run: |
           set -euo pipefail
-          if [ -n "$(git status --porcelain reports/guardians scripts/reports 2>/dev/null || true)" ]; then
-            git add reports/guardians scripts/reports || true
+          if [ -n "$(git status --porcelain reports/guardians 2>/dev/null || true)" ]; then
+            git add reports/guardians/repo_alignment_latest.json reports/guardians/repo_alignment_latest.md
             git commit -m "Guardian: update repo alignment report"
+            git fetch origin "${GITHUB_REF_NAME:-main}"
+            git rebase "origin/${GITHUB_REF_NAME:-main}"
             git push origin "${GITHUB_REF_NAME:-main}"
           else
             echo "No alignment report changes to commit."
