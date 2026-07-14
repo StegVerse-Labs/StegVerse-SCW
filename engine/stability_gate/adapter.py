@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from time import time
 from typing import Any
 
+from .failure_receipt import GateFailureReceipt, create_failure_receipt
 from .model import GateInput
-from .policy import GatePolicy, GateResult, evaluate
+from .policy import Decision, GatePolicy, GateResult, evaluate
 from .receipt import GateReceipt, create_receipt
 
 
@@ -64,7 +64,7 @@ def evaluate_context_dry_run(
     previous_hash: str = "",
     observed_at: int | None = None,
     policy: GatePolicy | None = None,
-) -> tuple[GateResult, GateReceipt | None]:
+) -> tuple[GateResult, GateReceipt | GateFailureReceipt]:
     active_policy = policy or GatePolicy()
     try:
         gate_input = gate_input_from_context(
@@ -74,9 +74,17 @@ def evaluate_context_dry_run(
             observed_at=observed_at,
         )
     except (GateContextError, TypeError, ValueError) as exc:
-        from .policy import Decision
-
-        return GateResult(Decision.FAIL_CLOSED, None, str(exc)), None
+        result = GateResult(Decision.FAIL_CLOSED, None, str(exc))
+        receipt = create_failure_receipt(
+            node_id=node_id,
+            command=command,
+            target_repo=target_repo,
+            args=args,
+            policy=active_policy,
+            reason=result.reason,
+            previous_hash=previous_hash,
+        )
+        return result, receipt
 
     result = evaluate(gate_input, active_policy, now=gate_input.observed_at)
     receipt = create_receipt(
