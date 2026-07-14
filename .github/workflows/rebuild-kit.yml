@@ -34,73 +34,67 @@ jobs:
           mkdir -p scripts
           if [ ! -f scripts/make_rebuild_bundle.sh ]; then
             cat > scripts/make_rebuild_bundle.sh <<'SH'
-#!/usr/bin/env bash
-set -euo pipefail
+          #!/usr/bin/env bash
+          set -euo pipefail
 
-ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
-OUT_DIR="$ROOT/out"
-WORK_DIR="$ROOT/bundle"
-TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-SHA="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
-BRANCH="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)}"
+          ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+          OUT_DIR="$ROOT/out"
+          WORK_DIR="$ROOT/bundle"
+          TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          SHA="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+          BRANCH="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)}"
 
-rm -rf "$OUT_DIR" "$WORK_DIR"
-mkdir -p "$OUT_DIR" "$WORK_DIR"
+          rm -rf "$OUT_DIR" "$WORK_DIR"
+          mkdir -p "$OUT_DIR" "$WORK_DIR"
 
-copy_if() { [ -e "$1" ] && (mkdir -p "$WORK_DIR/$(dirname "$1")"; cp -R "$1" "$WORK_DIR/$1"); }
+          copy_if() { [ -e "$1" ] && (mkdir -p "$WORK_DIR/$(dirname "$1")"; cp -R "$1" "$WORK_DIR/$1"); }
 
-# Include key areas if they exist
-copy_if ".github/workflows"
-copy_if "scripts"
-copy_if "self_healing_out"
-copy_if "infra"
-copy_if "api"
-copy_if "public"
-copy_if "docs"
-copy_if "README.md"
+          copy_if ".github/workflows"
+          copy_if "scripts"
+          copy_if "self_healing_out"
+          copy_if "infra"
+          copy_if "api"
+          copy_if "public"
+          copy_if "docs"
+          copy_if "README.md"
 
-# If nothing got copied, create a placeholder so we still produce an artifact
-if [ -z "$(ls -A "$WORK_DIR" 2>/dev/null)" ]; then
-  echo "# Rebuild Kit placeholder" > "$WORK_DIR/README_REBUILD_KIT.md"
-fi
-
-# Create a small manifest
-mkdir -p "$WORK_DIR/_manifest"
-cat > "$WORK_DIR/_manifest/MANIFEST.json" <<JSON
-{
-  "repo": "${GITHUB_REPOSITORY:-unknown}",
-  "sha": "${SHA}",
-  "branch": "${BRANCH}",
-  "generated_at": "${TS}",
-  "counts": {
-    "files_in_bundle": $(find "$WORK_DIR" -type f | wc -l | tr -d ' ')
-  },
-  "notes": [
-    "This archive is produced by scripts/make_rebuild_bundle.sh",
-    "It is safe to unpack on a new machine to reconstruct workflows/scripts/docs."
-  ]
-}
-JSON
-
-# Prefer zip; fallback to tar.gz
-BASENAME="rebuild_kit_${SHA}_${TS//[:]/}"
-if command -v zip >/dev/null 2>&1; then
-  (cd "$WORK_DIR" && zip -r "../out/${BASENAME}.zip" . >/dev/null)
-  echo "out/${BASENAME}.zip" > "$OUT_DIR/.bundle_path"
-else
-  tar -C "$WORK_DIR" -czf "$OUT_DIR/${BASENAME}.tgz" .
-  echo "out/${BASENAME}.tgz" > "$OUT_DIR/.bundle_path"
-fi
-
-# convenience symlink
-ln -sf "$(cat "$OUT_DIR/.bundle_path")" "$OUT_DIR/latest"
-
-echo "Bundle created: $(cat "$OUT_DIR/.bundle_path")"
-ls -lh "$OUT_DIR"
-SH
+          if [ -z "$(ls -A "$WORK_DIR" 2>/dev/null)" ]; then
+            echo "# Rebuild Kit placeholder" > "$WORK_DIR/README_REBUILD_KIT.md"
           fi
 
-      - name: Normalize line endings & make executable
+          mkdir -p "$WORK_DIR/_manifest"
+          cat > "$WORK_DIR/_manifest/MANIFEST.json" <<JSON
+          {
+            "repo": "${GITHUB_REPOSITORY:-unknown}",
+            "sha": "${SHA}",
+            "branch": "${BRANCH}",
+            "generated_at": "${TS}",
+            "counts": {
+              "files_in_bundle": $(find "$WORK_DIR" -type f | wc -l | tr -d ' ')
+            },
+            "notes": [
+              "This archive is produced by scripts/make_rebuild_bundle.sh",
+              "It is safe to unpack on a new machine to reconstruct workflows/scripts/docs."
+            ]
+          }
+          JSON
+
+          BASENAME="rebuild_kit_${SHA}_${TS//[:]/}"
+          if command -v zip >/dev/null 2>&1; then
+            (cd "$WORK_DIR" && zip -r "../out/${BASENAME}.zip" . >/dev/null)
+            echo "out/${BASENAME}.zip" > "$OUT_DIR/.bundle_path"
+          else
+            tar -C "$WORK_DIR" -czf "$OUT_DIR/${BASENAME}.tgz" .
+            echo "out/${BASENAME}.tgz" > "$OUT_DIR/.bundle_path"
+          fi
+
+          ln -sf "$(cat "$OUT_DIR/.bundle_path")" "$OUT_DIR/latest"
+          echo "Bundle created: $(cat "$OUT_DIR/.bundle_path")"
+          ls -lh "$OUT_DIR"
+          SH
+          fi
+
+      - name: Normalize line endings and make executable
         run: |
           set -e
           if command -v dos2unix >/dev/null 2>&1; then
@@ -114,15 +108,15 @@ SH
         run: |
           set -euo pipefail
           bash -x scripts/make_rebuild_bundle.sh
-          echo "BUNDLE_PATH=$(cat out/.bundle_path)" >> $GITHUB_ENV
+          echo "BUNDLE_PATH=$(cat out/.bundle_path)" >> "$GITHUB_ENV"
 
-      - name: Ensure there is *some* file to upload
+      - name: Ensure there is a file to upload
         run: |
           set -e
           if [ ! -f "${BUNDLE_PATH}" ]; then
             echo "No bundle found at ${BUNDLE_PATH}. Creating placeholder."
             echo "empty" > out/EMPTY.txt
-            echo "BUNDLE_PATH=out/EMPTY.txt" >> $GITHUB_ENV
+            echo "BUNDLE_PATH=out/EMPTY.txt" >> "$GITHUB_ENV"
           fi
 
       - name: Upload bundle artifact
@@ -130,12 +124,12 @@ SH
         with:
           name: rebuild_kit_bundle
           path: ${{ env.BUNDLE_PATH }}
-          if-no-files-found: warn
+          if-no-files-found: error
 
   telemetry:
     needs: [rebuild]
     if: always()
-    uses: ./.github/workflows/_reusables/telemetry.yml
+    uses: ./.github/workflows/telemetry-reusable.yml
     with:
       basename: rebuild
       status: ${{ needs.rebuild.result }}
