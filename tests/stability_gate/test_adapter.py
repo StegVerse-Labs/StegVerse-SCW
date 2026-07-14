@@ -2,6 +2,10 @@ import json
 from pathlib import Path
 
 from engine.stability_gate.adapter import evaluate_context_dry_run
+from engine.stability_gate.failure_receipt import (
+    GateFailureReceipt,
+    verify_failure_receipt_hash,
+)
 from engine.stability_gate.policy import Decision
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -23,13 +27,13 @@ def test_decision_fixtures():
             observed_at=NOW,
         )
         assert result.decision.value == fixture["expected_decision"]
+        assert receipt is not None
         if result.decision is Decision.FAIL_CLOSED:
-            assert receipt is None
-        else:
-            assert receipt is not None
+            assert isinstance(receipt, GateFailureReceipt)
+            assert verify_failure_receipt_hash(receipt)
 
 
-def test_missing_metrics_fail_closed_without_receipt():
+def test_missing_metrics_fail_closed_with_receipt():
     result, receipt = evaluate_context_dry_run(
         command="autopatch",
         target_repo="StegVerse-Labs/example",
@@ -38,4 +42,7 @@ def test_missing_metrics_fail_closed_without_receipt():
         observed_at=NOW,
     )
     assert result.decision is Decision.FAIL_CLOSED
-    assert receipt is None
+    assert isinstance(receipt, GateFailureReceipt)
+    assert verify_failure_receipt_hash(receipt)
+    assert receipt.context["command"] == "autopatch"
+    assert receipt.context["target_repo"] == "StegVerse-Labs/example"
