@@ -28,6 +28,8 @@ Installed code locations:
 - `engine/stability_gate/`
 - tests: `tests/stability_gate/`
 - runtime evidence: `artifacts/receipts/stability_gate/`
+- reports: `artifacts/reports/stability_gate/`
+- schemas: `schemas/stability_gate_input_provenance.schema.json`
 
 ## Verified SCW boundary
 
@@ -52,27 +54,36 @@ The authoritative repository implementation now includes:
 - `engine/stability_gate/model.py`
 - `engine/stability_gate/policy.py`
 - `engine/stability_gate/receipt.py`
+- `engine/stability_gate/failure_receipt.py`
 - `engine/stability_gate/replay.py`
 - `engine/stability_gate/adapter.py`
 - `engine/stability_gate/storage.py`
+- `engine/stability_gate/provenance.py`
 - `tests/stability_gate/test_policy.py`
 - `tests/stability_gate/test_receipt.py`
 - `tests/stability_gate/test_adapter.py`
 - `tests/stability_gate/test_storage.py`
+- `tests/stability_gate/test_provenance.py`
 - ALLOW, DELAY, BLOCK, and FAIL_CLOSED JSON fixtures
+- `scripts/stability_gate_fixture_run.py`
+- `docs/STABILITY_GATE_INPUT_PROVENANCE.md`
+- `schemas/stability_gate_input_provenance.schema.json`
 
 Implemented behavior:
 
 - typed and validated runtime input;
 - explicit ALLOW, DELAY, BLOCK, and FAIL_CLOSED decisions;
-- stale, malformed, invalid-range, NaN, and infinite inputs fail closed;
+- stale, malformed, invalid-range, zero-volatility, NaN, and infinite inputs fail closed;
 - canonical JSON serialization and SHA-256 receipt hashes;
+- normal decision receipts and hashed context-failure receipts;
 - receipt parent chaining;
 - deterministic replay and chain verification;
 - idempotent local receipt persistence;
 - SCW dry-run evaluation before command dispatch;
-- workflow unit-test step;
-- 30-day GitHub Actions artifact retention for generated dry-run receipts.
+- representative four-case evidence generation;
+- workflow unit-test and evidence-generation steps;
+- 30-day GitHub Actions artifact retention for generated dry-run receipts and reports;
+- machine-readable provenance validation for all four metrics.
 
 ## Accuracy boundary
 
@@ -97,11 +108,12 @@ The authorized integration slice remains local and deterministic:
 1. canonical state validation;
 2. score computation with explicit threshold policy;
 3. ALLOW, DELAY, BLOCK, or FAIL_CLOSED decision;
-4. chained receipt generation;
+4. chained receipt generation for both valid and invalid contexts;
 5. deterministic replay verification;
 6. unit tests and fixtures;
-7. dry-run integration at the verified command-dispatch boundary;
-8. observation before any enforcement activation.
+7. explicit provenance classification;
+8. dry-run integration at the verified command-dispatch boundary;
+9. observation before any enforcement activation.
 
 ## Runtime input contract
 
@@ -113,19 +125,37 @@ SCW accepts explicit metrics only through `args.stability_gate`:
 - `action_magnitude`
 - optional `source`
 
-No values are inferred. Missing metrics produce FAIL_CLOSED in dry-run output and do not block existing SCW execution.
+No values are inferred. Missing metrics produce FAIL_CLOSED in dry-run output, generate a hashed failure receipt, and do not block existing SCW execution.
 
-Authoritative derivation schemas for D, M, E, and A remain unresolved. Until those schemas exist, the inputs are caller assertions rather than independently reconstructed measurements.
+## Provenance contract
+
+The first authoritative provenance shape is defined by:
+
+- `engine/stability_gate/provenance.py`
+- `schemas/stability_gate_input_provenance.schema.json`
+- `docs/STABILITY_GATE_INPUT_PROVENANCE.md`
+
+Each metric must declare a derivation class, producer, method, and evidence references. Supported classes are:
+
+- `CALLER_ASSERTED`
+- `DERIVED`
+- `RECONSTRUCTED`
+
+Derived and reconstructed values require evidence references. Caller-asserted values may be observed in dry-run mode but are not sufficient for enforcement activation.
+
+Final measurement algorithms, authorized producers, evidence-age limits, and disagreement rules remain unresolved.
 
 ## Remaining work and blockers
 
 - Execute the Stability Gate test suite in GitHub Actions and retain run evidence.
 - Dispatch representative SCW runs for ALLOW, DELAY, BLOCK, and FAIL_CLOSED inputs.
-- Confirm receipt artifacts are uploaded and replayable after download.
-- Define authoritative schemas and provenance rules for D, M, E, and A.
+- Confirm receipt and report artifacts are uploaded and replayable after download.
+- Integrate the provenance object into runtime arguments and decision receipts.
+- Define the actual measurement algorithms and authorized producers for D, M, E, and A.
 - Identify the first concrete SCW handler that performs a mutation.
 - Place a second dry-run observation immediately before that handler's irreversible boundary.
 - Verify no alternate mutation path bypasses the gate.
+- Preserve the Stability Gate validation path if PR #20 consolidates workflows.
 - Keep enforcement disabled until representative observations and schema review are complete.
 
 ## Ownership
@@ -140,11 +170,13 @@ Before enforcement activation:
 
 - all unit tests pass in GitHub Actions;
 - canonical serialization reproduces hashes;
-- malformed, missing, stale, NaN, and infinite inputs fail closed;
+- malformed, missing, stale, zero, NaN, and infinite inputs fail closed;
+- valid and invalid contexts both produce verifiable receipts;
 - receipt chains verify from genesis to head;
 - replay reproduces the stored score and decision;
 - dry-run output is observed on representative SCW tasks;
-- receipt artifacts survive the workflow run;
+- receipt and report artifacts survive the workflow run;
+- provenance classifications and evidence references validate;
 - no existing mutation path is bypassed unintentionally.
 
 ## Release state
