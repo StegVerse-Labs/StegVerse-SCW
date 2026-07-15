@@ -74,7 +74,7 @@
 | `neutralize_secrets_if.yml` | parse-failed |
 | `nightly_snapshot.yml` | not-inserted |
 | `one-shot-workflow-normalizer.yml` | not-inserted |
-| `one_button_supercheck.yml` | parse-failed |
+| `one_button_supercheck.yml` | not-inserted |
 | `one_shot_patch_apply.yml` | not-inserted |
 | `ops-console-dispatcher.yml` | not-inserted |
 | `ops-console.yml` | not-inserted |
@@ -92,7 +92,7 @@
 | `quickkick-sweep.yml` | not-inserted |
 | `readme-nudge-kicks.yml` | not-inserted |
 | `readme-nudge-yaml-autofix.yml` | not-inserted |
-| `rebuild-kit.yml` | parse-failed |
+| `rebuild-kit.yml` | not-inserted |
 | `reindex-nudge.yml` | not-inserted |
 | `reindex-watchdog.yml` | parse-failed |
 | `repair-bad-yaml.yml` | not-inserted |
@@ -117,7 +117,7 @@
 | `seed_config.yml` | not-inserted |
 | `self-healing-scan.yml` | not-inserted |
 | `self_repair_autopatch.yml` | parse-failed |
-| `setup-common-python.yml` | parse-failed |
+| `setup-common-python.yml` | not-inserted |
 | `smoke-tests.yml` | not-inserted |
 | `smoke_api_worker.yml` | parse-failed |
 | `stegcore_governance_bootstrap.yml` | parse-failed |
@@ -134,6 +134,7 @@
 | `taskops-first-run-regression.yml` | parse-failed |
 | `taskops-first-run-update.yml` | not-inserted |
 | `taskops-nightly.yml` | not-inserted |
+| `telemetry-reusable.yml` | not-inserted |
 | `test-readiness.yml` | not-inserted |
 | `token_smoke_test.yml` | not-inserted |
 | `universal_fixit.yml` | parse-failed |
@@ -145,13 +146,13 @@
 | `workflow-dispatch-guardian.yml` | not-inserted |
 | `workflow-status-badges.yml` | parse-failed |
 | `workflow-status-check.yml` | parse-failed |
-| `workflow_preflight.yml` | parse-failed |
+| `workflow_preflight.yml` | not-inserted |
 | `workflows-badges-nudge.yml` | not-inserted |
 | `workflows-badges.yml` | not-inserted |
 | `workflows-console-table.yml` | not-inserted |
 | `workflows-first-aid-sweep.yml` | not-inserted |
 | `workflows-first-aid.yml` | not-inserted |
-| `workflows-sanity-check.yml` | parse-failed |
+| `workflows-sanity-check.yml` | not-inserted |
 | `workflows-second-aid.yml` | parse-failed |
 | `workflows-status-badges.yml` | parse-failed |
 | `yaml-bulk-autofix.yml` | not-inserted |
