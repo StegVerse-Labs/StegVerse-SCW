@@ -15,11 +15,11 @@ _Last updated: 2026-07-21_
 
 Build a patient-owned, continuously recording health evidence system that preserves raw data, correlates multiple sensors, and validates every derived metric against a known reference device worn or operated at the same time.
 
-The system is intended to support investigation of long warning periods and brief episodes by preserving synchronized evidence rather than reducing observations to summary scores.
+The system supports investigation of long warning periods and brief episodes by preserving synchronized evidence rather than reducing observations to summary scores.
 
 ## Active goal
 
-Deliver the first executable engineering baseline for:
+Deliver an executable engineering baseline for:
 
 1. Continuous wearable ECG + PPG + IMU + temperature acquisition.
 2. Experimental continuous hemodynamic-change detection and cuffless blood-pressure estimation.
@@ -27,20 +27,20 @@ Deliver the first executable engineering baseline for:
 4. Glucose ingestion from a reference CGM or meter.
 5. Low-cost saliva, urine, and finger-stick test capture.
 6. A staged CBC research workstation beginning with hemoglobin, hematocrit, and standardized blood-smear imaging.
-7. A validation framework based on simultaneous reference-device measurements, raw-data retention, error analysis, drift analysis, and explicit acceptance criteria.
+7. Validation through simultaneous reference-device measurements, raw-data retention, error analysis, drift analysis, and explicit acceptance criteria.
 
 ## Operating rules
 
 - Build what can be built.
 - Preserve raw signals before calculating summaries.
-- Every calculated or inferred metric must identify its source signals, algorithm version, calibration state, and validation status.
-- Validation must use simultaneous paired measurements against a known reference device or laboratory result.
-- Unknown, unmeasured, estimated, and validated values must remain distinct.
-- No black-box score may replace exportable raw data.
-- Device clocks must be synchronized and clock drift measured.
-- Reference measurements must be timestamped and linked to the corresponding raw-signal window.
-- Calibration data must never be mixed silently with validation data.
-- Personal baselines and population models must be versioned separately.
+- Every calculated or inferred metric identifies source signals, algorithm version, calibration state, and validation status.
+- Validation uses simultaneous paired measurements against a known reference device or laboratory result.
+- Unknown, unmeasured, estimated, and validated values remain distinct.
+- No black-box score replaces exportable raw data.
+- Device clocks are synchronized and clock drift is measured.
+- Reference measurements are timestamped and linked to the corresponding raw-signal window.
+- Calibration data is never mixed silently with validation data.
+- Personal baselines and population models are versioned separately.
 
 ## Completed foundation
 
@@ -50,33 +50,43 @@ Deliver the first executable engineering baseline for:
 - `HARDWARE_BOM.md` — revision A0 wearable, PAP, fluid dock, and CBC components.
 - `PAP_EVIDENCE_MODULE.md` — channels, synchronization, validation sessions, and acceptance gates.
 - `CBC_WORKSTATION.md` — staged hematocrit, hemoglobin, smear-imaging, and cell-counting plan.
-- `tools/patient_owned_monitoring/reference_pairing.py` — executable JSONL reference-pairing and validation metrics CLI.
-- `tests/patient_owned_monitoring/fixtures/` — deterministic paired BP fixtures.
-- `tests/patient_owned_monitoring/test_reference_pairing.py` — pairing, metric, partition, and integrity tests.
+- `reference_pairing.py` — paired reference/estimate validation and metrics.
+- `schema_validate.py` — schema and field validation for core POM records.
+- `clock_sync.py` — linear drift fitting, residual reporting, and timestamp correction.
+- `signal_window.py` — timestamp-window extraction with coverage, flatline, clipping, and motion quality scoring.
+- `hemodynamic_features.py` — personal-baseline PAT, PPG amplitude, pulse-width, and heart-rate relative-change features.
+- `pap_report.py` — nightly raw-linked summaries and threshold event extraction.
+- `hematocrit_image.py` — axis-coordinate packed-cell fraction measurement.
+- deterministic BP fixtures and automated reference-pairing tests.
+- `test_processing_pipeline.py` — unit tests for schema validation, clock fitting, hematocrit, and hemodynamic features.
 
 ## Current executable capability
 
-The reference-pairing CLI can:
+The module can now:
 
-- import `pom.reference.v1` and `pom.estimate.v1` JSON Lines records;
-- pair the nearest estimate to each reference inside a defined tolerance;
-- preserve calibration/development/validation/challenge partition labels;
-- emit `pom.pairing.v1` records with SHA-256 integrity fields;
-- calculate count, bias, MAE, RMSE, Pearson correlation, Bland–Altman limits, maximum absolute error, and average timestamp delta;
-- hash source datasets and the generated validation report.
+- validate core JSON and JSONL evidence records;
+- fit a clock model from simultaneous timing anchors and preserve residual error;
+- extract bounded signal windows from CSV streams;
+- score coverage, flatline, clipping, and motion quality;
+- create transparent relative hemodynamic features against a personal baseline;
+- pair estimates with reference readings and calculate bias, MAE, RMSE, Pearson correlation, Bland–Altman limits, maximum error, and timing offset;
+- produce independent nightly PAP summaries linked to source hashes;
+- identify oxygen-below-90 and low-mask-humidity intervals from synchronized PAP evidence;
+- calculate hematocrit from explicit capillary-image coordinates;
+- preserve calibration/development/validation/challenge partitions.
 
 ## Initial validation references
 
-- Blood pressure: validated upper-arm cuff used during calibration and validation sessions.
+- Blood pressure: validated upper-arm cuff during calibration and validation sessions.
 - ECG and heart rate: clinical ECG or validated single-lead reference when available.
-- Oxygen saturation: recording pulse oximeter used simultaneously.
+- Oxygen saturation: recording pulse oximeter worn simultaneously.
 - Glucose: commercial meter or CGM paired with timestamped readings.
 - Hemoglobin and CBC: accredited laboratory result from the same sampling interval.
 - PAP: machine SD-card export when accessible plus independent mask-pressure and oxygen capture.
 
 ## Required data labels
 
-Every output must carry one of:
+Every output carries one of:
 
 - `measured`
 - `reference_measured`
@@ -88,31 +98,29 @@ Every output must carry one of:
 
 ## Required execution order
 
-1. Run the deterministic reference-pairing tests.
-2. Add schema validation for manifests, references, estimates, pairings, features, events, and samples.
-3. Build the wearable firmware recorder interface and simulated sensor source.
-4. Add clock synchronization and drift-correction tooling.
-5. Add signal-window extraction and quality scoring.
-6. Add hemodynamic relative-change feature extraction before absolute BP modeling.
-7. Build PAP-module import and nightly-report generation.
-8. Build fluid-sample manifest, image calibration, and strip-reader tooling.
-9. Build hematocrit image measurement and paired laboratory validation.
-10. Add hardware bench receipts and real paired datasets without replacing synthetic fixtures.
+1. Run all deterministic unit tests in a checked-out repository and record the receipt.
+2. Add simulated wearable acquisition and append-only recorder output.
+3. Add beat detection and ECG-to-PPG pulse-arrival-time extraction from raw waveforms.
+4. Add cross-stream resampling and alignment-quality reports.
+5. Add personal hemodynamic-collapse event detection using validated relative features.
+6. Add fluid-sample manifests, fixed-light image calibration, and strip-reader tooling.
+7. Add semi-automatic capillary boundary detection while retaining reviewed coordinates.
+8. Add nightly PAP event correlation around awakenings and mouth-opening markers.
+9. Add hardware enclosure, wiring, and bench-test receipts.
+10. Add real simultaneous reference-device and laboratory datasets without replacing synthetic fixtures.
 
 ## Known remaining files and modules
 
-- `tools/patient_owned_monitoring/schema_validate.py`
-- `tools/patient_owned_monitoring/clock_sync.py`
-- `tools/patient_owned_monitoring/signal_window.py`
-- `tools/patient_owned_monitoring/hemodynamic_features.py`
-- `tools/patient_owned_monitoring/pap_report.py`
-- `tools/patient_owned_monitoring/sample_manifest.py`
-- `tools/patient_owned_monitoring/strip_reader.py`
-- `tools/patient_owned_monitoring/hematocrit_image.py`
-- firmware acquisition and append-only storage implementation;
-- enclosure and wiring files;
-- real reference-device and laboratory paired datasets;
-- validation receipts from hardware bench runs.
+- simulated acquisition and append-only storage implementation;
+- raw ECG/PPG beat and pulse-arrival-time extraction;
+- cross-stream resampling/alignment tooling;
+- hemodynamic-collapse detector and evaluation harness;
+- `sample_manifest.py`;
+- fixed-light image calibration and `strip_reader.py`;
+- automatic hematocrit boundary proposal;
+- PAP event-correlation report;
+- firmware, enclosure, and wiring files;
+- real paired datasets and hardware validation receipts.
 
 Destination: `StegVerse-Labs/StegVerse-SCW`.
 
