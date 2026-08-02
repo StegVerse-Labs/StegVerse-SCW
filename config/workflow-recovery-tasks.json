@@ -1,23 +1,10 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "goal_id": "SCW-WORKFLOW-CONTROL-PLANE-RECOVERY-001",
   "owner_repository": "StegVerse-Labs/StegVerse-SCW",
   "branch": "main",
   "updated_at": "2026-08-02T08:36:00Z",
-  "allowed_states": [
-    "UNCLAIMED",
-    "CLAIMED_FOR_IMPLEMENTATION",
-    "CLAIMED_FOR_VALIDATION",
-    "CLAIMED_FOR_INTEGRATION",
-    "MACHINE_OWNED",
-    "BLOCKED",
-    "COMPLETE",
-    "SUPERSEDED",
-    "MERGED_INTO_CANONICAL_WORKSTREAM",
-    "RETRY",
-    "REVIEW_REQUIRED",
-    "FAILED"
-  ],
+  "allowed_states": ["UNCLAIMED", "CLAIMED_FOR_IMPLEMENTATION", "CLAIMED_FOR_VALIDATION", "CLAIMED_FOR_INTEGRATION", "MACHINE_OWNED", "BLOCKED", "COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM", "RETRY", "REVIEW_REQUIRED", "FAILED"],
   "collision_key_format": "<repository>:<branch>:<surface>",
   "tasks": [
     {
@@ -36,7 +23,7 @@
       "validation_state": "PENDING_HOSTED_RECEIPT",
       "integration_state": "INSTALLED_NOT_PROVEN_ACTIVE",
       "archival_dependency": false,
-      "next_executable_action": "Inspect the newest hosted run and artifact; correct the workflow or controller only when evidence reports FAILED."
+      "next_executable_action": "Inspect the newest hosted run and artifact; correct only when evidence reports FAILED."
     },
     {
       "task_id": "SCW-RECOVERY-NUCLEUS-VALIDATION-002",
@@ -48,7 +35,7 @@
       "role": "validation",
       "claim_created_at": "2026-08-02T08:36:00Z",
       "claim_expires_at": "2026-08-09T08:36:00Z",
-      "release_condition": "Receipts are inspected for workflows-sanity-check.yml, setup-common-python.yml, workflow_preflight.yml, repair-bad-yaml.yml report-only, and ops-console.yml dispatching the sanity check.",
+      "release_condition": "Receipts are inspected for sanity-check, setup-common-python, read-only preflight, report-only repair, and ops-console dispatch.",
       "collision_boundaries": ["StegVerse-Labs/StegVerse-SCW:main:.github/workflows/ops-console.yml", "StegVerse-Labs/StegVerse-SCW:main:.github/workflows/workflows-sanity-check.yml", "StegVerse-Labs/StegVerse-SCW:main:.github/workflows/setup-common-python.yml", "StegVerse-Labs/StegVerse-SCW:main:.github/workflows/workflow_preflight.yml", "StegVerse-Labs/StegVerse-SCW:main:.github/workflows/repair-bad-yaml.yml"],
       "completion_state": "IMPLEMENTED_BUT_UNVALIDATED",
       "validation_state": "PENDING_HOSTED_RUNS",
@@ -72,11 +59,11 @@
       "validation_state": "NOT_STARTED",
       "integration_state": "BLOCKED_BY_SAME_REPOSITORY_VALIDATION",
       "archival_dependency": false,
-      "next_executable_action": "After release, install a read-only least-privilege PAT probe that records authorization class and HTTP status without exposing token material."
+      "next_executable_action": "Install a read-only least-privilege PAT probe after the release condition is met."
     },
     {
       "task_id": "SCW-RECOVERY-OPS-PUBLICATION-004",
-      "originating_goal": "Replace the historical 2026-01-03 Ops Console snapshot with current controller-derived state.",
+      "originating_goal": "Replace the historical Ops Console snapshot with current controller-derived state.",
       "destination": "docs/OPS_CONSOLE.md",
       "evidence_location": "self_healing_out/workflow-recovery/WORKFLOW_RECOVERY_RECEIPT.json",
       "claim_state": "BLOCKED",
@@ -94,21 +81,21 @@
     },
     {
       "task_id": "SCW-RECOVERY-TELEMETRY-DISPOSITION-005",
-      "originating_goal": "Remove or relocate the malformed nested reusable telemetry file without breaking callers.",
+      "originating_goal": "Remove the malformed nested reusable telemetry file without breaking callers.",
       "destination": ".github/workflows/_reusables/telemetry.yml",
-      "evidence_location": "repository code-search receipt for _reusables/telemetry.yml callers",
-      "claim_state": "CLAIMED_FOR_VALIDATION",
+      "evidence_location": "repository code search plus removal commit f3cee5e0d0333a8ec1707c22efe2c64be2e40766",
+      "claim_state": "COMPLETE",
       "claimant": "StegVerse-SCW dependency reconciliation lane",
-      "role": "dependency-validation",
+      "role": "dependency-validation-and-removal",
       "claim_created_at": "2026-08-02T08:36:00Z",
-      "claim_expires_at": "2026-08-09T08:36:00Z",
-      "release_condition": "Repository search proves zero remaining callers, permitting deletion or archival; otherwise callers are migrated first.",
+      "claim_expires_at": "2026-08-02T08:36:00Z",
+      "release_condition": "Repository search returned no callers and the malformed file was deleted after canonical replacement installation.",
       "collision_boundaries": ["StegVerse-Labs/StegVerse-SCW:main:.github/workflows/_reusables/telemetry.yml", "StegVerse-Labs/StegVerse-SCW:main:.github/workflows/telemetry-reusable.yml"],
-      "completion_state": "PARTIALLY_IMPLEMENTED",
-      "validation_state": "CALLER_SEARCH_PENDING",
-      "integration_state": "CANONICAL_REPLACEMENT_INSTALLED",
+      "completion_state": "COMPLETE",
+      "validation_state": "ZERO_CALLERS_FOUND_BEFORE_REMOVAL",
+      "integration_state": "CANONICAL_REPLACEMENT_RETAINED",
       "archival_dependency": false,
-      "next_executable_action": "Search all repository references, migrate any callers, then delete or archive the malformed nested file."
+      "next_executable_action": "None."
     },
     {
       "task_id": "SCW-RECOVERY-DUPLICATE-CLASSIFICATION-006",
@@ -126,14 +113,14 @@
       "validation_state": "AWAITING_CONTROLLER_RECEIPT",
       "integration_state": "INVENTORY_ENGINE_INSTALLED",
       "archival_dependency": false,
-      "next_executable_action": "Consume the first valid controller receipt and install the canonical workflow-family classification registry."
+      "next_executable_action": "Consume the first valid controller receipt and install the workflow-family classification registry."
     },
     {
       "task_id": "SCW-SESSION-CONSOLIDATION-007",
       "originating_goal": "Durably transfer all unique requirements and execution history from the originating ChatGPT session.",
       "destination": "docs/SCW_SESSION_CONSOLIDATION_2026-08-02.md",
-      "evidence_location": "docs/SCW_MIRROR_HANDOFF.md and this task registry",
-      "claim_state": "COMPLETE",
+      "evidence_location": "commit cda99b52f8ae573a9afba0af79534fb4aa2f94d2 plus docs/SCW_MIRROR_HANDOFF.md",
+      "claim_state": "MERGED_INTO_CANONICAL_WORKSTREAM",
       "claimant": "originating ChatGPT session",
       "role": "consolidation",
       "claim_created_at": "2026-08-02T08:36:00Z",
@@ -141,10 +128,10 @@
       "release_condition": "All session-specific goals, decisions, blockers, authority states, evidence references, and next actions are committed in canonical records.",
       "collision_boundaries": ["StegVerse-Labs/StegVerse-SCW:main:docs/SCW_SESSION_CONSOLIDATION_2026-08-02.md"],
       "completion_state": "COMPLETE",
-      "validation_state": "COMMIT_REQUIRED",
+      "validation_state": "COMMITTED",
       "integration_state": "MERGED_INTO_CANONICAL_WORKSTREAM",
-      "archival_dependency": true,
-      "next_executable_action": "Verify the consolidation record and handoff commit, then release the originating session claim."
+      "archival_dependency": false,
+      "next_executable_action": "None; originating session claim released."
     }
   ]
 }
