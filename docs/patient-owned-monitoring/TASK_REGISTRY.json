@@ -10,11 +10,7 @@
     {
       "task_id": "POM-SW-001",
       "originating_goal": "Build and validate the software evidence pipeline",
-      "surfaces": [
-        "tools/patient_owned_monitoring/",
-        "tests/patient_owned_monitoring/",
-        ".github/workflows/patient-owned-monitoring-validation.yml"
-      ],
+      "surfaces": ["tools/patient_owned_monitoring/", "tests/patient_owned_monitoring/", ".github/workflows/patient-owned-monitoring-validation.yml"],
       "claimant": "repository-native-ci",
       "role": "CLAIMED_FOR_VALIDATION",
       "claimed_at": "2026-08-02T16:28:00-05:00",
@@ -26,10 +22,7 @@
     {
       "task_id": "POM-HW-001",
       "originating_goal": "Construct wearable and PAP evidence hardware",
-      "surfaces": [
-        "hardware/patient_owned_monitoring/",
-        "docs/patient-owned-monitoring/HARDWARE_BOM.md"
-      ],
+      "surfaces": ["hardware/patient_owned_monitoring/", "docs/patient-owned-monitoring/HARDWARE_BOM.md"],
       "claimant": "hardware-bench-lane",
       "role": "BLOCKED",
       "claimed_at": "2026-08-02T16:28:00-05:00",
@@ -41,10 +34,7 @@
     {
       "task_id": "POM-VAL-REAL-001",
       "originating_goal": "Validate derived measurements against simultaneous reliable devices and laboratory results",
-      "surfaces": [
-        "data/patient_owned_monitoring/reference/",
-        "receipts/patient_owned_monitoring/"
-      ],
+      "surfaces": ["data/patient_owned_monitoring/reference/", "receipts/patient_owned_monitoring/"],
       "claimant": "paired-reference-validation-lane",
       "role": "BLOCKED",
       "claimed_at": "2026-08-02T16:28:00-05:00",
@@ -59,10 +49,7 @@
       "task_id": "POM-PIPE-001",
       "state": "COMPLETE",
       "location": "tools/patient_owned_monitoring/run_synthetic_pipeline.py",
-      "evidence": [
-        "commit:63a22d723cdd4efe4a23229544a3607a71d781fd",
-        "tests/patient_owned_monitoring/test_end_to_end_pipeline.py"
-      ],
+      "evidence": ["commit:63a22d723cdd4efe4a23229544a3607a71d781fd", "tests/patient_owned_monitoring/test_end_to_end_pipeline.py"],
       "next_action": "Execute through repository-native CI"
     },
     {
@@ -76,19 +63,15 @@
       "task_id": "POM-EVENT-EVAL-001",
       "state": "IMPLEMENTED_BUT_UNVALIDATED",
       "location": "tools/patient_owned_monitoring/evaluate_collapse_events.py",
-      "evidence": [
-        "commit:d084ea539b6f80cb436e327a541fd97757aa6793",
-        "commit:ee9bf5f47510d2756ce4a71f1465d140ddee90d2",
-        "tests/patient_owned_monitoring/test_collapse_event_evaluation.py"
-      ],
+      "evidence": ["commit:d084ea539b6f80cb436e327a541fd97757aa6793", "commit:ee9bf5f47510d2756ce4a71f1465d140ddee90d2", "tests/patient_owned_monitoring/test_collapse_event_evaluation.py"],
       "next_action": "Execute deterministic tests through repository-native CI and retain the artifact receipt"
     },
     {
       "task_id": "POM-IMAGE-001",
-      "state": "UNCLAIMED",
+      "state": "IMPLEMENTED_BUT_UNVALIDATED",
       "location": "tools/patient_owned_monitoring/image_calibration.py",
-      "evidence": [],
-      "next_action": "Implement calibration-card geometry and corrected strip-pad sampling"
+      "evidence": ["commit:fb18f5da1fc7d7f8b932b299bea72ccc43027f0c", "commit:46c599bef1ac65d47a6ab40eafbbd912498c14f5", "tests/patient_owned_monitoring/test_image_calibration.py"],
+      "next_action": "Execute deterministic image calibration tests through repository-native CI and retain the artifact receipt"
     },
     {
       "task_id": "POM-CBC-IMG-001",
@@ -96,6 +79,13 @@
       "location": "tools/patient_owned_monitoring/hematocrit_boundaries.py",
       "evidence": [],
       "next_action": "Implement boundary proposals while retaining operator-reviewed coordinates"
+    },
+    {
+      "task_id": "POM-GLUCOSE-001",
+      "state": "UNCLAIMED",
+      "location": "tools/patient_owned_monitoring/glucose_import.py",
+      "evidence": [],
+      "next_action": "Implement timestamped meter and CGM import with source, unit, provenance, and partition labels"
     }
   ],
   "session_consolidation": {
