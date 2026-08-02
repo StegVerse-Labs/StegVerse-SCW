@@ -68,10 +68,11 @@ No competing implementation claim was found. Remaining software tasks are enumer
 - `stream_align.py` — cross-stream alignment and timing-quality reporting.
 - `collapse_detector.py` — sustained personal-baseline candidate events.
 - `sample_manifest.py` — hashed append-only fluid and capillary-sample records.
-- `strip_reader.py` — fixed-light calibrated RGB interpretation.
+- `strip_reader.py` — calibrated RGB interpretation.
 - `pap_event_correlation.py` — event-centered PAP evidence windows.
 - `run_synthetic_pipeline.py` — deterministic acquisition-to-beat-extraction pipeline with hashed receipt; commit `63a22d723cdd4efe4a23229544a3607a71d781fd`.
-- `evaluate_collapse_events.py` — event-level sensitivity, false positives, false-positive rate per monitored hour, onset delay, overlap, and coverage; commit `d084ea539b6f80cb436e327a541fd97757aa6793`.
+- `evaluate_collapse_events.py` — event sensitivity, false-positive rate, onset delay, overlap, and coverage; commit `d084ea539b6f80cb436e327a541fd97757aa6793`.
+- `image_calibration.py` — dependency-free fixed-light calibration from rectangular reference patches, per-channel affine correction, corrected sample-region RGB, fit RMSE, source hashing, and fail-closed geometry checks; commit `fb18f5da1fc7d7f8b932b299bea72ccc43027f0c`.
 
 ## Tests and automation
 
@@ -81,13 +82,14 @@ No competing implementation claim was found. Remaining software tasks are enumer
 - `test_acquisition_and_detection.py`;
 - `test_end_to_end_pipeline.py`;
 - `test_collapse_event_evaluation.py`; commit `ee9bf5f47510d2756ce4a71f1465d140ddee90d2`;
+- `test_image_calibration.py`; commit `46c599bef1ac65d47a6ab40eafbbd912498c14f5`;
 - `.github/workflows/patient-owned-monitoring-validation.yml`; commit `6da51bcdd2902181f2c025fcf3b9dc9255b20651`.
 
 The workflow compiles modules, runs deterministic tests, executes the synthetic pipeline, validates the receipt, and uploads evidence for 90 days. Workflow success is not claimed because no run, job log, or artifact has yet been directly inspected.
 
 ## Task and consolidation records
 
-- `TASK_REGISTRY.json`; latest update commit `e408e3d3bf4312c112c89920b2e3f267a0bab18a`.
+- `TASK_REGISTRY.json`; latest update commit `382fbfb763ad1a82c4f486c0fcdfb0062d67a303`.
 - `SESSION_EXECUTION_INVENTORY.md`; commit `db864abbaad6ec65e40d61d3bb58d3b7a02392e5`.
 
 All unique session requirements remain transferred into this canonical workstream. The historical discussion of MaxAlert, white-cross tablets, ephedrine, and ma-huang created no repository implementation obligation.
@@ -98,6 +100,7 @@ All unique session requirements remain transferred into this canonical workstrea
 - Software processing modules: `IMPLEMENTED_BUT_PARTIALLY_UNVALIDATED`.
 - Synthetic pipeline: `IMPLEMENTED_BUT_UNVALIDATED_BY_CI`.
 - Collapse-event evaluator: `IMPLEMENTED_BUT_UNVALIDATED_BY_CI`.
+- Fixed-light image calibration: `IMPLEMENTED_BUT_UNVALIDATED_BY_CI`.
 - Repository-native CI: `CLAIMED_FOR_VALIDATION`.
 - Physical wearable/PAP recorder: `BLOCKED` by hardware-bench release condition.
 - Real device and laboratory pairing: `BLOCKED` by synchronized dataset release condition.
@@ -106,12 +109,11 @@ All unique session requirements remain transferred into this canonical workstrea
 ## Exact next execution order
 
 1. Inspect the run, jobs, logs, and artifact produced by `.github/workflows/patient-owned-monitoring-validation.yml`; reconcile `POM-SW-001` and commit a receipt under `docs/patient-owned-monitoring/receipts/`.
-2. Implement `tools/patient_owned_monitoring/image_calibration.py` for calibration-card geometry and corrected strip-pad sampling.
-3. Implement `tools/patient_owned_monitoring/hematocrit_boundaries.py` for semi-automatic boundary proposals while retaining reviewed coordinates.
-4. Implement a timestamped glucose meter/CGM importer under `tools/patient_owned_monitoring/`.
-5. Create firmware interfaces, wiring maps, enclosure files, and bench receipt templates under `hardware/patient_owned_monitoring/`.
-6. Commit real synchronized datasets under governed data/custody locations without replacing synthetic fixtures.
-7. Run isolated calibration, development, validation, and challenge evaluations before activating personal BP-change or collapse models.
+2. Implement `tools/patient_owned_monitoring/hematocrit_boundaries.py` for semi-automatic boundary proposals while retaining reviewed coordinates.
+3. Implement `tools/patient_owned_monitoring/glucose_import.py` for timestamped meter and CGM records with provenance, units, and partition labels.
+4. Create firmware interfaces, wiring maps, enclosure files, and bench receipt templates under `hardware/patient_owned_monitoring/`.
+5. Commit real synchronized datasets under governed data/custody locations without replacing synthetic fixtures.
+6. Run isolated calibration, development, validation, and challenge evaluations before activating personal BP-change or collapse models.
 
 ## Validation commands
 
@@ -139,7 +141,7 @@ The validation workflow is the active machine-owned task. It has deterministic i
 
 ## Percentages and denominator
 
-Required deliverables denominator: 27 canonical deliverables — 6 specifications, 16 software modules, 5 tests/automation/coordination records. Developed: 27/27. Validation denominator: 10 layers — static presence, syntax, unit tests, end-to-end deterministic execution, workflow, logs, artifact, physical bench, real paired-device, laboratory pairing. Verified: 1/10. Integration denominator: 8 capability chains. Integrated in software: 6/8; hardware and real-reference chains remain blocked. Goal activation is 50% because the evaluator is installed but CI, physical acquisition, and real paired validation are not established.
+Required deliverables denominator: 29 canonical deliverables — 6 specifications, 17 software modules, 6 tests/automation/coordination records. Developed: 29/29. Validation denominator: 10 layers — static presence, syntax, unit tests, end-to-end deterministic execution, workflow, logs, artifact, physical bench, real paired-device, laboratory pairing. Verified: 1/10. Integration denominator: 8 capability chains. Integrated in software: 6/8; hardware and real-reference chains remain blocked. Goal activation is 52% because fixed-light calibration is installed but CI, physical acquisition, and real paired validation are not established.
 
 ## Archive condition
 
