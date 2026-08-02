@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "SCW-STEGAGENTS-PROPAGATE-001",
+  "originating_session_goal": "Stabilize StegAgents execution, validate the personal-data planner, canonicalize it in StegDB, and transfer continuation without retaining chat-only state.",
+  "repository": "StegVerse-Labs/StegVerse-SCW",
+  "branch": "main",
+  "state": "READY",
+  "claim_state": "MACHINE_OWNED",
+  "claim": {
+    "claimant": "StegVerse-Labs/StegVerse-SCW",
+    "role": "integration_and_propagation",
+    "created_at": "2026-08-02T08:20:00Z",
+    "expires_on": "release_when_receipt_is_complete_or_failed",
+    "collision_boundary": [
+      "config/stegagents-canonical-source.v1.json",
+      "scripts/validate_stegagents_canonical_source.py",
+      ".github/workflows/stegagents-canonical-propagation.yml",
+      "self_healing_out/stegagents-canonical-propagation/"
+    ]
+  },
+  "source": {
+    "repository": "StegVerse-Labs/StegDB",
+    "manifest": "canonical/stegagents/personal-data-control-agent-planner/1.0.0/manifest.json",
+    "import_receipt": "receipts/stegagents-canonical-import.v1.json",
+    "import_task": "runtime/stegagents-import-task.v1.json"
+  },
+  "required_outputs": [
+    "config/stegagents-canonical-source.v1.json",
+    "scripts/validate_stegagents_canonical_source.py",
+    ".github/workflows/stegagents-canonical-propagation.yml",
+    "self_healing_out/stegagents-canonical-propagation/STEGAGENTS_PROPAGATION_RECEIPT.json"
+  ],
+  "status_values": [
+    "COMPLETE",
+    "BLOCKED",
+    "RETRY",
+    "REVIEW_REQUIRED",
+    "FAILED",
+    "CLAIMED",
+    "SUPERSEDED",
+    "MERGED"
+  ],
+  "requirements": [
+    "consume only the pinned StegDB manifest",
+    "reject archived or ambiguous operational paths",
+    "detect duplicate schedules and missing dispatch surfaces",
+    "preserve archive-first replacement behavior",
+    "emit source and destination hashes",
+    "infer no release, deployment, legal, identity-verification, external-deletion, or provider authority",
+    "produce a deterministic next task and fail closed when evidence is missing"
+  ],
+  "blockers": [],
+  "next_executable_task": {
+    "task_id": "SCW-STEGAGENTS-PROPAGATE-001-IMPLEMENT",
+    "owner": "StegVerse-Labs/StegVerse-SCW",
+    "state": "READY",
+    "action": "Install the pinned-source contract, validator, workflow, and receipt output in the collision-boundary paths."
+  },
+  "session_consolidation": {
+    "merged_from": "StegAgents workflow repair and personal-data planner session",
+    "canonical_continuation": "StegVerse-Labs/StegVerse-SCW/runtime/stegagents-propagation-task.v1.json",
+    "chat_context_required": false
+  }
+}
