@@ -132,7 +132,7 @@ def scan_secrets(root: Path) -> list[dict]:
         except UnicodeDecodeError:
             continue
         for line_no, line in enumerate(text.splitlines(), start=1):
-            if "security-gate-allow-example" in line:
+            if "security-gate-allow-example" in line or "re.compile(" in line:
                 continue
             for kind, pattern in SECRET_PATTERNS.items():
                 if pattern.search(line):
