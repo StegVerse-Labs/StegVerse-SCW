@@ -1,0 +1,75 @@
+name: Workflow Recovery Controller
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/setup-common-python/**"
+      - "scripts/workflow_recovery_controller.py"
+      - "scripts/patches/repair_workflow_yaml.py"
+      - "config/workflow-recovery-required.json"
+      - "docs/SCW_MIRROR_HANDOFF.md"
+  schedule:
+    - cron: "17 5 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workflow-recovery-controller-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pinned parser
+        run: python -m pip install --disable-pip-version-check "PyYAML==6.0.2"
+
+      - name: Run deterministic recovery controller
+        id: controller
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python scripts/workflow_recovery_controller.py 2>&1 | tee workflow-recovery-controller.log
+          rc=${PIPESTATUS[0]}
+          echo "exit_code=${rc}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish job summary
+        if: always()
+        run: |
+          if [ -f self_healing_out/workflow-recovery/WORKFLOW_RECOVERY_RECEIPT.md ]; then
+            cat self_healing_out/workflow-recovery/WORKFLOW_RECOVERY_RECEIPT.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "# Workflow Recovery Controller" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "**FAILED:** no receipt was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload inspectable receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-recovery-receipt-${{ github.run_id }}
+          path: |
+            self_healing_out/workflow-recovery/**
+            workflow-recovery-controller.log
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Fail closed when recovery is incomplete
+        if: ${{ steps.controller.outputs.exit_code != '0' }}
+        run: |
+          echo "Recovery controller reported incomplete or invalid state. Inspect the uploaded receipt."
+          exit 1
