@@ -1,0 +1,52 @@
+{
+  "schema_version": "pom.security-profile.v1",
+  "profile_id": "POM-SEC-ABOVE-FEDERAL-001",
+  "status": "MANDATORY",
+  "policy": "Applicable federal security requirements are the minimum floor; this profile requires stronger controls where technically feasible.",
+  "references": [
+    "HHS_HIPAA_SECURITY_RULE",
+    "HHS_RISK_ANALYSIS_GUIDANCE",
+    "NIST_SP_800_53_REV5_CURRENT_PATCH",
+    "NIST_CSF_2_0",
+    "CISA_SECURE_BY_DESIGN"
+  ],
+  "required_control_families": {
+    "governance": ["risk_register", "threat_model", "control_ownership", "exception_expiration", "independent_review"],
+    "data_protection": ["authenticated_encryption_at_rest", "encrypted_transport", "key_separation", "key_rotation", "revocation", "encrypted_backup", "secure_disposal"],
+    "identity_access": ["deny_by_default", "least_privilege", "phishing_resistant_mfa_for_privileged_access", "short_lived_service_credentials", "role_separation", "audited_emergency_override"],
+    "device_integrity": ["unique_device_identity", "signed_firmware", "verified_boot", "anti_rollback", "controlled_debug_interfaces", "firmware_provenance"],
+    "evidence_integrity": ["append_only_sequence", "record_hash_chain", "original_timestamp_retention", "clock_correction_retention", "algorithm_version_binding", "calibration_binding", "hardware_firmware_binding", "null_not_zero"],
+    "audit_detection": ["tamper_evident_audit", "time_synchronized_audit", "separate_audit_retention", "auth_failure_detection", "integrity_failure_detection", "sequence_gap_detection", "clock_discontinuity_detection", "unexpected_export_detection", "policy_bypass_detection"],
+    "availability_recovery": ["offline_acquisition", "patient_export", "backup_integrity_check", "recovery_test", "provenance_preserving_recovery", "disclosure_fail_closed", "safe_acquisition_continuity"],
+    "software_supply_chain": ["deterministic_dependencies", "build_provenance", "artifact_hashes", "syntax_gate", "unit_gate", "integration_gate", "security_profile_gate", "secret_scanning", "dependency_review", "component_removal_path"],
+    "incident_response": ["durable_incident_receipt", "containment_process", "key_compromise_process", "device_revocation_process", "patient_material_event_notification", "exercise_receipt"]
+  },
+  "activation_evidence": [
+    "validated_security_profile",
+    "committed_threat_model",
+    "committed_risk_register",
+    "active_secret_scanning",
+    "active_dependency_review",
+    "encryption_test_receipt",
+    "key_lifecycle_test_receipt",
+    "firmware_integrity_receipt_or_blocked_platform_record",
+    "access_control_test_receipt",
+    "emergency_override_test_receipt",
+    "backup_restore_receipt",
+    "offline_recovery_receipt",
+    "incident_exercise_receipt",
+    "independent_security_review"
+  ],
+  "exception_contract": {
+    "required_fields": ["exception_id", "control", "rationale", "compensating_controls", "owner", "approved_by", "created_at", "expires_at"],
+    "indefinite_exceptions_allowed": false,
+    "missing_exception_evidence": "FAIL"
+  },
+  "validation_semantics": {
+    "missing_required_control": "FAIL",
+    "missing_activation_evidence": "BLOCKED",
+    "unknown_value": null,
+    "zero_means_measured_zero": true,
+    "unreviewed_security_claim": "NOT_VALIDATED"
+  }
+}
