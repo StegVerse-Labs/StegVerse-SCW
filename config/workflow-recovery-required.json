@@ -2,6 +2,9 @@
   "goal_id": "SCW-WORKFLOW-CONTROL-PLANE-RECOVERY-001",
   "owner_repository": "StegVerse-Labs/StegVerse-SCW",
   "branch": "main",
+  "canonical_handoff": "docs/SCW_MIRROR_HANDOFF.md",
+  "canonical_task_registry": "config/workflow-recovery-tasks.json",
+  "session_consolidation_record": "docs/SCW_SESSION_CONSOLIDATION_2026-08-02.md",
   "required_components": [
     {"path": ".github/workflows/ops-console.yml", "role": "reviewed dispatcher"},
     {"path": ".github/workflows/workflow_preflight.yml", "role": "read-only preflight by default"},
@@ -10,19 +13,43 @@
     {"path": ".github/workflows/neutralize_secrets_if.yml", "role": "quarantined legacy mutator"},
     {"path": ".github/workflows/setup-common-python.yml", "role": "composite-action smoke test"},
     {"path": ".github/workflows/telemetry-reusable.yml", "role": "reusable telemetry"},
+    {"path": ".github/workflows/workflow-recovery-controller.yml", "role": "machine-owned recovery controller"},
     {"path": ".github/actions/setup-common-python/action.yml", "role": "canonical composite action"},
     {"path": "scripts/patches/repair_workflow_yaml.py", "role": "loss-minimizing repair engine"},
+    {"path": "scripts/workflow_recovery_controller.py", "role": "deterministic state controller"},
+    {"path": "config/workflow-recovery-tasks.json", "role": "task and claim registry"},
+    {"path": "docs/SCW_SESSION_CONSOLIDATION_2026-08-02.md", "role": "originating session transfer record"},
     {"path": "docs/SCW_MIRROR_HANDOFF.md", "role": "continuation authority"}
   ],
   "quarantined_workflows": [
-    ".github/workflows/neutralize_secrets_if.yml",
-    ".github/workflows/_reusables/telemetry.yml"
+    ".github/workflows/neutralize_secrets_if.yml"
   ],
-  "status_vocabulary": ["COMPLETE", "BLOCKED", "RETRY", "REVIEW_REQUIRED", "FAILED"],
+  "superseded_or_removed": [
+    {
+      "path": ".github/workflows/_reusables/telemetry.yml",
+      "reason": "concatenated malformed definitions; canonical replacement installed at .github/workflows/telemetry-reusable.yml",
+      "removal_commit": "f3cee5e0d0333a8ec1707c22efe2c64be2e40766"
+    }
+  ],
+  "status_vocabulary": [
+    "UNCLAIMED",
+    "CLAIMED_FOR_IMPLEMENTATION",
+    "CLAIMED_FOR_VALIDATION",
+    "CLAIMED_FOR_INTEGRATION",
+    "MACHINE_OWNED",
+    "BLOCKED",
+    "COMPLETE",
+    "SUPERSEDED",
+    "MERGED_INTO_CANONICAL_WORKSTREAM",
+    "RETRY",
+    "REVIEW_REQUIRED",
+    "FAILED"
+  ],
   "release_conditions": {
     "syntax": "all required workflow YAML parses with the GitHub-aware loader",
-    "validation": "hosted runs and artifacts exist for sanity-check, setup-common-python, and read-only preflight",
+    "validation": "hosted runs and artifacts exist for controller, sanity-check, setup-common-python, repair report, ops-console dispatch, and read-only preflight",
     "authentication": "same-repository GITHUB_TOKEN validation completes before any PAT-dependent test",
-    "activation": "current Ops Console inventory reports no invalid required component and an inspectable receipt identifies no unassigned task"
+    "activation": "current Ops Console inventory reports no invalid required component and an inspectable receipt identifies no unassigned task",
+    "session_archival": "all unique originating-session requirements are committed in the handoff, task registry, consolidation record, Git history, and machine-owned continuation lane"
   }
 }
