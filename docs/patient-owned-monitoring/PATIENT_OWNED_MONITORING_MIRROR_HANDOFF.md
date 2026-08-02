@@ -18,18 +18,8 @@ _Last updated: 2026-08-02T16:28:00-05:00_
 
 ## Active claims
 
-### Software validation claim
-
-- Task: `POM-SW-001`
-- Role: `CLAIMED_FOR_VALIDATION`
-- Claimant: repository-native CI
-- Created: `2026-08-02T16:28:00-05:00`
-- Release condition: the latest `main` validation workflow passes and its job logs and receipt artifact are inspected; otherwise update the claim to `BLOCKED` or `FAILED` with observed evidence.
-- Exact surface: `.github/workflows/patient-owned-monitoring-validation.yml`
-
-### Physical construction and paired-reference claims
-
-- `POM-HW-001`: `BLOCKED`; owner `hardware-bench-lane`; release condition is availability of components and the first committed bench capture.
+- `POM-SW-001`: `CLAIMED_FOR_VALIDATION`; owner `repository-native-ci`; release condition is an inspected latest-main workflow run, job logs, and receipt artifact, or a durable FAILED/BLOCKED record from observed evidence.
+- `POM-HW-001`: `BLOCKED`; owner `hardware-bench-lane`; release condition is component availability and the first committed bench capture.
 - `POM-VAL-REAL-001`: `BLOCKED`; owner `paired-reference-validation-lane`; release condition is a synchronized physical or fluid-test dataset with reliable reference measurements.
 
 No competing implementation claim was found. Remaining software tasks are enumerated in `TASK_REGISTRY.json`.
@@ -44,6 +34,7 @@ No competing implementation claim was found. Remaining software tasks are enumer
 - Keep calibration, development, validation, and challenge partitions isolated.
 - Zero is a measured value; unknown or untracked values never become zero.
 - PAP evidence must remain independently collectable when clinic exports are unavailable.
+- Algorithmic image boundaries are proposals only; reviewed coordinates remain the only effective coordinates.
 
 ## Authoritative specifications
 
@@ -72,7 +63,8 @@ No competing implementation claim was found. Remaining software tasks are enumer
 - `pap_event_correlation.py` — event-centered PAP evidence windows.
 - `run_synthetic_pipeline.py` — deterministic acquisition-to-beat-extraction pipeline with hashed receipt; commit `63a22d723cdd4efe4a23229544a3607a71d781fd`.
 - `evaluate_collapse_events.py` — event sensitivity, false-positive rate, onset delay, overlap, and coverage; commit `d084ea539b6f80cb436e327a541fd97757aa6793`.
-- `image_calibration.py` — dependency-free fixed-light calibration from rectangular reference patches, per-channel affine correction, corrected sample-region RGB, fit RMSE, source hashing, and fail-closed geometry checks; commit `fb18f5da1fc7d7f8b932b299bea72ccc43027f0c`.
+- `image_calibration.py` — fixed-light calibration, corrected sample-region RGB, fit RMSE, source hashing, and fail-closed geometry checks; commit `fb18f5da1fc7d7f8b932b299bea72ccc43027f0c`.
+- `hematocrit_boundaries.py` — transparent red-dominance gradient proposals from a profile or image region, source hashing, confidence evidence, and mandatory operator review; commit `83cf15497c3c56a7ef3e66580eacd9ae3acea830`.
 
 ## Tests and automation
 
@@ -83,13 +75,14 @@ No competing implementation claim was found. Remaining software tasks are enumer
 - `test_end_to_end_pipeline.py`;
 - `test_collapse_event_evaluation.py`; commit `ee9bf5f47510d2756ce4a71f1465d140ddee90d2`;
 - `test_image_calibration.py`; commit `46c599bef1ac65d47a6ab40eafbbd912498c14f5`;
+- `test_hematocrit_boundaries.py`; commit `7e015cb493014aafdec979112559e573aa0eec9f`;
 - `.github/workflows/patient-owned-monitoring-validation.yml`; commit `6da51bcdd2902181f2c025fcf3b9dc9255b20651`.
 
 The workflow compiles modules, runs deterministic tests, executes the synthetic pipeline, validates the receipt, and uploads evidence for 90 days. Workflow success is not claimed because no run, job log, or artifact has yet been directly inspected.
 
 ## Task and consolidation records
 
-- `TASK_REGISTRY.json`; latest update commit `382fbfb763ad1a82c4f486c0fcdfb0062d67a303`.
+- `TASK_REGISTRY.json`; latest update commit `d3721385492674d9e786c40af1dd104697d3b572`.
 - `SESSION_EXECUTION_INVENTORY.md`; commit `db864abbaad6ec65e40d61d3bb58d3b7a02392e5`.
 
 All unique session requirements remain transferred into this canonical workstream. The historical discussion of MaxAlert, white-cross tablets, ephedrine, and ma-huang created no repository implementation obligation.
@@ -101,6 +94,7 @@ All unique session requirements remain transferred into this canonical workstrea
 - Synthetic pipeline: `IMPLEMENTED_BUT_UNVALIDATED_BY_CI`.
 - Collapse-event evaluator: `IMPLEMENTED_BUT_UNVALIDATED_BY_CI`.
 - Fixed-light image calibration: `IMPLEMENTED_BUT_UNVALIDATED_BY_CI`.
+- Hematocrit boundary proposals: `IMPLEMENTED_BUT_UNVALIDATED_BY_CI`; proposals never become effective without reviewed coordinates.
 - Repository-native CI: `CLAIMED_FOR_VALIDATION`.
 - Physical wearable/PAP recorder: `BLOCKED` by hardware-bench release condition.
 - Real device and laboratory pairing: `BLOCKED` by synchronized dataset release condition.
@@ -109,11 +103,10 @@ All unique session requirements remain transferred into this canonical workstrea
 ## Exact next execution order
 
 1. Inspect the run, jobs, logs, and artifact produced by `.github/workflows/patient-owned-monitoring-validation.yml`; reconcile `POM-SW-001` and commit a receipt under `docs/patient-owned-monitoring/receipts/`.
-2. Implement `tools/patient_owned_monitoring/hematocrit_boundaries.py` for semi-automatic boundary proposals while retaining reviewed coordinates.
-3. Implement `tools/patient_owned_monitoring/glucose_import.py` for timestamped meter and CGM records with provenance, units, and partition labels.
-4. Create firmware interfaces, wiring maps, enclosure files, and bench receipt templates under `hardware/patient_owned_monitoring/`.
-5. Commit real synchronized datasets under governed data/custody locations without replacing synthetic fixtures.
-6. Run isolated calibration, development, validation, and challenge evaluations before activating personal BP-change or collapse models.
+2. Implement `tools/patient_owned_monitoring/glucose_import.py` for timestamped meter and CGM records with provenance, units, and partition labels.
+3. Create firmware interfaces, wiring maps, enclosure files, and bench receipt templates under `hardware/patient_owned_monitoring/`.
+4. Commit real synchronized datasets under governed data/custody locations without replacing synthetic fixtures.
+5. Run isolated calibration, development, validation, and challenge evaluations before activating personal BP-change or collapse models.
 
 ## Validation commands
 
@@ -141,7 +134,7 @@ The validation workflow is the active machine-owned task. It has deterministic i
 
 ## Percentages and denominator
 
-Required deliverables denominator: 29 canonical deliverables — 6 specifications, 17 software modules, 6 tests/automation/coordination records. Developed: 29/29. Validation denominator: 10 layers — static presence, syntax, unit tests, end-to-end deterministic execution, workflow, logs, artifact, physical bench, real paired-device, laboratory pairing. Verified: 1/10. Integration denominator: 8 capability chains. Integrated in software: 6/8; hardware and real-reference chains remain blocked. Goal activation is 52% because fixed-light calibration is installed but CI, physical acquisition, and real paired validation are not established.
+Required deliverables denominator: 31 canonical deliverables — 6 specifications, 18 software modules, 7 tests/automation/coordination records. Developed: 31/31. Validation denominator: 10 layers — static presence, syntax, unit tests, end-to-end deterministic execution, workflow, logs, artifact, physical bench, real paired-device, laboratory pairing. Verified: 1/10. Integration denominator: 8 capability chains. Integrated in software: 6/8; hardware and real-reference chains remain blocked. Goal activation is 54% because boundary proposal and operator-review controls are installed but CI, physical acquisition, and real paired validation are not established.
 
 ## Archive condition
 
