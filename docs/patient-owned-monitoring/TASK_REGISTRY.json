@@ -1,0 +1,103 @@
+{
+  "schema_version": "pom.task-registry.v1",
+  "goal_id": "POM-001",
+  "goal": "Patient-owned continuous monitoring and reference validation",
+  "repository": "StegVerse-Labs/StegVerse-SCW",
+  "branch": "main",
+  "canonical_handoff": "docs/patient-owned-monitoring/PATIENT_OWNED_MONITORING_MIRROR_HANDOFF.md",
+  "updated_at": "2026-08-02T16:28:00-05:00",
+  "claims": [
+    {
+      "task_id": "POM-SW-001",
+      "originating_goal": "Build and validate the software evidence pipeline",
+      "surfaces": [
+        "tools/patient_owned_monitoring/",
+        "tests/patient_owned_monitoring/",
+        ".github/workflows/patient-owned-monitoring-validation.yml"
+      ],
+      "claimant": "repository-native-ci",
+      "role": "CLAIMED_FOR_VALIDATION",
+      "claimed_at": "2026-08-02T16:28:00-05:00",
+      "release_condition": "Latest main-branch validation workflow passes and receipt artifact is inspectable",
+      "expected_evidence": "GitHub Actions run, job logs, and patient-owned-monitoring-receipt artifact",
+      "collision_boundary": "Do not create a second POM validation workflow or parallel task registry",
+      "next_task_after_release": "POM-HW-001"
+    },
+    {
+      "task_id": "POM-HW-001",
+      "originating_goal": "Construct wearable and PAP evidence hardware",
+      "surfaces": [
+        "hardware/patient_owned_monitoring/",
+        "docs/patient-owned-monitoring/HARDWARE_BOM.md"
+      ],
+      "claimant": "hardware-bench-lane",
+      "role": "BLOCKED",
+      "claimed_at": "2026-08-02T16:28:00-05:00",
+      "release_condition": "Physical components are available and the first bench capture can be committed",
+      "expected_evidence": "Wiring files, firmware build, bench receipt, and simultaneous reference capture",
+      "collision_boundary": "Software sessions may define interfaces but may not claim physical validation",
+      "next_task_after_release": "POM-VAL-REAL-001"
+    },
+    {
+      "task_id": "POM-VAL-REAL-001",
+      "originating_goal": "Validate derived measurements against simultaneous reliable devices and laboratory results",
+      "surfaces": [
+        "data/patient_owned_monitoring/reference/",
+        "receipts/patient_owned_monitoring/"
+      ],
+      "claimant": "paired-reference-validation-lane",
+      "role": "BLOCKED",
+      "claimed_at": "2026-08-02T16:28:00-05:00",
+      "release_condition": "A hardware or fluid-test session produces synchronized raw and reference data",
+      "expected_evidence": "Immutable paired dataset, validation report, and acceptance decision",
+      "collision_boundary": "Synthetic fixtures remain separate and may not be represented as physical validation",
+      "next_task_after_release": "POM-ACTIVATE-001"
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "POM-PIPE-001",
+      "state": "COMPLETE",
+      "location": "tools/patient_owned_monitoring/run_synthetic_pipeline.py",
+      "evidence": [
+        "commit:63a22d723cdd4efe4a23229544a3607a71d781fd",
+        "tests/patient_owned_monitoring/test_end_to_end_pipeline.py"
+      ],
+      "next_action": "Execute through repository-native CI"
+    },
+    {
+      "task_id": "POM-CI-001",
+      "state": "CLAIMED",
+      "location": ".github/workflows/patient-owned-monitoring-validation.yml",
+      "evidence": [],
+      "next_action": "Run on push and inspect jobs, logs, and receipt artifact"
+    },
+    {
+      "task_id": "POM-EVENT-EVAL-001",
+      "state": "UNCLAIMED",
+      "location": "tools/patient_owned_monitoring/evaluate_collapse_events.py",
+      "evidence": [],
+      "next_action": "Implement sensitivity, false-positive rate, onset-delay, and coverage metrics"
+    },
+    {
+      "task_id": "POM-IMAGE-001",
+      "state": "UNCLAIMED",
+      "location": "tools/patient_owned_monitoring/image_calibration.py",
+      "evidence": [],
+      "next_action": "Implement calibration-card geometry and corrected strip-pad sampling"
+    },
+    {
+      "task_id": "POM-CBC-IMG-001",
+      "state": "UNCLAIMED",
+      "location": "tools/patient_owned_monitoring/hematocrit_boundaries.py",
+      "evidence": [],
+      "next_action": "Implement boundary proposals while retaining operator-reviewed coordinates"
+    }
+  ],
+  "session_consolidation": {
+    "originating_session_goals": 8,
+    "durably_transferred": 8,
+    "canonical_location": "StegVerse-Labs/StegVerse-SCW/docs/patient-owned-monitoring/",
+    "archive_condition": "CI evidence is inspected, active software validation claim is released or blocked durably, and no session-only requirements remain"
+  }
+}
