@@ -7,12 +7,14 @@ on:
       - 'tools/patient_owned_monitoring/**'
       - 'tests/patient_owned_monitoring/**'
       - 'docs/patient-owned-monitoring/**'
+      - 'security/patient_owned_monitoring/**'
       - '.github/workflows/patient-owned-monitoring-validation.yml'
   pull_request:
     paths:
       - 'tools/patient_owned_monitoring/**'
       - 'tests/patient_owned_monitoring/**'
       - 'docs/patient-owned-monitoring/**'
+      - 'security/patient_owned_monitoring/**'
       - '.github/workflows/patient-owned-monitoring-validation.yml'
   workflow_dispatch:
 
@@ -39,25 +41,35 @@ jobs:
       - name: Compile modules
         run: python -m compileall -q tools/patient_owned_monitoring tests/patient_owned_monitoring
 
+      - name: Validate mandatory security profile
+        run: |
+          mkdir -p artifacts/patient-owned-monitoring
+          python tools/patient_owned_monitoring/validate_security_profile.py \
+            security/patient_owned_monitoring/security_profile.json \
+            --receipt artifacts/patient-owned-monitoring/security_profile_validation.json
+
       - name: Run deterministic tests
         run: python -m unittest discover -s tests/patient_owned_monitoring -p 'test_*.py' -v
 
       - name: Run end-to-end synthetic pipeline
         run: |
-          rm -rf artifacts/patient-owned-monitoring
-          python tools/patient_owned_monitoring/run_synthetic_pipeline.py artifacts/patient-owned-monitoring --duration 60 --rate 100 --heart-rate 72 --seed 7
+          rm -rf artifacts/patient-owned-monitoring/pipeline
+          python tools/patient_owned_monitoring/run_synthetic_pipeline.py artifacts/patient-owned-monitoring/pipeline --duration 60 --rate 100 --heart-rate 72 --seed 7
 
       - name: Validate receipt state
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          receipt = json.loads(Path('artifacts/patient-owned-monitoring/pipeline_receipt.json').read_text())
+          security = json.loads(Path('artifacts/patient-owned-monitoring/security_profile_validation.json').read_text())
+          assert security['status'] == 'COMPLETE', security
+          assert security['activation_state'] == 'BLOCKED_PENDING_EVIDENCE', security
+          receipt = json.loads(Path('artifacts/patient-owned-monitoring/pipeline/pipeline_receipt.json').read_text())
           assert receipt['status'] == 'COMPLETE', receipt
           assert receipt['outputs']['sample_count'] == 6000, receipt
           assert receipt['outputs']['beat_count'] > 40, receipt
           assert len(receipt['receipt_sha256']) == 64, receipt
-          print(json.dumps(receipt, indent=2))
+          print(json.dumps({'security': security, 'pipeline': receipt}, indent=2))
           PY
 
       - name: Record workflow metadata
@@ -77,6 +89,7 @@ jobs:
               'workflow': os.environ['GITHUB_WORKFLOW'],
               'ref': os.environ['GITHUB_REF'],
               'actor': os.environ['GITHUB_ACTOR'],
+              'security_profile_required': True,
           }
           (out / 'workflow_metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
           PY
