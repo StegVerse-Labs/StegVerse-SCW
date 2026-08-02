@@ -75,10 +75,10 @@
     },
     {
       "task_id": "POM-CBC-IMG-001",
-      "state": "UNCLAIMED",
+      "state": "IMPLEMENTED_BUT_UNVALIDATED",
       "location": "tools/patient_owned_monitoring/hematocrit_boundaries.py",
-      "evidence": [],
-      "next_action": "Implement boundary proposals while retaining operator-reviewed coordinates"
+      "evidence": ["commit:83cf15497c3c56a7ef3e66580eacd9ae3acea830", "commit:7e015cb493014aafdec979112559e573aa0eec9f", "tests/patient_owned_monitoring/test_hematocrit_boundaries.py"],
+      "next_action": "Execute deterministic boundary tests through repository-native CI; retain operator-reviewed coordinates as the only effective coordinates"
     },
     {
       "task_id": "POM-GLUCOSE-001",
