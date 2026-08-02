@@ -20,6 +20,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: pom-validation-${{ github.ref }}
@@ -48,6 +49,20 @@ jobs:
             security/patient_owned_monitoring/security_profile.json \
             --receipt artifacts/patient-owned-monitoring/security_profile_validation.json
 
+      - name: Validate threat, risk and secret gates
+        run: |
+          python tools/patient_owned_monitoring/security_gate.py \
+            --risk-register docs/patient-owned-monitoring/security/RISK_REGISTER.json \
+            --root . \
+            --receipt artifacts/patient-owned-monitoring/security_gate_receipt.json
+
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-3.0, AGPL-3.0
+
       - name: Run deterministic tests
         run: python -m unittest discover -s tests/patient_owned_monitoring -p 'test_*.py' -v
 
@@ -62,14 +77,18 @@ jobs:
           import json
           from pathlib import Path
           security = json.loads(Path('artifacts/patient-owned-monitoring/security_profile_validation.json').read_text())
+          gate = json.loads(Path('artifacts/patient-owned-monitoring/security_gate_receipt.json').read_text())
           assert security['status'] == 'COMPLETE', security
           assert security['activation_state'] == 'BLOCKED_PENDING_EVIDENCE', security
+          assert gate['status'] == 'COMPLETE', gate
+          assert gate['secret_scan']['finding_count'] == 0, gate
+          assert gate['risk_register']['validation_errors'] == [], gate
           receipt = json.loads(Path('artifacts/patient-owned-monitoring/pipeline/pipeline_receipt.json').read_text())
           assert receipt['status'] == 'COMPLETE', receipt
           assert receipt['outputs']['sample_count'] == 6000, receipt
           assert receipt['outputs']['beat_count'] > 40, receipt
           assert len(receipt['receipt_sha256']) == 64, receipt
-          print(json.dumps({'security': security, 'pipeline': receipt}, indent=2))
+          print(json.dumps({'security_profile': security, 'security_gate': gate, 'pipeline': receipt}, indent=2))
           PY
 
       - name: Record workflow metadata
@@ -90,6 +109,9 @@ jobs:
               'ref': os.environ['GITHUB_REF'],
               'actor': os.environ['GITHUB_ACTOR'],
               'security_profile_required': True,
+              'risk_register_required': True,
+              'secret_scan_required': True,
+              'dependency_review_on_pull_request': True,
           }
           (out / 'workflow_metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
           PY
