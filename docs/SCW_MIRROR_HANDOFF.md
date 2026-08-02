@@ -1,133 +1,130 @@
 # StegVerse-SCW Mirror Handoff
 
-_Last updated: 2026-07-14_
+_Last updated: 2026-08-02_
 
-## Repository
+## Goal authority
 
+- Goal ID: `SCW-WORKFLOW-CONTROL-PLANE-RECOVERY-001`
 - Organization: `StegVerse-Labs`
-- Repository: `StegVerse-SCW`
-- Continuation authority: this file is the current handoff and task source of truth for workflow recovery until superseded by a newer committed handoff.
+- Repository: `StegVerse-Labs/StegVerse-SCW`
+- Branch: `main`
+- Active goal: restore a trustworthy, observable workflow control plane without destroying recoverable workflow intent.
+- Continuation authority: this file plus live repository state and committed evidence.
 
-## Current durable findings
+## Historical incident
 
-The Ops Console snapshot supplied from 2026-01-03 reported:
+The 2026-01-03 Ops Console snapshot reported 150 workflows: 0 OK, 110 no-dispatch, and 40 broken. That snapshot is historical and must not be treated as current state until regenerated.
 
-- OK: 0
-- No dispatch: 110
-- Broken: 40
-- Total workflows observed: 150
+`ScannerError` and `ParserError` are parse-stage failures and are not caused by an expired PAT. PAT validity remains a separate runtime question and requires direct `401`, `403`, `Bad credentials`, push, resource-access, or dispatch evidence.
 
-The snapshot is historical and must not be treated as the current repository count without regeneration.
+## Authoritative implementation inventory
 
-The broken workflows were labeled primarily with YAML `ScannerError` or `ParserError`.
+The governed required-component denominator is defined in `config/workflow-recovery-required.json`.
 
-### Diagnostic distinction
+### Implemented
 
-- `ScannerError` and `ParserError` are workflow-file parsing failures. They occur before jobs execute and are not caused by an expired PAT.
-- An expired, revoked, or under-permissioned PAT may still be a secondary runtime blocker after a workflow parses and starts.
-- PAT failure evidence must come from runtime errors such as `401`, `403`, `Bad credentials`, push rejection, inaccessible resource, or failed workflow dispatch.
-- `no-dispatch` is not equivalent to broken. It may indicate a valid push-, schedule-, workflow-call-, or repository-dispatch-only workflow, or a workflow whose dispatch trigger is not recognized.
+1. `.github/actions/setup-common-python/action.yml` — canonical composite action.
+2. `.github/workflows/setup-common-python.yml` — read-only smoke test; repaired in `786453329b4c4c803527298cf21c96937ded579e`.
+3. `.github/workflows/telemetry-reusable.yml` — top-level reusable telemetry; installed in `3e4e8654b122759d8413fedeeaea87aea32f1c97`.
+4. `.github/workflows/workflow_preflight.yml` — safe defaults and corrected telemetry caller; repaired in `aab8e268a819860eccecc18a2aa8d9b1535dedc6`.
+5. `.github/workflows/workflows-sanity-check.yml` — recursive read-only inventory gate; upgraded in `ecf7ec713de2b1846eb9af72dc14fd86a18cd4f7`.
+6. `scripts/patches/repair_workflow_yaml.py` — bounded loss-minimizing repair engine; replaced in `247542dcb14883ac568309909642b6fe11a8c587`.
+7. `.github/workflows/repair-bad-yaml.yml` — one-target, report-first repair workflow; rebuilt in `f7ab3277c73e29df8f639f07481f21b535e16638`.
+8. `.github/workflows/ops-console.yml` — reviewed allowlisted dispatcher; restricted in `34dc85b5d0a91b13a2c84bba1154b741a2e46f16`.
+9. `config/workflow-recovery-required.json` — governed inventory and release conditions; installed in `ff6d7a09b483e010db4d068ad7619a60b8e2a955`.
+10. `scripts/workflow_recovery_controller.py` — deterministic read-only state controller; installed in `d651e1a16f2c1aa78d82665430ec17b1f5c1f125`.
+11. `.github/workflows/workflow-recovery-controller.yml` — push, schedule, and manual automation producing inspectable receipts and failing closed; installed in `9a4fd146f374ab52e02f90ce8fab1c6f573cb423`.
+12. `docs/SCW_MIRROR_HANDOFF.md` — durable continuation authority.
 
-## Completed work
+### Quarantined or superseded
 
-- Established this durable handoff in commit `e4f8284accafce648f1b777e6d5d20efb2708e0a`.
-- Preserved the parser-error versus PAT-error decision.
-- Preserved the January 2026 Ops Console counts as historical evidence.
-- Inspected `.github/workflows/workflow_preflight.yml`; its current file was structured YAML, so the January broken label no longer represented its present shape.
-- Inspected `.github/workflows/setup-common-python.yml`; it was malformed YAML and attempted to express a composite action from inside the workflows directory.
-- Confirmed the intended composite action already exists at `.github/actions/setup-common-python/action.yml`.
-- Replaced the malformed `setup-common-python.yml` with a valid, read-only, manually dispatchable smoke-test workflow in commit `786453329b4c4c803527298cf21c96937ded579e`.
-- Inspected `.github/workflows/_reusables/telemetry.yml`; blob `d2bc52a3ff4be5853fdca402a62287fbbfdc79f7` contains two concatenated reusable-workflow definitions and is not safe to call.
-- Added a valid top-level reusable workflow at `.github/workflows/telemetry-reusable.yml` in commit `3e4e8654b122759d8413fedeeaea87aea32f1c97`.
-- Rewired `workflow_preflight.yml` to the top-level reusable telemetry workflow, changed manual mutation defaults to false, removed swallowed validator and push failures, and made fallback output explicitly unvalidated in commit `aab8e268a819860eccecc18a2aa8d9b1535dedc6`.
-- Inspected `.github/workflows/neutralize_secrets_if.yml`; current blob `976265cdefe48767ab1799926d6671195e514495` is structured and manually dispatchable, but remains a high-risk bulk mutator and has not been run.
-- Upgraded `.github/workflows/workflows-sanity-check.yml` from a shallow parse loop into a recursive, read-only workflow inventory gate producing JSON and Markdown artifacts in commit `ecf7ec713de2b1846eb9af72dc14fd86a18cd4f7`.
-- Inspected `scripts/patches/repair_workflow_yaml.py`; prior blob `8eef282036ce5be54d4c3052fda6b87f411ff679` used PyYAML parsing followed by full-file dumping. That could reinterpret GitHub's `on` key as boolean false, remove comments, alter quoting, and rewrite expressions.
-- Replaced the repair script with a loss-minimizing engine in commit `247542dcb14883ac568309909642b6fe11a8c587`. It reports parser failures using a GitHub-aware loader and only applies line-ending, trailing-space, and final-newline normalization. It never automatically replaces tabs or structurally re-dumps YAML.
-- Rebuilt `.github/workflows/repair-bad-yaml.yml` in commit `f7ab3277c73e29df8f639f07481f21b535e16638`. Apply mode now requires exactly one reviewed top-level target, default mode is report-only, reports are uploaded, and only the selected file can be staged.
-- Inspected `.github/workflows/ops-console.yml`; prior blob `634697b55984d6f2e2200515a90cad53f0d23f95` could dispatch any top-level manually dispatchable workflow.
-- Restricted `.github/workflows/ops-console.yml` to the reviewed control nucleus in commit `34dc85b5d0a91b13a2c84bba1154b741a2e46f16`. It records actor, ref, workflow, and reason, and dispatches targets with their safe defaults.
-- No bulk stubbing, bulk mutation, PAT rotation, release, or tag has been performed.
+- `.github/workflows/_reusables/telemetry.yml` — blob `d2bc52a3ff4be5853fdca402a62287fbbfdc79f7` contains concatenated workflow definitions and must not be called.
+- `.github/workflows/neutralize_secrets_if.yml` — parse-structured but a high-risk repository-wide mutator; do not execute until inventory evidence names exact targets and a reviewed mutation boundary exists.
+- Prior repair script blob `8eef282036ce5be54d4c3052fda6b87f411ff679` — superseded because full-document PyYAML dumping could alter GitHub workflow semantics.
 
-## Active goal
+## Automation contract
 
-Restore a trustworthy workflow control plane without destroying recoverable workflow intent.
+Owner: `StegVerse-Labs/StegVerse-SCW`.
 
-## Required execution order
+Trigger:
 
-1. Inspect current repository files before mutation.
-2. Classify each workflow as valid, invalid YAML, misplaced composite action, intentionally non-dispatchable, duplicate, obsolete, or operational.
-3. Repair a minimal control nucleus first rather than stubbing every broken workflow.
-4. Validate YAML parsing independently.
-5. Run a minimal read-only workflow.
-6. Test repository write permission using `GITHUB_TOKEN` where sufficient.
-7. Test any PAT-dependent cross-repository or dispatch operation separately.
-8. Record receipts, failures, and repaired-file inventory here or in linked durable task records.
+- changes to workflow recovery files on `main`;
+- daily schedule at `05:17 UTC`;
+- manual dispatch.
 
-## Initial control nucleus
+Deterministic inputs:
 
-- `.github/workflows/ops-console.yml` — restricted to reviewed control workflows; execution validation pending.
-- `.github/workflows/workflow_preflight.yml` — repaired; execution validation pending.
-- `.github/workflows/workflows-sanity-check.yml` — repaired into inventory gate; execution validation pending.
-- `.github/workflows/repair-bad-yaml.yml` — rebuilt as bounded report/safe-normalization workflow; execution validation pending.
-- `.github/workflows/neutralize_secrets_if.yml` — parse-structured; quarantined from execution pending inventory results and review.
-- `.github/workflows/setup-common-python.yml` — repaired; execution validation pending.
-- `.github/workflows/telemetry-reusable.yml` — installed; caller validation pending.
+- repository tree;
+- `config/workflow-recovery-required.json`.
 
-## Safety constraints
+Outputs:
 
-- Do not overwrite malformed workflows without preserving their prior blob or commit reference.
-- Do not assume every no-dispatch workflow requires `workflow_dispatch`.
-- Do not treat PAT rotation as a YAML repair.
-- Prefer `GITHUB_TOKEN` for same-repository operations and least-privilege PAT access only where cross-repository operations require it.
-- Preserve iPhone-friendly recovery paths and complete-file replacements.
-- Do not run `neutralize_secrets_if.yml` or another bulk mutator until the read-only inventory has identified exact targets and a reviewed mutation plan exists.
-- Do not rely on `.github/workflows/_reusables/telemetry.yml`; use `.github/workflows/telemetry-reusable.yml`.
-- Do not restore full-document PyYAML dumping as a repair mechanism.
-- Apply-mode YAML repair must name exactly one reviewed top-level workflow file.
-- The Ops Console allowlist must not be expanded to bulk mutators without review and a recorded reason.
+- `self_healing_out/workflow-recovery/WORKFLOW_RECOVERY_RECEIPT.json`;
+- `self_healing_out/workflow-recovery/WORKFLOW_RECOVERY_RECEIPT.md`;
+- uploaded artifact `workflow-recovery-receipt-<run_id>`;
+- job summary and non-zero fail-closed result when incomplete.
 
-## Known remaining work
+Status vocabulary: `COMPLETE`, `BLOCKED`, `RETRY`, `REVIEW_REQUIRED`, `FAILED`.
 
-- Execute and inspect `Workflows Sanity Check`; persist its artifact summary or failure evidence.
-- Execute and inspect `Validate Setup Common Python`.
-- Execute and inspect `Workflow Preflight` in its default read-only mode.
-- Execute and inspect `Repair Bad Workflow YAML` in default report-only mode.
-- Execute and inspect the restricted `Ops Console`, initially dispatching `workflows-sanity-check.yml`.
-- Decide whether to delete, archive, or convert the malformed nested `_reusables/telemetry.yml` after all callers are migrated.
-- Verify the current contents and parse status of workflows historically labeled broken using the generated inventory.
-- Identify duplicate workflows and naming collisions such as multiple autopatch variants.
-- Run separate PAT health validation after parse-valid same-repository workflows have executed.
-- Recompute Ops Console counts from current repository state.
+The controller detects missing required components, invalid YAML, nested workflow files, duplicate exact content, dispatch posture, and the next executable task. It is read-only and prevents duplicate concurrent execution by workflow concurrency.
 
-## Installed and missing components
+## Validation state
 
-### Present
+### Proven
 
-- Composite action: `.github/actions/setup-common-python/action.yml`
-- Smoke-test workflow: `.github/workflows/setup-common-python.yml`
-- Read-only inventory gate: `.github/workflows/workflows-sanity-check.yml`
-- Top-level reusable telemetry workflow: `.github/workflows/telemetry-reusable.yml`
-- Rewired preflight workflow: `.github/workflows/workflow_preflight.yml`
-- Bounded repair engine: `scripts/patches/repair_workflow_yaml.py`
-- Bounded repair workflow: `.github/workflows/repair-bad-yaml.yml`
-- Reviewed control dispatcher: `.github/workflows/ops-console.yml`
+- Repository mutations were accepted on `main` by the connected GitHub authority.
+- Required automation files exist at their committed destinations.
+- Repository permission snapshot reports administrative, maintain, push, pull, and triage authority.
 
-### Pending verification or repair
+### Not yet proven
 
-- Execution receipts for the repaired control workflows.
-- Full current workflow inventory artifact.
-- Malformed nested telemetry file disposition.
-- Duplicate and obsolete workflow classification.
-- PAT-dependent cross-repository dispatch and write pathways.
+- No hosted workflow run, job log, or artifact receipt has yet been directly inspected for the controller or repaired nucleus.
+- The connected commit-status endpoint returned no status records for commit `9a4fd146f374ab52e02f90ce8fab1c6f573cb423`; this is absence of evidence, not success or failure.
+- Current repository-wide parse counts remain unknown until a controller or sanity-check artifact is inspected.
+- Same-repository `GITHUB_TOKEN` execution has not been proven.
+- PAT-dependent cross-repository dispatch or write authority has not been tested.
 
-Destination: `StegVerse-Labs/StegVerse-SCW`.
+## Exact next tasks
 
-## Ownership
+1. Inspect the first `Workflow Recovery Controller` run, jobs, logs, and `workflow-recovery-receipt-*` artifact at `.github/workflows/workflow-recovery-controller.yml`.
+2. Correct `scripts/workflow_recovery_controller.py` or its workflow if the hosted receipt reports `FAILED`.
+3. Use the receipt’s `next_task` field to repair the first invalid workflow through `.github/workflows/repair-bad-yaml.yml` in report-only mode.
+4. Inspect hosted runs for `.github/workflows/workflows-sanity-check.yml`, `.github/workflows/setup-common-python.yml`, and `.github/workflows/workflow_preflight.yml` with mutation inputs disabled.
+5. After same-repository execution succeeds, install a least-privilege PAT health-check workflow that performs no mutation and records only authorization class and HTTP result.
+6. Recompute and publish the current Ops Console state from controller evidence.
+7. Remove or relocate `.github/workflows/_reusables/telemetry.yml` only after repository search proves no remaining callers.
+8. Classify duplicate and obsolete workflow families, beginning with autopatch variants, using the controller receipt.
 
-- Current recovery owner: StegVerse-SCW workflow recovery task.
-- Continuation may be performed by any authorized session or automation that reads this file first and records mutations and validation evidence durably.
+## Blockers and release conditions
 
-## Archival condition for originating diagnostic session
+- Hosted validation blocker: release when a directly inspected run has jobs, logs, and an uploaded controller receipt.
+- PAT validation blocker: release only after parse-valid same-repository workflows execute successfully.
+- Nested telemetry removal blocker: release when repository search finds no caller of `_reusables/telemetry.yml`.
+- Bulk mutator quarantine: release only when an inventory receipt names exact targets and a reviewed one-target or bounded mutation plan exists.
 
-The originating diagnostic continuity gap is closed by this committed handoff. Future work no longer requires access to that conversation, provided this file remains available.
+There are no unspecified external tasks. Hosted observation is owned by `.github/workflows/workflow-recovery-controller.yml`; repair selection is owned by `scripts/workflow_recovery_controller.py`; bounded correction is owned by `.github/workflows/repair-bad-yaml.yml`; PAT validation remains a named future repository-native workflow task after its release condition is met.
+
+## Cross-repository posture
+
+No canonical change from this recovery task currently requires propagation to `StegVerse-Labs/Site`, `GCAT-BCAT-Engine/Publisher`, `admissibility-wiki`, `stegguardian-wiki`, or `master-records`. Propagation is not claimed. A future release record may require publication after the SCW control plane is validated and tagged.
+
+## Completion accounting
+
+Required deliverables for the current recovery goal: 16.
+
+- Implemented production files/contracts: 12.
+- Hosted validation receipt sets: 0 of 4 required.
+- PAT health-check automation: missing, intentionally blocked by same-repository validation.
+- Current-state Ops Console publication: missing.
+- Nested malformed telemetry disposition: incomplete.
+- Duplicate/obsolete workflow classification: incomplete.
+
+Task completion: 12/16 = 75%.
+Developed-file completion: 12/13 currently unblocked required files = 92%.
+Validation completion: 0/4 receipt sets = 0%.
+Integration completion: 1/3 internal integration boundaries = 33% (controller installed; hosted evidence and PAT lane incomplete).
+Goal activation: 7/16 weighted activation conditions = 44%.
+
+## Archive condition
+
+Do not archive while hosted receipts, current-state classification, PAT-lane implementation, malformed telemetry disposition, or duplicate-family classification remain unresolved. Continuation must begin from this file and the latest controller receipt.
