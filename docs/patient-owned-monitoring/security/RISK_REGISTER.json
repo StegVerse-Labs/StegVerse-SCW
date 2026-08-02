@@ -1,0 +1,94 @@
+{
+  "schema_version": "pom.security-risk-register.v1",
+  "goal_id": "POM-SEC-001",
+  "repository": "StegVerse-Labs/StegVerse-SCW",
+  "updated_at": "2026-08-02T17:47:00-05:00",
+  "risk_policy": {
+    "federal_floor_only": true,
+    "critical_open_risks_block_activation": true,
+    "high_open_risks_require_owner_and_release_condition": true,
+    "exceptions_must_expire": true,
+    "unknown_risk_state": null,
+    "zero_means_measured_zero": true
+  },
+  "risks": [
+    {
+      "risk_id": "POM-RISK-001",
+      "title": "Unauthorized disclosure from lost or stolen recorder",
+      "severity": "critical",
+      "likelihood": "possible",
+      "state": "BLOCKED_PENDING_EVIDENCE",
+      "owner": "security-assurance-lane",
+      "controls": ["encrypted-storage", "hardware-backed-key", "local-authentication", "remote-revocation"],
+      "evidence_required": ["encryption-test-receipt", "lost-device-exercise", "revocation-receipt"],
+      "release_condition": "All required evidence exists, hashes verify, and no critical exception remains open"
+    },
+    {
+      "risk_id": "POM-RISK-002",
+      "title": "Malicious or rolled-back software and firmware",
+      "severity": "critical",
+      "likelihood": "possible",
+      "state": "BLOCKED_PENDING_EVIDENCE",
+      "owner": "hardware-bench-lane",
+      "controls": ["signed-release", "verified-boot", "anti-rollback", "build-provenance"],
+      "evidence_required": ["signature-verification-receipt", "rollback-rejection-receipt", "firmware-provenance"],
+      "release_condition": "Target platform enforces signatures and rollback rejection, or a blocked-platform record prevents activation"
+    },
+    {
+      "risk_id": "POM-RISK-003",
+      "title": "Sensor replay, spoofing, or record injection",
+      "severity": "critical",
+      "likelihood": "possible",
+      "state": "BLOCKED_PENDING_EVIDENCE",
+      "owner": "security-assurance-lane",
+      "controls": ["device-identity", "session-nonce", "monotonic-sequence", "authenticated-records", "clock-evidence"],
+      "evidence_required": ["replay-rejection-test", "sequence-gap-test", "device-identity-test"],
+      "release_condition": "Replay and forged records are rejected and durable receipts are committed"
+    },
+    {
+      "risk_id": "POM-RISK-004",
+      "title": "Privilege escalation or persistent emergency access",
+      "severity": "high",
+      "likelihood": "possible",
+      "state": "BLOCKED_PENDING_EVIDENCE",
+      "owner": "security-assurance-lane",
+      "controls": ["least-privilege", "phishing-resistant-mfa", "time-limited-override", "dual-control", "audit"],
+      "evidence_required": ["access-matrix", "override-expiration-test", "privileged-authentication-test"],
+      "release_condition": "Unauthorized privilege paths fail and emergency access expires visibly"
+    },
+    {
+      "risk_id": "POM-RISK-005",
+      "title": "CI, dependency, secret, or supply-chain compromise",
+      "severity": "high",
+      "likelihood": "possible",
+      "state": "MITIGATION_IMPLEMENTED_PENDING_VALIDATION",
+      "owner": "repository-native-ci",
+      "controls": ["minimal-workflow-permissions", "pinned-actions", "secret-pattern-scan", "dependency-review", "artifact-receipt"],
+      "evidence_required": ["security-gate-receipt", "dependency-review-result", "secret-scan-result"],
+      "release_condition": "Latest main workflow passes and gate receipts are inspected"
+    },
+    {
+      "risk_id": "POM-RISK-006",
+      "title": "Evidence loss during cloud, clinic, account, or network outage",
+      "severity": "high",
+      "likelihood": "likely",
+      "state": "BLOCKED_PENDING_EVIDENCE",
+      "owner": "hardware-bench-lane",
+      "controls": ["local-first-recording", "offline-export", "queued-sync", "offline-recovery"],
+      "evidence_required": ["offline-capture-receipt", "restore-test-receipt", "patient-export-test"],
+      "release_condition": "Monitoring and export operate without cloud or clinic availability"
+    },
+    {
+      "risk_id": "POM-RISK-007",
+      "title": "Incorrect inference represented as measurement or validation",
+      "severity": "critical",
+      "likelihood": "possible",
+      "state": "MITIGATION_IMPLEMENTED_PENDING_REAL_VALIDATION",
+      "owner": "paired-reference-validation-lane",
+      "controls": ["provenance-labels", "raw-retention", "partition-isolation", "reference-pairing", "human-review"],
+      "evidence_required": ["paired-device-report", "laboratory-pairing-report", "acceptance-decision"],
+      "release_condition": "Declared use is supported by isolated validation and challenge evidence"
+    }
+  ],
+  "exceptions": []
+}
