@@ -74,10 +74,14 @@
     },
     {
       "task_id": "POM-EVENT-EVAL-001",
-      "state": "UNCLAIMED",
+      "state": "IMPLEMENTED_BUT_UNVALIDATED",
       "location": "tools/patient_owned_monitoring/evaluate_collapse_events.py",
-      "evidence": [],
-      "next_action": "Implement sensitivity, false-positive rate, onset-delay, and coverage metrics"
+      "evidence": [
+        "commit:d084ea539b6f80cb436e327a541fd97757aa6793",
+        "commit:ee9bf5f47510d2756ce4a71f1465d140ddee90d2",
+        "tests/patient_owned_monitoring/test_collapse_event_evaluation.py"
+      ],
+      "next_action": "Execute deterministic tests through repository-native CI and retain the artifact receipt"
     },
     {
       "task_id": "POM-IMAGE-001",
