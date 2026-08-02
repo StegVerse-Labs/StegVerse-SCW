@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2026-08-02 07:55 UTC**_
+_Last updated: **2026-08-02 22:21 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **122**
+- ➖ No dispatch: **123**
 - ❌ Broken: **35**
-- Total: **157**
+- Total: **158**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -92,6 +92,7 @@ _Last updated: **2026-08-02 07:55 UTC**_
 | `patch_artifacts_index.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_artifacts_index.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_artifacts_index.yml) · [File](.github/workflows/patch_artifacts_index.yml) |
 | `patch_convert_to_uploader.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_convert_to_uploader.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_convert_to_uploader.yml) · [File](.github/workflows/patch_convert_to_uploader.yml) |
 | `patch_triggers.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_triggers.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patch_triggers.yml) · [File](.github/workflows/patch_triggers.yml) |
+| `patient-owned-monitoring-validation.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patient-owned-monitoring-validation.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/patient-owned-monitoring-validation.yml) · [File](.github/workflows/patient-owned-monitoring-validation.yml) |
 | `ping.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ping.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ping.yml) · [File](.github/workflows/ping.yml) |
 | `propagate-commit-template-v1_1.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/propagate-commit-template-v1_1.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/propagate-commit-template-v1_1.yml) · [File](.github/workflows/propagate-commit-template-v1_1.yml) |
 | `propagate-commit-template.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/propagate-commit-template.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/propagate-commit-template.yml) · [File](.github/workflows/propagate-commit-template.yml) |
