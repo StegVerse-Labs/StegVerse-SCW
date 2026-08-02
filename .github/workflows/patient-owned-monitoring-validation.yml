@@ -1,0 +1,91 @@
+name: Patient-Owned Monitoring Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/patient_owned_monitoring/**'
+      - 'tests/patient_owned_monitoring/**'
+      - 'docs/patient-owned-monitoring/**'
+      - '.github/workflows/patient-owned-monitoring-validation.yml'
+  pull_request:
+    paths:
+      - 'tools/patient_owned_monitoring/**'
+      - 'tests/patient_owned_monitoring/**'
+      - 'docs/patient-owned-monitoring/**'
+      - '.github/workflows/patient-owned-monitoring-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pom-validation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile modules
+        run: python -m compileall -q tools/patient_owned_monitoring tests/patient_owned_monitoring
+
+      - name: Run deterministic tests
+        run: python -m unittest discover -s tests/patient_owned_monitoring -p 'test_*.py' -v
+
+      - name: Run end-to-end synthetic pipeline
+        run: |
+          rm -rf artifacts/patient-owned-monitoring
+          python tools/patient_owned_monitoring/run_synthetic_pipeline.py artifacts/patient-owned-monitoring --duration 60 --rate 100 --heart-rate 72 --seed 7
+
+      - name: Validate receipt state
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          receipt = json.loads(Path('artifacts/patient-owned-monitoring/pipeline_receipt.json').read_text())
+          assert receipt['status'] == 'COMPLETE', receipt
+          assert receipt['outputs']['sample_count'] == 6000, receipt
+          assert receipt['outputs']['beat_count'] > 40, receipt
+          assert len(receipt['receipt_sha256']) == 64, receipt
+          print(json.dumps(receipt, indent=2))
+          PY
+
+      - name: Record workflow metadata
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          out = Path('artifacts/patient-owned-monitoring')
+          out.mkdir(parents=True, exist_ok=True)
+          metadata = {
+              'schema_version': 'pom.workflow-receipt.v1',
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'commit_sha': os.environ['GITHUB_SHA'],
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'workflow': os.environ['GITHUB_WORKFLOW'],
+              'ref': os.environ['GITHUB_REF'],
+              'actor': os.environ['GITHUB_ACTOR'],
+          }
+          (out / 'workflow_metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
+          PY
+
+      - name: Upload validation receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patient-owned-monitoring-receipt-${{ github.run_id }}
+          path: artifacts/patient-owned-monitoring/
+          if-no-files-found: error
+          retention-days: 90
