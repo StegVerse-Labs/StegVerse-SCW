@@ -1,0 +1,28 @@
+{
+  "goal_id": "SCW-WORKFLOW-CONTROL-PLANE-RECOVERY-001",
+  "owner_repository": "StegVerse-Labs/StegVerse-SCW",
+  "branch": "main",
+  "required_components": [
+    {"path": ".github/workflows/ops-console.yml", "role": "reviewed dispatcher"},
+    {"path": ".github/workflows/workflow_preflight.yml", "role": "read-only preflight by default"},
+    {"path": ".github/workflows/workflows-sanity-check.yml", "role": "workflow inventory gate"},
+    {"path": ".github/workflows/repair-bad-yaml.yml", "role": "bounded one-target repair"},
+    {"path": ".github/workflows/neutralize_secrets_if.yml", "role": "quarantined legacy mutator"},
+    {"path": ".github/workflows/setup-common-python.yml", "role": "composite-action smoke test"},
+    {"path": ".github/workflows/telemetry-reusable.yml", "role": "reusable telemetry"},
+    {"path": ".github/actions/setup-common-python/action.yml", "role": "canonical composite action"},
+    {"path": "scripts/patches/repair_workflow_yaml.py", "role": "loss-minimizing repair engine"},
+    {"path": "docs/SCW_MIRROR_HANDOFF.md", "role": "continuation authority"}
+  ],
+  "quarantined_workflows": [
+    ".github/workflows/neutralize_secrets_if.yml",
+    ".github/workflows/_reusables/telemetry.yml"
+  ],
+  "status_vocabulary": ["COMPLETE", "BLOCKED", "RETRY", "REVIEW_REQUIRED", "FAILED"],
+  "release_conditions": {
+    "syntax": "all required workflow YAML parses with the GitHub-aware loader",
+    "validation": "hosted runs and artifacts exist for sanity-check, setup-common-python, and read-only preflight",
+    "authentication": "same-repository GITHUB_TOKEN validation completes before any PAT-dependent test",
+    "activation": "current Ops Console inventory reports no invalid required component and an inspectable receipt identifies no unassigned task"
+  }
+}
