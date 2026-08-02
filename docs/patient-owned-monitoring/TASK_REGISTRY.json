@@ -1,7 +1,7 @@
 {
   "schema_version": "pom.task-registry.v1",
   "goal_id": "POM-001",
-  "goal": "Patient-owned continuous monitoring and reference validation",
+  "goal": "Patient-owned continuous monitoring, above-federal security, and reference validation",
   "repository": "StegVerse-Labs/StegVerse-SCW",
   "branch": "main",
   "canonical_handoff": "docs/patient-owned-monitoring/PATIENT_OWNED_MONITORING_MIRROR_HANDOFF.md",
@@ -10,14 +10,26 @@
     {
       "task_id": "POM-SW-001",
       "originating_goal": "Build and validate the software evidence pipeline",
-      "surfaces": ["tools/patient_owned_monitoring/", "tests/patient_owned_monitoring/", ".github/workflows/patient-owned-monitoring-validation.yml"],
+      "surfaces": ["tools/patient_owned_monitoring/", "tests/patient_owned_monitoring/", "security/patient_owned_monitoring/", ".github/workflows/patient-owned-monitoring-validation.yml"],
       "claimant": "repository-native-ci",
       "role": "CLAIMED_FOR_VALIDATION",
       "claimed_at": "2026-08-02T16:28:00-05:00",
-      "release_condition": "Latest main-branch validation workflow passes and receipt artifact is inspectable",
-      "expected_evidence": "GitHub Actions run, job logs, and patient-owned-monitoring-receipt artifact",
-      "collision_boundary": "Do not create a second POM validation workflow or parallel task registry",
-      "next_task_after_release": "POM-HW-001"
+      "release_condition": "Latest main-branch validation workflow passes and receipt artifact is inspectable, or observed failure/blockage is durably recorded",
+      "expected_evidence": "GitHub Actions run, job logs, security-profile receipt, pipeline receipt, and uploaded artifact",
+      "collision_boundary": "Do not create a second POM validation workflow, security profile, or parallel task registry",
+      "next_task_after_release": "POM-SEC-ACT-001"
+    },
+    {
+      "task_id": "POM-SEC-ACT-001",
+      "originating_goal": "Exceed applicable federal security requirements",
+      "surfaces": ["docs/patient-owned-monitoring/SECURITY_BASELINE.md", "security/patient_owned_monitoring/", "docs/patient-owned-monitoring/security/receipts/"],
+      "claimant": "security-assurance-lane",
+      "role": "BLOCKED",
+      "claimed_at": "2026-08-02T16:28:00-05:00",
+      "release_condition": "Threat model, risk register, secret scanning, dependency review, encryption/key tests, firmware integrity, recovery tests, incident exercise, and independent review evidence are committed",
+      "expected_evidence": "All activation_evidence entries declared by security_profile.json",
+      "collision_boundary": "A passing profile schema or CI run does not constitute production security activation",
+      "next_task_after_release": "POM-ACTIVATE-001"
     },
     {
       "task_id": "POM-HW-001",
@@ -27,8 +39,8 @@
       "role": "BLOCKED",
       "claimed_at": "2026-08-02T16:28:00-05:00",
       "release_condition": "Physical components are available and the first bench capture can be committed",
-      "expected_evidence": "Wiring files, firmware build, bench receipt, and simultaneous reference capture",
-      "collision_boundary": "Software sessions may define interfaces but may not claim physical validation",
+      "expected_evidence": "Wiring files, firmware build, bench receipt, security controls, and simultaneous reference capture",
+      "collision_boundary": "Software sessions may define interfaces but may not claim physical or firmware security validation",
       "next_task_after_release": "POM-VAL-REAL-001"
     },
     {
@@ -56,8 +68,21 @@
       "task_id": "POM-CI-001",
       "state": "CLAIMED",
       "location": ".github/workflows/patient-owned-monitoring-validation.yml",
-      "evidence": [],
-      "next_action": "Run on push and inspect jobs, logs, and receipt artifact"
+      "evidence": ["commit:bb1e6ac3eec7e9fb86873d3c261a3c64d972ee06"],
+      "next_action": "Inspect run, jobs, logs, security receipt, pipeline receipt, and artifact"
+    },
+    {
+      "task_id": "POM-SEC-PROFILE-001",
+      "state": "IMPLEMENTED_BUT_UNVALIDATED",
+      "location": "security/patient_owned_monitoring/security_profile.json",
+      "evidence": [
+        "commit:9e704d8e87bd445d758ffda78c41882a8918b58b",
+        "commit:3e6e636ef90f0a8d4c97e1e803b9180612d719d2",
+        "commit:25f0389cf8579663570571743e93ac3e18a45bf9",
+        "commit:f200420fb2f7c7c4af1c62714ead4654865fb642",
+        "commit:bb1e6ac3eec7e9fb86873d3c261a3c64d972ee06"
+      ],
+      "next_action": "Execute profile validator and tests through CI; then produce all production activation evidence"
     },
     {
       "task_id": "POM-EVENT-EVAL-001",
@@ -78,7 +103,7 @@
       "state": "IMPLEMENTED_BUT_UNVALIDATED",
       "location": "tools/patient_owned_monitoring/hematocrit_boundaries.py",
       "evidence": ["commit:83cf15497c3c56a7ef3e66580eacd9ae3acea830", "commit:7e015cb493014aafdec979112559e573aa0eec9f", "tests/patient_owned_monitoring/test_hematocrit_boundaries.py"],
-      "next_action": "Execute deterministic boundary tests through repository-native CI; retain operator-reviewed coordinates as the only effective coordinates"
+      "next_action": "Execute deterministic boundary tests through repository-native CI; reviewed coordinates remain the only effective coordinates"
     },
     {
       "task_id": "POM-GLUCOSE-001",
@@ -89,9 +114,9 @@
     }
   ],
   "session_consolidation": {
-    "originating_session_goals": 8,
-    "durably_transferred": 8,
+    "originating_session_goals": 9,
+    "durably_transferred": 9,
     "canonical_location": "StegVerse-Labs/StegVerse-SCW/docs/patient-owned-monitoring/",
-    "archive_condition": "CI evidence is inspected, active software validation claim is released or blocked durably, and no session-only requirements remain"
+    "archive_condition": "CI evidence is inspected and the active software validation claim is released or blocked durably; all remaining hardware, reference, and security activation tasks remain assigned to durable lanes"
   }
 }
