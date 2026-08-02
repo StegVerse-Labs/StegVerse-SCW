@@ -1,6 +1,6 @@
 # Patient-Owned Monitoring Session Execution Inventory
 
-_Last reconciled: 2026-08-02T16:28:00-05:00_
+_Last reconciled: 2026-08-02T17:47:00-05:00_
 
 Canonical continuation: `StegVerse-Labs/StegVerse-SCW/docs/patient-owned-monitoring/PATIENT_OWNED_MONITORING_MIRROR_HANDOFF.md`
 
@@ -8,49 +8,49 @@ Canonical continuation: `StegVerse-Labs/StegVerse-SCW/docs/patient-owned-monitor
 
 | ID | Originating goal | Exact destination | Owner / claim | Completion | Validation | Integration | Archival dependency | Evidence | Next executable action |
 |---|---|---|---|---|---|---|---|---|---|
-| POM-001 | Build a patient-owned continuous evidence system | `docs/patient-owned-monitoring/`, `tools/patient_owned_monitoring/`, `tests/patient_owned_monitoring/` on `main` | Canonical repository workstream | Partially implemented | CI pending | Software modules share open records | CI evidence and hardware ownership must be durable | Canonical handoff and Git history | Inspect validation workflow run |
-| POM-SEC-001 | Treat applicable federal security requirements as the minimum floor and exceed them | `SECURITY_BASELINE.md`, `security/patient_owned_monitoring/security_profile.json`, `validate_security_profile.py`, CI security gate | Canonical repository workstream; CI validation claim | Implemented but operational evidence incomplete | Profile tests and workflow run pending | Integrated into the only POM validation workflow | CI receipt plus production security evidence | Inspect CI; create threat model and risk register |
-| POM-BP-001 | Continuous hemodynamic sensing and BP-change validation | `hemodynamic_features.py`, `collapse_detector.py`, `reference_pairing.py`, `evaluate_collapse_events.py` | Software implemented; real validation BLOCKED under POM-VAL-REAL-001 | Relative features and evaluator implemented; absolute personal model incomplete | Synthetic tests committed; real cuff data absent | Integrated in software evidence chain | Physical paired dataset | Source files; task registry | Import paired cuff data after hardware capture |
-| POM-WEAR-001 | One wearable combining ECG, PPG, movement, temperature, and detailed raw data | `HARDWARE_BOM.md`, `simulated_acquisition.py`; future `hardware/patient_owned_monitoring/` | Hardware bench lane BLOCKED | Interface and simulation implemented; physical recorder absent | Software validation pending; bench validation absent | Software format integrated | Components and bench capture | BOM, acquisition code, task registry | Produce firmware interface and wiring files |
-| POM-PAP-001 | Independent PAP evidence without clinic-gated portal access | `PAP_EVIDENCE_MODULE.md`, `pap_report.py`, `pap_event_correlation.py` | Canonical repository workstream | Software reporting implemented | Structured-input validation pending | Integrated with shared timestamps and hashes | Real overnight capture | PAP files and handoff | Add fixture and deterministic event-correlation tests |
-| POM-GLU-001 | Ingest glucose meter or CGM evidence | `DATA_SCHEMA.md`; future `tools/patient_owned_monitoring/glucose_import.py` | UNCLAIMED | Schema only | None | Not integrated | Importer and paired records | Data schema; task registry | Implement generic timestamped meter/CGM importer |
-| POM-FLUID-001 | Low-cost saliva, urine, and finger-stick testing | `sample_manifest.py`, `strip_reader.py`, `image_calibration.py` | Canonical repository workstream | Manifest, calibration, and RGB lookup implemented | CI pending; physical calibration absent | Software chain integrated | Fixed-light physical calibration receipt | Source files and tests | Capture physical calibration-card evidence |
-| POM-CBC-001 | Begin home CBC workstation with capillary blood | `CBC_WORKSTATION.md`, `hematocrit_image.py`, `hematocrit_boundaries.py` | Canonical repository workstream; physical validation BLOCKED | Hematocrit calculation and reviewed boundary proposals implemented; broader CBC incomplete | Laboratory pairing absent | Partial | Physical samples and laboratory references | CBC specification, source, tests | Add paired comparison tooling and lab datasets |
-| POM-VAL-001 | Validate every metric against a reliable simultaneous reference | `VALIDATION_PROTOCOL.md`, `reference_pairing.py`, CI workflow, future `data/` and `receipts/` | CI CLAIMED; physical validation BLOCKED | Software framework implemented | Workflow not yet observed; physical validation absent | Framework integrated | Workflow run plus real references | Workflow and task registry | Inspect CI run/jobs/logs/artifact |
-| POM-CONT-001 | Prevent duplicate sessions and preserve continuation | `TASK_REGISTRY.json`, canonical handoff, this inventory | Canonical repository | Implemented | Static inspection complete | Integrated into handoff | Release or block active claims from evidence | Registry, handoff, inventory commits | Reconcile CI claim |
+| POM-001 | Build a patient-owned continuous evidence system | `docs/patient-owned-monitoring/`, `tools/patient_owned_monitoring/`, `tests/patient_owned_monitoring/` on `main` | Canonical repository workstream | Partially implemented | CI pending | Software modules share open evidence records | CI evidence; durable hardware and validation ownership | Canonical handoff and Git history | Inspect latest validation workflow |
+| POM-SEC-001 | Treat applicable federal security requirements as the minimum floor and exceed them | `SECURITY_BASELINE.md`, `security_profile.json`, `security/THREAT_MODEL.md`, `security/RISK_REGISTER.json`, security validators, existing CI workflow | CI validation claim; production activation assigned to security-assurance lane | Policy, profile, threat model, risk register, secret gate, tests, and dependency-review gate installed | CI run, logs, receipts, and operational evidence pending | Integrated into the sole POM workflow | Reconcile CI claim; operational evidence remains in durable blocked lane | Commits `9e704d8e`, `3e6e636e`, `b7d86cc9`, `c06985da`, `ca272f72`, `06d9561a`, `4d588f74`, `aef5db49` | Inspect workflow; then complete cryptography, firmware, recovery, incident, and independent-review evidence |
+| POM-BP-001 | Continuous hemodynamic sensing and BP-change validation | `hemodynamic_features.py`, `collapse_detector.py`, `reference_pairing.py`, `evaluate_collapse_events.py` | Software implemented; real validation BLOCKED | Relative features and evaluator implemented; absolute personal model incomplete | Synthetic tests committed; cuff data absent | Integrated in software evidence chain | Physical paired dataset | Source and tests | Import paired cuff data after capture |
+| POM-WEAR-001 | One wearable combining ECG, PPG, movement, temperature, and detailed raw data | `HARDWARE_BOM.md`, `simulated_acquisition.py`, future `hardware/patient_owned_monitoring/` | Hardware-bench lane BLOCKED | Interface and simulation implemented; recorder absent | Software CI and bench validation pending | Software format integrated | Components and bench evidence | BOM, acquisition source, registry | Install firmware interface and wiring files |
+| POM-PAP-001 | Independent PAP evidence without clinic-gated portal access | `PAP_EVIDENCE_MODULE.md`, `pap_report.py`, `pap_event_correlation.py` | Canonical workstream | Reporting implemented | Structured-input validation and overnight capture pending | Shared timestamps and hashes | Real capture | PAP files | Add deterministic correlation fixtures and real overnight evidence |
+| POM-GLU-001 | Ingest glucose meter or CGM evidence | `DATA_SCHEMA.md`, future `glucose_import.py` | UNCLAIMED | Schema only | None | Not integrated | Importer and paired records | Registry | Implement importer |
+| POM-FLUID-001 | Low-cost saliva, urine, and finger-stick testing | `sample_manifest.py`, `strip_reader.py`, `image_calibration.py` | Canonical workstream | Software chain implemented | CI and physical calibration pending | Integrated in software | Physical fixed-light receipt | Sources and tests | Capture physical calibration evidence |
+| POM-CBC-001 | Begin home CBC workstation with capillary blood | `CBC_WORKSTATION.md`, `hematocrit_image.py`, `hematocrit_boundaries.py` | Canonical workstream; lab validation BLOCKED | Hematocrit and reviewed proposals implemented; broader CBC incomplete | Laboratory pairing absent | Partial | Physical samples and lab references | Specification, source, tests | Add paired comparison and laboratory data |
+| POM-VAL-001 | Validate every metric against reliable simultaneous reference | `VALIDATION_PROTOCOL.md`, `reference_pairing.py`, workflow, future `data/` and `receipts/` | CI CLAIMED; physical validation BLOCKED | Software framework implemented | Workflow unobserved; physical validation absent | Framework integrated | CI plus real references | Workflow and registry | Inspect run/jobs/logs/artifacts |
+| POM-CONT-001 | Prevent duplicate sessions and preserve continuation | `TASK_REGISTRY.json`, handoff, this inventory | Canonical repository | Implemented | Static inspection complete | Integrated | Evidence-based claim release | Registry and handoff | Reconcile CI claim |
+
+## Security implementation transferred
+
+The above-federal requirement now has durable policy and executable controls:
+
+- `docs/patient-owned-monitoring/SECURITY_BASELINE.md`
+- `security/patient_owned_monitoring/security_profile.json`
+- `docs/patient-owned-monitoring/security/THREAT_MODEL.md`
+- `docs/patient-owned-monitoring/security/RISK_REGISTER.json`
+- `tools/patient_owned_monitoring/validate_security_profile.py`
+- `tools/patient_owned_monitoring/security_gate.py`
+- `tests/patient_owned_monitoring/test_security_profile.py`
+- `tests/patient_owned_monitoring/test_security_gate.py`
+- `.github/workflows/patient-owned-monitoring-validation.yml`
+
+The gate validates risk ownership, release conditions, required evidence, exception expiry, federal-floor semantics, and null/zero semantics; scans repository text for credential patterns; and runs dependency review on pull requests. It produces a hashed security receipt and keeps production activation blocked until operational evidence is present.
 
 ## Session-specific requirements transferred
 
 1. Buildable engineering steps take precedence over generic warning text.
-2. Every inferred measurement must be validated for its stated purpose through simultaneous reliable references.
-3. Raw data must remain available; summary scores cannot become the sole evidence.
-4. Long warning periods and brief collapses both require continuous capture.
-5. Calibration, development, validation, and challenge datasets remain isolated.
-6. Zero is a measured value; unknown or untracked values cannot be converted to zero.
-7. PAP evidence must remain independently collectable when clinic data is gated.
-8. CBC work begins with capillary sampling, hemoglobin/hematocrit, and smear imaging, then expands through paired laboratory validation.
-9. Applicable federal security requirements are the minimum floor; production activation requires stronger, fail-closed controls and directly inspectable evidence.
+2. Every inferred measurement requires simultaneous reference validation for its declared use.
+3. Raw data remains available; summaries cannot replace evidence.
+4. Long warning periods and brief collapses require continuous capture.
+5. Calibration, development, validation, and challenge partitions remain isolated.
+6. Zero is measured; unknown remains null.
+7. PAP evidence remains independently collectable.
+8. CBC begins with capillary hemoglobin/hematocrit and smear imaging, then paired laboratory expansion.
+9. Applicable federal security requirements are the minimum floor; stronger fail-closed controls and inspectable evidence are mandatory.
 
-## Security requirement transfer
+## Convergence decision
 
-The new security requirement is installed at:
-
-- `docs/patient-owned-monitoring/SECURITY_BASELINE.md`
-- `security/patient_owned_monitoring/security_profile.json`
-- `tools/patient_owned_monitoring/validate_security_profile.py`
-- `tests/patient_owned_monitoring/test_security_profile.py`
-- `.github/workflows/patient-owned-monitoring-validation.yml`
-
-The profile requires governance, encryption, identity/access, device integrity, evidence integrity, audit/detection, availability/recovery, software supply-chain, and incident-response controls. Security exceptions must be time-bounded and include compensating controls. Missing control evidence fails; missing activation evidence blocks activation.
-
-## Convergence and duplicate-control decision
-
-All patient-owned monitoring implementation from this session is merged into the canonical `StegVerse-Labs/StegVerse-SCW` workstream. No second repository, handoff, CI workflow, security profile, or task registry should be created for the same capability. Physical construction and real paired validation are distinct lanes recorded in `TASK_REGISTRY.json`.
-
-## Non-project discussion
-
-The historical discussion of 1990s “white cross” or MaxAlert products and modern ephedrine/ma-huang comparisons did not create a StegVerse implementation obligation.
+All session implementation is merged into `StegVerse-Labs/StegVerse-SCW`. No second handoff, security profile, risk register, task registry, or POM validation workflow is authorized. Physical construction, production security assurance, and real-reference validation are separate durable lanes in `TASK_REGISTRY.json`.
 
 ## Archive dependency
 
-All nine session goals are durably transferred. Archive remains blocked by the active software-validation claim: the repository workflow must produce inspectable run evidence or be durably marked FAILED/BLOCKED. Physical, real-reference, and production-security activation work is durably assigned and does not require retaining undocumented chat history.
+All nine session goals are durably transferred. Archive remains blocked only by the active software-validation claim: inspect the repository workflow and receipts, or durably record its failure/blockage. Hardware, real-reference, and production-security evidence no longer depend on undocumented chat context.
