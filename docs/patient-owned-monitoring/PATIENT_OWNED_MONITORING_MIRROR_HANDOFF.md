@@ -1,6 +1,6 @@
 # Patient-Owned Monitoring Mirror Handoff
 
-_Last updated: 2026-08-02T21:50:00-05:00_
+_Last updated: 2026-08-02T22:09:00-05:00_
 
 ## Canonical authority
 
@@ -10,20 +10,19 @@ _Last updated: 2026-08-02T21:50:00-05:00_
 - Security rule: applicable federal requirements are the minimum floor, never the target ceiling.
 - Repository/branch: `StegVerse-Labs/StegVerse-SCW` / `main`
 - Documentation: `docs/patient-owned-monitoring/`
-- Implementation: `tools/patient_owned_monitoring/`
+- Software: `tools/patient_owned_monitoring/`
 - Tests: `tests/patient_owned_monitoring/`
-- Hardware lane: `hardware/patient_owned_monitoring/`
+- Hardware: `hardware/patient_owned_monitoring/`
 - Security profile: `security/patient_owned_monitoring/security_profile.json`
-- Action provenance: `docs/patient-owned-monitoring/security/ACTION_PROVENANCE.json`
 - Task registry: `docs/patient-owned-monitoring/TASK_REGISTRY.json`
 - Session inventory: `docs/patient-owned-monitoring/SESSION_EXECUTION_INVENTORY.md`
-- This is the only canonical POM handoff. Do not create a competing handoff, security profile, risk register, action-provenance registry, glucose importer, task registry, or validation workflow.
+- This is the sole canonical POM handoff. Do not create competing handoffs, security profiles, risk registers, action-provenance records, hardware-interface sets, bench receipt schemas, task registries, importers, or validation workflows.
 
 ## Active claims
 
-- `POM-SW-001` — `CLAIMED_FOR_VALIDATION`; owner `repository-native-ci`; release when latest-main workflow, jobs, logs, security receipts, action provenance, dependency-review result when applicable, pipeline receipt, and artifact are inspected, or observed failure/blockage is durably recorded.
-- `POM-SEC-ACT-001` — `BLOCKED`; owner `security-assurance-lane`; release after encryption/key, firmware/device integrity, access/override, recovery, incident, independent-review, and all declared activation evidence are verified.
-- `POM-HW-001` — `BLOCKED`; owner `hardware-bench-lane`; release after components exist and the first bench capture is committed.
+- `POM-SW-001` — `CLAIMED_FOR_VALIDATION`; owner `repository-native-ci`; release after direct inspection of the latest-main workflow, jobs, logs, security receipts, action provenance, dependency review when applicable, pipeline receipt, and artifact, or after observed failure/blockage is durably recorded.
+- `POM-SEC-ACT-001` — `BLOCKED`; owner `security-assurance-lane`; release after cryptography/key, firmware/device integrity, access/override, recovery, incident, independent-review, and all declared activation evidence are verified.
+- `POM-HW-001` — `BLOCKED`; owner `hardware-bench-lane`; release after source schematic, firmware build, enclosure artifacts, measured power/thermal evidence, completed bench receipt, and simultaneous reference capture are committed.
 - `POM-VAL-REAL-001` — `BLOCKED`; owner `paired-reference-validation-lane`; release after synchronized raw and reliable reference evidence is committed.
 
 ## Governing invariants
@@ -34,10 +33,11 @@ _Last updated: 2026-08-02T21:50:00-05:00_
 - Preserve timestamps, source hashes, clock corrections, algorithm/model versions, hardware/firmware versions, calibration IDs, partitions, security decisions, and quality decisions.
 - Calibration, development, validation, and challenge data remain isolated.
 - Missing required security evidence fails validation; missing activation evidence blocks activation.
-- Security exceptions require an owner, approver, compensating control, and expiration.
-- Every third-party GitHub Action must be pinned to a reviewed immutable commit SHA; floating tags are prohibited.
-- Synthetic or imported records never represent physical, clinical, or laboratory validation without a separate simultaneous reference and pairing decision.
-- Patient export and local evidence capture must not depend on continued cloud, clinic, or account availability.
+- Security exceptions require owner, approver, compensating control, and expiration.
+- Every third-party action is pinned to a reviewed immutable commit SHA; floating tags are prohibited.
+- Unsigned firmware, failed verification, rollback, replay, sequence gaps, unavailable sensors, and evidence loss cannot be silently accepted.
+- Synthetic, imported, or interface-only artifacts never represent physical, clinical, or laboratory validation.
+- Patient export and local evidence capture must not depend on cloud, clinic, or account availability.
 
 ## Authoritative specifications and controls
 
@@ -47,47 +47,46 @@ _Last updated: 2026-08-02T21:50:00-05:00_
 - `HARDWARE_BOM.md`
 - `PAP_EVIDENCE_MODULE.md`
 - `CBC_WORKSTATION.md`
-- `GLUCOSE_IMPORT.md` — governed meter/CGM import contract; commit `11ec5d4eea2b8df8dca1c23fba43ecd30fb88946`
+- `GLUCOSE_IMPORT.md`
 - `SECURITY_BASELINE.md`
 - `security/patient_owned_monitoring/security_profile.json`
 - `security/THREAT_MODEL.md`
 - `security/RISK_REGISTER.json`
-- `security/ACTION_PROVENANCE.json` — immutable action pins and reviewed provenance; commit `35217a47bec9431951af37a9583c1dc34e40fdfa`
+- `security/ACTION_PROVENANCE.json`
+- `hardware/patient_owned_monitoring/FIRMWARE_SECURITY_INTERFACE.md`
+- `hardware/patient_owned_monitoring/WIRING_INTERFACES.md`
+- `hardware/patient_owned_monitoring/POWER_THERMAL_ENCLOSURE.md`
+- `hardware/patient_owned_monitoring/BENCH_RECEIPT_TEMPLATE.json`
 
-The security baseline aligns engineering controls with HHS HIPAA Security Rule and risk-analysis concepts, NIST SP 800-53 Rev. 5, NIST CSF 2.0, and CISA Secure by Design. This does not claim certification, legal applicability, federal approval, authorization to operate, or FDA clearance.
+The security baseline aligns engineering controls with HHS HIPAA Security Rule and risk-analysis concepts, NIST SP 800-53 Rev. 5, NIST CSF 2.0, and CISA Secure by Design. This is not a claim of certification, legal applicability, authorization to operate, federal approval, or FDA clearance.
 
-## Implemented software
+## Implemented software and automation
 
-The canonical implementation includes reference pairing, schema validation, clock correction, signal quality, hemodynamic features, PAP reporting and correlation, simulated acquisition, ECG/PPG extraction, stream alignment, event detection and evaluation, fluid-sample manifests, strip reading, image calibration, reviewed hematocrit processing, synthetic end-to-end receipts, security-profile validation, risk/secret scanning, governed glucose import, and immutable CI action provenance.
+The canonical software includes reference pairing, schema validation, clock correction, signal quality, hemodynamic features, PAP reporting/correlation, simulated acquisition, ECG/PPG extraction, stream alignment, event detection/evaluation, fluid-sample manifests, strip reading, image calibration, reviewed hematocrit processing, glucose import, synthetic receipts, security-profile validation, risk/secret scanning, and immutable action provenance.
 
-### Glucose import
+The sole workflow is `.github/workflows/patient-owned-monitoring-validation.yml`. It compiles modules, validates security records, scans credential patterns, performs pull-request dependency review, runs deterministic tests, executes the synthetic pipeline, validates receipts, and uploads evidence. Its third-party actions are pinned to immutable commits recorded in `security/ACTION_PROVENANCE.json`.
 
-- Implementation: `tools/patient_owned_monitoring/glucose_import.py`
-- Commit: `2e50f2fcd0ce9c47adc0d63454073ba56392e54d`
-- Tests: `tests/patient_owned_monitoring/test_glucose_import.py`
-- Test commit: `a83b509e0e43288280d9b45a59be0fc93c3fc05f`
-- Contract: `docs/patient-owned-monitoring/GLUCOSE_IMPORT.md`
+Workflow success is not claimed until the run, jobs, logs, and artifact are directly inspected.
 
-The importer accepts CSV, JSON, JSONL, and NDJSON; requires timezone-aware timestamps; accepts `mg/dL` and `mmol/L`; preserves the original value/unit; normalizes to `mg/dL` using factor `18.0182`; records device/source metadata, source SHA-256, row index, importer version, output label, partition, and record SHA-256; rejects invalid values, units, timestamps, source types, and partitions; and preserves measured zero.
+## Hardware interface implementation
 
-## Tests and automation
+`POM-HW-IFACE-001` is `COMPLETE` as an interface and acceptance-contract task:
 
-The sole workflow is `.github/workflows/patient-owned-monitoring-validation.yml`. It compiles modules, validates the mandatory security profile and risk register, scans credential patterns, performs pull-request dependency review, runs all deterministic tests including glucose import, executes the synthetic pipeline, validates receipts, and uploads evidence for 90 days.
+- `FIRMWARE_SECURITY_INTERFACE.md`; commit `3ba219c6672b3e763cc3af4af2187e0b4596cb4e`
+- `WIRING_INTERFACES.md`; commit `a1ccf7ff3b65a28700e5bc8434e5bd85914cb4b3`
+- `POWER_THERMAL_ENCLOSURE.md`; commit `646e1c4f23f4405014c331d7c1c47d8597f88cb9`
+- `BENCH_RECEIPT_TEMPLATE.json`; commit `b0e5d5e2dcc7523015fd8818bebf9c5550a1ded4`
 
-All third-party actions are pinned to reviewed immutable commits:
+These contracts require signed firmware, verified boot, anti-rollback, non-exportable identity, key separation, authenticated encrypted evidence, explicit replay/sequence handling, governed debug authorization, brownout recovery, offline export, patient isolation, documented bus and fault behavior, measured runtime and temperature, enclosure evidence, and a hashed bench receipt.
 
-- `actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955` (`v4.3.0`)
-- `actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065` (`v5.6.0`)
-- `actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294` (`v5.0.0`)
-- `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02` (`v4.6.2`)
-
-Workflow pinning commit: `dbd906243501b8bce31289b3676a0d179327b0ac`. Future action updates require a new reviewed immutable SHA, provenance mutation, workflow mutation, and validation receipt. Workflow success is not claimed until the run, jobs, logs, and artifact are directly inspected.
+They do not prove a physical device, firmware implementation, electrical safety, thermal safety, or body-worn operation. Those remain blocked under `POM-HW-001`.
 
 ## Current task state
 
-- `POM-PIPE-001`: `COMPLETE`, pending CI execution evidence.
+- `POM-PIPE-001`: `COMPLETE`, pending CI evidence.
 - `POM-CI-001`: `CLAIMED`.
 - `POM-ACTION-PIN-001`: `COMPLETE`, pending hosted execution evidence.
+- `POM-HW-IFACE-001`: `COMPLETE`, physical implementation pending in hardware lane.
 - `POM-SEC-PROFILE-001`: `IMPLEMENTED_BUT_UNVALIDATED`.
 - `POM-SEC-RISK-001`: `IMPLEMENTED_BUT_UNVALIDATED`.
 - `POM-EVENT-EVAL-001`: `IMPLEMENTED_BUT_UNVALIDATED`.
@@ -95,16 +94,16 @@ Workflow pinning commit: `dbd906243501b8bce31289b3676a0d179327b0ac`. Future acti
 - `POM-CBC-IMG-001`: `IMPLEMENTED_BUT_UNVALIDATED`.
 - `POM-GLUCOSE-001`: `IMPLEMENTED_BUT_UNVALIDATED`.
 
-Exact evidence and release conditions are authoritative in `TASK_REGISTRY.json`, latest action-pinning state commit `21cb49c28fbec78949001c857a4c09dfbd14fdeb`.
+Exact evidence and release conditions are authoritative in `TASK_REGISTRY.json`, hardware-interface update commit `806540f132e2ab3cafdfc0ce583cb0e7928a84f0`.
 
 ## Exact next execution order
 
-1. Inspect the latest main workflow run, jobs, logs, security-profile receipt, security-gate receipt, action provenance, dependency-review result when applicable, pipeline receipt, and artifact. Commit reconciliation under `docs/patient-owned-monitoring/receipts/` and release or block `POM-SW-001` from evidence.
-2. Create hardware firmware interfaces, wiring maps, enclosure definitions, power/thermal budgets, and bench receipt templates, including signed firmware, verified boot, anti-rollback, hardware identity, debug control, encrypted storage, and offline recovery.
-3. Produce encryption/key-lifecycle, access/override, replay/sequence, restore/offline, incident-response, and independent-review receipts.
-4. Import governed real simultaneous glucose-meter/CGM records and commit their reference-pairing decisions without mixing calibration, development, validation, and challenge partitions.
-5. Commit governed real synchronized cuff, ECG, pulse-oximeter, PAP, hemoglobin, hematocrit, and CBC references without replacing synthetic fixtures.
-6. Run isolated calibration, development, validation, and challenge evaluations before any personal BP-change, collapse, or diagnostic activation.
+1. Inspect the latest main workflow run, jobs, logs, security receipts, action provenance, dependency-review result when applicable, pipeline receipt, and artifact. Commit reconciliation under `docs/patient-owned-monitoring/receipts/` and release, fail, or durably block `POM-SW-001`.
+2. In `hardware/patient_owned_monitoring/`, commit source schematic/netlist, connector pinout, firmware source/build manifest, signed-image metadata, enclosure CAD/drawings, measured power/thermal data, and a completed hashed bench receipt.
+3. Produce cryptography/key-lifecycle, access/override, replay/sequence, restore/offline, incident-response, and independent-review receipts.
+4. Import governed real simultaneous glucose records and commit pairing decisions without mixing dataset partitions.
+5. Commit synchronized cuff, ECG, pulse-oximeter, PAP, hemoglobin, hematocrit, and CBC references.
+6. Run isolated calibration, development, validation, and challenge evaluations before any personal model or diagnostic activation.
 
 ## Validation commands
 
@@ -125,13 +124,13 @@ No external repository currently owns this capability. No Site, Publisher, wiki,
 - Primary and adjacent goals: `9`.
 - Durably transferred or completed: `9`.
 - MERGED INTO: `StegVerse-Labs/StegVerse-SCW/docs/patient-owned-monitoring/PATIENT_OWNED_MONITORING_MIRROR_HANDOFF.md`.
-- No unique project or security requirement remains only in this conversation.
-- Physical, real-reference, and production-security work can continue from durable claims without retaining chat history.
+- No unique project, security, or hardware-interface requirement remains only in this conversation.
+- Physical, real-reference, and production-security work can continue from durable claims without chat history.
 - Archive remains blocked only by this session's distinct responsibility to reconcile `POM-SW-001` from directly inspected workflow evidence.
 
 ## Percentages and denominator
 
-Required deliverables: 44 — 11 specifications/security records, 21 software modules, and 12 tests/automation/coordination records. Developed: 44/44. Validation layers: 15 — static presence, profile consistency, risk-register consistency, secret scan, syntax, unit tests, deterministic pipeline, hosted workflow, logs, artifact, cryptography/key evidence, firmware/device evidence, recovery/incident evidence, real paired-device evidence, laboratory pairing. Verified: 1/15. Integration chains: 9; software-integrated: 8/9. Goal activation: 48% because immutable supply-chain provenance is installed while hosted, physical, security-assurance, and real-reference evidence remain incomplete.
+Required deliverables: 48 — 15 specifications/security/hardware records, 21 software modules, and 12 tests/automation/coordination records. Developed: 48/48. Validation layers: 16 — static presence, profile consistency, risk-register consistency, secret scan, syntax, unit tests, deterministic pipeline, hosted workflow, logs, artifact, cryptography/key evidence, firmware/device evidence, power/thermal/mechanical bench evidence, recovery/incident evidence, real paired-device evidence, laboratory pairing. Verified: 1/16. Integration chains: 10; contract/software-integrated: 9/10; physical/reference activation remains blocked. Goal activation: 50%.
 
 ## Archive condition
 
