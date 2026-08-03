@@ -5,7 +5,7 @@
   "repository": "StegVerse-Labs/StegVerse-SCW",
   "branch": "main",
   "canonical_handoff": "docs/patient-owned-monitoring/PATIENT_OWNED_MONITORING_MIRROR_HANDOFF.md",
-  "updated_at": "2026-08-02T17:47:00-05:00",
+  "updated_at": "2026-08-02T19:32:00-05:00",
   "claims": [
     {
       "task_id": "POM-SW-001",
@@ -108,10 +108,10 @@
     },
     {
       "task_id": "POM-GLUCOSE-001",
-      "state": "UNCLAIMED",
+      "state": "IMPLEMENTED_BUT_UNVALIDATED",
       "location": "tools/patient_owned_monitoring/glucose_import.py",
-      "evidence": [],
-      "next_action": "Implement timestamped meter and CGM import with provenance, units, and partition labels"
+      "evidence": ["commit:2e50f2fcd0ce9c47adc0d63454073ba56392e54d", "commit:a83b509e0e43288280d9b45a59be0fc93c3fc05f", "commit:11ec5d4eea2b8df8dca1c23fba43ecd30fb88946", "tests/patient_owned_monitoring/test_glucose_import.py", "docs/patient-owned-monitoring/GLUCOSE_IMPORT.md"],
+      "next_action": "Execute deterministic importer tests through CI and import governed simultaneous meter or CGM reference data without mixing partitions"
     }
   ],
   "session_consolidation": {
