@@ -1,0 +1,64 @@
+{
+  "schema_version": "pom.hardware-bench-receipt.v1",
+  "task_id": "POM-HW-001",
+  "device_id": null,
+  "hardware_revision": null,
+  "firmware_version": null,
+  "firmware_image_sha256": null,
+  "firmware_signer_key_id": null,
+  "security_version": null,
+  "test_started_at_utc": null,
+  "test_ended_at_utc": null,
+  "operator": null,
+  "reviewer": null,
+  "artifact_hashes": {
+    "schematic": null,
+    "netlist": null,
+    "wiring_export": null,
+    "enclosure_cad": null,
+    "bom": null
+  },
+  "electrical_checks": {
+    "continuity": "NOT_RUN",
+    "short_circuit": "NOT_RUN",
+    "rail_voltage": "NOT_RUN",
+    "sensor_enumeration": "NOT_RUN",
+    "patient_isolation": "NOT_RUN"
+  },
+  "security_checks": {
+    "signed_image_accepted": "NOT_RUN",
+    "modified_image_rejected": "NOT_RUN",
+    "unsigned_image_rejected": "NOT_RUN",
+    "rollback_rejected": "NOT_RUN",
+    "debug_denied_without_authorization": "NOT_RUN",
+    "storage_encrypted": "NOT_RUN",
+    "replay_detected": "NOT_RUN",
+    "sequence_gap_recorded": "NOT_RUN",
+    "offline_export_verified": "NOT_RUN"
+  },
+  "power_thermal_checks": {
+    "measured_runtime_hours": null,
+    "runtime_reserve_percent": null,
+    "maximum_contact_temperature_c": null,
+    "brownout_recovery": "NOT_RUN",
+    "charger_transition": "NOT_RUN",
+    "thermal_safe_state": "NOT_RUN"
+  },
+  "mechanical_checks": {
+    "drop": "NOT_RUN",
+    "strap_pull": "NOT_RUN",
+    "sweat_cleaning": "NOT_RUN",
+    "storage_access_separation": "NOT_RUN"
+  },
+  "simultaneous_reference_capture": {
+    "status": "NOT_RUN",
+    "dataset_path": null,
+    "dataset_sha256": null,
+    "reference_devices": []
+  },
+  "failures": [],
+  "exclusions": [],
+  "status": "BLOCKED_PENDING_BENCH_EVIDENCE",
+  "release_condition": "All required checks are executed, evidence artifacts are committed, failures are dispositioned, and independent review is recorded",
+  "receipt_sha256": null
+}
