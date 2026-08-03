@@ -5,7 +5,7 @@
   "repository": "StegVerse-Labs/StegVerse-SCW",
   "branch": "main",
   "canonical_handoff": "docs/patient-owned-monitoring/PATIENT_OWNED_MONITORING_MIRROR_HANDOFF.md",
-  "updated_at": "2026-08-02T19:32:00-05:00",
+  "updated_at": "2026-08-02T21:50:00-05:00",
   "claims": [
     {
       "task_id": "POM-SW-001",
@@ -14,21 +14,21 @@
       "claimant": "repository-native-ci",
       "role": "CLAIMED_FOR_VALIDATION",
       "claimed_at": "2026-08-02T16:28:00-05:00",
-      "release_condition": "Latest main-branch validation workflow passes and all security, pipeline, job-log, and artifact evidence is inspectable, or observed failure/blockage is durably recorded",
-      "expected_evidence": "GitHub Actions run, jobs, logs, security-profile receipt, security-gate receipt, pipeline receipt, dependency review result, and uploaded artifact",
-      "collision_boundary": "Do not create a second POM validation workflow, security profile, risk register, or parallel task registry",
+      "release_condition": "Latest main-branch validation workflow passes and all jobs, logs, security receipts, pipeline receipt, action provenance, and artifact evidence are inspectable, or observed failure/blockage is durably recorded",
+      "expected_evidence": "GitHub Actions run, jobs, logs, security-profile receipt, security-gate receipt, pipeline receipt, dependency review result when applicable, immutable-action provenance, and uploaded artifact",
+      "collision_boundary": "Do not create a second POM validation workflow, security profile, risk register, provenance registry, or parallel task registry",
       "next_task_after_release": "POM-SEC-ACT-001"
     },
     {
       "task_id": "POM-SEC-ACT-001",
       "originating_goal": "Exceed applicable federal security requirements",
-      "surfaces": ["docs/patient-owned-monitoring/SECURITY_BASELINE.md", "docs/patient-owned-monitoring/security/", "security/patient_owned_monitoring/", "docs/patient-owned-monitoring/security/receipts/"],
+      "surfaces": ["docs/patient-owned-monitoring/SECURITY_BASELINE.md", "docs/patient-owned-monitoring/security/", "security/patient_owned_monitoring/", "hardware/patient_owned_monitoring/"],
       "claimant": "security-assurance-lane",
       "role": "BLOCKED",
       "claimed_at": "2026-08-02T16:28:00-05:00",
-      "release_condition": "Threat and risk records, CI security gates, encryption/key tests, firmware integrity, access/override tests, recovery tests, incident exercise, and independent review evidence are committed and verified",
-      "expected_evidence": "All activation_evidence entries declared by security_profile.json plus closed critical risks",
-      "collision_boundary": "A passing profile schema, secret scan, dependency review, or CI run does not constitute production security activation",
+      "release_condition": "Threat/risk records, CI gates, encryption and key tests, firmware integrity, access and override tests, recovery tests, incident exercise, independent review, and every activation-evidence item are committed and verified",
+      "expected_evidence": "Closed critical risks and all activation_evidence entries declared by security_profile.json",
+      "collision_boundary": "A passing CI run, profile validator, secret scan, dependency review, or immutable action pin does not constitute production security activation",
       "next_task_after_release": "POM-ACTIVATE-001"
     },
     {
@@ -38,8 +38,8 @@
       "claimant": "hardware-bench-lane",
       "role": "BLOCKED",
       "claimed_at": "2026-08-02T16:28:00-05:00",
-      "release_condition": "Physical components are available and the first bench capture can be committed",
-      "expected_evidence": "Wiring files, firmware build, bench receipt, security controls, and simultaneous reference capture",
+      "release_condition": "Physical components are available and the first bench capture is committed",
+      "expected_evidence": "Firmware, wiring, enclosure, power/thermal budget, bench receipt, security controls, and simultaneous reference capture",
       "collision_boundary": "Software sessions may define interfaces but may not claim physical or firmware security validation",
       "next_task_after_release": "POM-VAL-REAL-001"
     },
@@ -50,74 +50,27 @@
       "claimant": "paired-reference-validation-lane",
       "role": "BLOCKED",
       "claimed_at": "2026-08-02T16:28:00-05:00",
-      "release_condition": "A hardware or fluid-test session produces synchronized raw and reference data",
+      "release_condition": "A hardware or fluid-test session produces synchronized raw and reliable reference data",
       "expected_evidence": "Immutable paired dataset, validation report, and acceptance decision",
       "collision_boundary": "Synthetic fixtures remain separate and may not be represented as physical validation",
       "next_task_after_release": "POM-ACTIVATE-001"
     }
   ],
   "tasks": [
-    {
-      "task_id": "POM-PIPE-001",
-      "state": "COMPLETE",
-      "location": "tools/patient_owned_monitoring/run_synthetic_pipeline.py",
-      "evidence": ["commit:63a22d723cdd4efe4a23229544a3607a71d781fd", "tests/patient_owned_monitoring/test_end_to_end_pipeline.py"],
-      "next_action": "Execute through repository-native CI"
-    },
-    {
-      "task_id": "POM-CI-001",
-      "state": "CLAIMED",
-      "location": ".github/workflows/patient-owned-monitoring-validation.yml",
-      "evidence": ["commit:4d588f747e8c1c30af44ff301c26bad4d23f6c1f"],
-      "next_action": "Inspect run, jobs, logs, security receipts, dependency review, pipeline receipt, and artifact"
-    },
-    {
-      "task_id": "POM-SEC-PROFILE-001",
-      "state": "IMPLEMENTED_BUT_UNVALIDATED",
-      "location": "security/patient_owned_monitoring/security_profile.json",
-      "evidence": ["commit:9e704d8e87bd445d758ffda78c41882a8918b58b", "commit:3e6e636ef90f0a8d4c97e1e803b9180612d719d2", "commit:25f0389cf8579663570571743e93ac3e18a45bf9", "commit:f200420fb2f7c7c4af1c62714ead4654865fb642"],
-      "next_action": "Execute profile validator and tests through CI; then produce operational activation evidence"
-    },
-    {
-      "task_id": "POM-SEC-RISK-001",
-      "state": "IMPLEMENTED_BUT_UNVALIDATED",
-      "location": "docs/patient-owned-monitoring/security/",
-      "evidence": ["commit:b7d86cc9c79eb4f8e9165b3dcd6ea7727a0c2ea6", "commit:c06985da69d82e10094bef68e17db00f6d37dcc3", "commit:db17e5af910fa470bb019c80460c8dd4fa4e0640", "commit:ca272f721184d92bc42f73b3e1d755600abe581c", "commit:06d9561a927cc460533b0a5959670978561a2964", "commit:4d588f747e8c1c30af44ff301c26bad4d23f6c1f"],
-      "next_action": "Execute risk validation, secret scanning, tests, and pull-request dependency review; inspect receipts"
-    },
-    {
-      "task_id": "POM-EVENT-EVAL-001",
-      "state": "IMPLEMENTED_BUT_UNVALIDATED",
-      "location": "tools/patient_owned_monitoring/evaluate_collapse_events.py",
-      "evidence": ["commit:d084ea539b6f80cb436e327a541fd97757aa6793", "commit:ee9bf5f47510d2756ce4a71f1465d140ddee90d2"],
-      "next_action": "Execute deterministic tests through CI"
-    },
-    {
-      "task_id": "POM-IMAGE-001",
-      "state": "IMPLEMENTED_BUT_UNVALIDATED",
-      "location": "tools/patient_owned_monitoring/image_calibration.py",
-      "evidence": ["commit:fb18f5da1fc7d7f8b932b299bea72ccc43027f0c", "commit:46c599bef1ac65d47a6ab40eafbbd912498c14f5"],
-      "next_action": "Execute deterministic tests through CI"
-    },
-    {
-      "task_id": "POM-CBC-IMG-001",
-      "state": "IMPLEMENTED_BUT_UNVALIDATED",
-      "location": "tools/patient_owned_monitoring/hematocrit_boundaries.py",
-      "evidence": ["commit:83cf15497c3c56a7ef3e66580eacd9ae3acea830", "commit:7e015cb493014aafdec979112559e573aa0eec9f"],
-      "next_action": "Execute deterministic tests through CI; reviewed coordinates remain authoritative"
-    },
-    {
-      "task_id": "POM-GLUCOSE-001",
-      "state": "IMPLEMENTED_BUT_UNVALIDATED",
-      "location": "tools/patient_owned_monitoring/glucose_import.py",
-      "evidence": ["commit:2e50f2fcd0ce9c47adc0d63454073ba56392e54d", "commit:a83b509e0e43288280d9b45a59be0fc93c3fc05f", "commit:11ec5d4eea2b8df8dca1c23fba43ecd30fb88946", "tests/patient_owned_monitoring/test_glucose_import.py", "docs/patient-owned-monitoring/GLUCOSE_IMPORT.md"],
-      "next_action": "Execute deterministic importer tests through CI and import governed simultaneous meter or CGM reference data without mixing partitions"
-    }
+    {"task_id":"POM-PIPE-001","state":"COMPLETE","location":"tools/patient_owned_monitoring/run_synthetic_pipeline.py","evidence":["commit:63a22d723cdd4efe4a23229544a3607a71d781fd"],"next_action":"Execute through repository-native CI"},
+    {"task_id":"POM-CI-001","state":"CLAIMED","location":".github/workflows/patient-owned-monitoring-validation.yml","evidence":["commit:4d588f747e8c1c30af44ff301c26bad4d23f6c1f","commit:dbd906243501b8bce31289b3676a0d179327b0ac"],"next_action":"Inspect run, jobs, logs, receipts, dependency review when applicable, and artifact"},
+    {"task_id":"POM-ACTION-PIN-001","state":"COMPLETE","location":"docs/patient-owned-monitoring/security/ACTION_PROVENANCE.json","evidence":["commit:dbd906243501b8bce31289b3676a0d179327b0ac","commit:35217a47bec9431951af37a9583c1dc34e40fdfa","actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955","actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065","actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294","actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"],"next_action":"Validate pinned actions in hosted CI; every future update requires reviewed immutable provenance"},
+    {"task_id":"POM-SEC-PROFILE-001","state":"IMPLEMENTED_BUT_UNVALIDATED","location":"security/patient_owned_monitoring/security_profile.json","evidence":["commit:9e704d8e87bd445d758ffda78c41882a8918b58b","commit:3e6e636ef90f0a8d4c97e1e803b9180612d719d2","commit:25f0389cf8579663570571743e93ac3e18a45bf9","commit:f200420fb2f7c7c4af1c62714ead4654865fb642"],"next_action":"Execute through CI and produce operational activation evidence"},
+    {"task_id":"POM-SEC-RISK-001","state":"IMPLEMENTED_BUT_UNVALIDATED","location":"docs/patient-owned-monitoring/security/","evidence":["commit:b7d86cc9c79eb4f8e9165b3dcd6ea7727a0c2ea6","commit:c06985da69d82e10094bef68e17db00f6d37dcc3","commit:ca272f721184d92bc42f73b3e1d755600abe581c","commit:06d9561a927cc460533b0a5959670978561a2964"],"next_action":"Execute risk validation, secret scan, and dependency review; inspect receipts"},
+    {"task_id":"POM-EVENT-EVAL-001","state":"IMPLEMENTED_BUT_UNVALIDATED","location":"tools/patient_owned_monitoring/evaluate_collapse_events.py","evidence":["commit:d084ea539b6f80cb436e327a541fd97757aa6793","commit:ee9bf5f47510d2756ce4a71f1465d140ddee90d2"],"next_action":"Execute deterministic tests through CI"},
+    {"task_id":"POM-IMAGE-001","state":"IMPLEMENTED_BUT_UNVALIDATED","location":"tools/patient_owned_monitoring/image_calibration.py","evidence":["commit:fb18f5da1fc7d7f8b932b299bea72ccc43027f0c","commit:46c599bef1ac65d47a6ab40eafbbd912498c14f5"],"next_action":"Execute deterministic tests through CI"},
+    {"task_id":"POM-CBC-IMG-001","state":"IMPLEMENTED_BUT_UNVALIDATED","location":"tools/patient_owned_monitoring/hematocrit_boundaries.py","evidence":["commit:83cf15497c3c56a7ef3e66580eacd9ae3acea830","commit:7e015cb493014aafdec979112559e573aa0eec9f"],"next_action":"Execute tests through CI; reviewed coordinates remain authoritative"},
+    {"task_id":"POM-GLUCOSE-001","state":"IMPLEMENTED_BUT_UNVALIDATED","location":"tools/patient_owned_monitoring/glucose_import.py","evidence":["commit:2e50f2fcd0ce9c47adc0d63454073ba56392e54d","commit:a83b509e0e43288280d9b45a59be0fc93c3fc05f","commit:11ec5d4eea2b8df8dca1c23fba43ecd30fb88946"],"next_action":"Execute importer tests through CI and import governed simultaneous meter or CGM reference data"}
   ],
   "session_consolidation": {
     "originating_session_goals": 9,
     "durably_transferred": 9,
     "canonical_location": "StegVerse-Labs/StegVerse-SCW/docs/patient-owned-monitoring/",
-    "archive_condition": "CI evidence is inspected and POM-SW-001 is released or blocked durably; hardware, real-reference, and production-security activation remain assigned to durable lanes"
+    "archive_condition": "CI evidence is inspected and POM-SW-001 is released, failed, or blocked durably; hardware, real-reference, and production-security activation remain assigned to durable lanes"
   }
 }
