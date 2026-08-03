@@ -1,0 +1,25 @@
+{
+  "schema_version": "pom.ci-reconciliation-receipt.v1",
+  "task_id": "POM-SW-001",
+  "repository": "StegVerse-Labs/StegVerse-SCW",
+  "branch": "main",
+  "observed_at": "2026-08-02T22:26:00-05:00",
+  "observed_commit": "55c40907fa2214cb9d376a15ba2c2bf81f83b275",
+  "workflow": ".github/workflows/patient-owned-monitoring-validation.yml",
+  "observation": {
+    "combined_status_count": 0,
+    "commit_workflow_run_count": 0,
+    "job_logs_inspected": false,
+    "artifacts_inspected": false,
+    "workflow_success_claimed": false,
+    "workflow_failure_claimed": false
+  },
+  "state": "BLOCKED",
+  "blocker": "No workflow run or status was observable for the inspected commit through the available GitHub status and commit-run surfaces; therefore jobs, logs, receipts, and artifacts could not be inspected.",
+  "owner": "repository-native-ci",
+  "release_condition": "A workflow run for main becomes observable with a run_id, after which jobs, logs, security-profile receipt, security-gate receipt, pipeline receipt, action provenance, dependency-review result when applicable, and artifact are inspected and a successor reconciliation receipt is committed.",
+  "next_action": "Repository-native CI executes the existing workflow on a qualifying push, pull request, or workflow_dispatch; the next validation lane records the resulting run evidence.",
+  "collision_boundary": "Do not create a second validation workflow or claim pass/fail without run, job, log, and artifact evidence.",
+  "session_dependency": false,
+  "archive_effect": "This receipt durably preserves the unresolved validation state and removes the need to retain chat history solely for CI observation."
+}
