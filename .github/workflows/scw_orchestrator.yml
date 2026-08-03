@@ -48,6 +48,10 @@ jobs:
         run: |
           pytest -q tests/stability_gate
 
+      - name: Validate Stability Gate continuation registry
+        run: |
+          python scripts/stability_gate_task_controller.py
+
       - name: Generate representative Stability Gate evidence
         run: |
           python scripts/stability_gate_fixture_run.py
