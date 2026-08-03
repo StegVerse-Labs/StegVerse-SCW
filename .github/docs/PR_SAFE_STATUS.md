@@ -85,6 +85,7 @@
 | `patch_artifacts_index.yml` | parse-failed |
 | `patch_convert_to_uploader.yml` | parse-failed |
 | `patch_triggers.yml` | not-inserted |
+| `patient-owned-monitoring-validation.yml` | not-inserted |
 | `ping.yml` | not-inserted |
 | `propagate-commit-template-v1_1.yml` | not-inserted |
 | `propagate-commit-template.yml` | parse-failed |
@@ -144,6 +145,7 @@
 | `verify_ui.yml` | not-inserted |
 | `weekly_drift_report.yml` | not-inserted |
 | `workflow-dispatch-guardian.yml` | not-inserted |
+| `workflow-recovery-controller.yml` | not-inserted |
 | `workflow-status-badges.yml` | parse-failed |
 | `workflow-status-check.yml` | parse-failed |
 | `workflow_preflight.yml` | not-inserted |
