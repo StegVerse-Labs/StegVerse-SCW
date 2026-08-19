@@ -1,89 +1,19 @@
-name: StegVerse PAT Auditor
+name: StegVerse PAT Auditor [RETIRED — TV/TVC AUTHORITY REQUIRED]
 
 on:
-  workflow_dispatch:
-    inputs:
-      org_primary:
-        description: "Primary org to test (default StegVerse)"
-        required: false
-        default: "StegVerse"
-      org_secondary:
-        description: "Secondary org to test (default StegVerse-Labs)"
-        required: false
-        default: "StegVerse-Labs"
-      strict:
-        description: "Fail job if any PAT fails audit"
-        required: false
-        default: "false"
+  workflow_dispatch: {}
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  pat_audit:
+  retired:
     runs-on: ubuntu-latest
-
-    env:
-      # --- Provide PATs here via secrets ---
-      # Each PAT uses two env vars:
-      #   <NAME>_NAME: label string
-      #   <NAME>_PAT:  the actual token (secret)
-
-      GH_STEGVERSE_PAT_FG_NAME: "GH_STEGVERSE_PAT_FG"
-      GH_STEGVERSE_PAT_FG_PAT: ${{ secrets.GH_STEGVERSE_PAT_FG_PAT }}
-
-      PAT_WORKFLOW_FG_NAME: "PAT_WORKFLOW_FG"
-      PAT_WORKFLOW_FG_PAT: ${{ secrets.PAT_WORKFLOW_FG_PAT }}
-
-      PAT_WORKFLOW_CLASSIC_NAME: "PAT_WORKFLOW_CLASSIC"
-      PAT_WORKFLOW_CLASSIC_PAT: ${{ secrets.PAT_WORKFLOW_CLASSIC_PAT }}
-
-      # Optional additional PATs? just add more pairs:
-      # SOME_PAT_NAME: "SOME_PAT"
-      # SOME_PAT_PAT: ${{ secrets.SOME_PAT_PAT }}
-
     steps:
-      - name: Check out StegVerse-SCW
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install deps
+      - name: Block direct PAT credential inspection
+        shell: bash
         run: |
           set -euo pipefail
-          python -m pip install --upgrade pip
-          pip install requests pyyaml
-
-      - name: Run PAT auditor
-        env:
-          ORG_PRIMARY: ${{ github.event.inputs.org_primary }}
-          ORG_SECONDARY: ${{ github.event.inputs.org_secondary }}
-          STRICT: ${{ github.event.inputs.strict }}
-        run: |
-          set -euo pipefail
-          echo "=== StegVerse PAT Auditor ==="
-          python scripts/genesis/pat_auditor.py \
-            --org-primary "${ORG_PRIMARY:-StegVerse}" \
-            --org-secondary "${ORG_SECONDARY:-StegVerse-Labs}" \
-            --strict "${STRICT:-false}"
-
-      - name: Commit audit report (if changed)
-        run: |
-          set -euo pipefail
-
-          git config user.name  "StegVerse Autopatch Bot"
-          git config user.email "autopatch-bot@users.noreply.github.com"
-
-          if [ -n "$(git status --porcelain 'reports/pat_audit' 2>/dev/null || echo '')" ]; then
-            echo "Detected PAT audit report changes; committing..."
-            git add reports/pat_audit
-            git commit -m "PAT audit report (automated)"
-            git push origin "${GITHUB_REF_NAME:-main}"
-          else
-            echo "No PAT audit report changes to commit."
-          fi
+          echo "::error::Legacy PAT auditor is retired because it directly consumed non-TV/TVC PAT credentials inside GitHub Actions and persisted reports from that execution."
+          echo "Credential validation must occur inside TV/TVC authority and export only secret-free evidence. See SCW issue #22."
+          exit 1
