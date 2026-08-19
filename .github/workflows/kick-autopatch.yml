@@ -1,29 +1,19 @@
-name: Kick StegVerse Autopatch
+name: Kick StegVerse Autopatch [CONTAINED]
 
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
-  kick:
+  contained:
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve token
-        id: token
-        run: |
-          if [ -n "${{ secrets.GH_STEGVERSE_PAT }}" ]; then
-            echo "token=${{ secrets.GH_STEGVERSE_PAT }}" >> $GITHUB_OUTPUT
-          else
-            echo "ERROR: Missing GH_STEGVERSE_PAT secret"
-            exit 1
-          fi
-
-      - name: Dispatch target workflow
+      - name: Block retired credential dispatcher
+        shell: bash
         run: |
           set -euo pipefail
-          echo "Dispatching auto_patch.yml on StegVerse-Labs/StegVerse-SCW@main"
-
-          curl -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token ${{ steps.token.outputs.token }}" \
-            https://api.github.com/repos/StegVerse-Labs/StegVerse-SCW/actions/workflows/auto_patch.yml/dispatches \
-            -d '{"ref":"main"}'
+          echo "::error::This dispatcher is contained because the prior path copied a generic PAT into GitHub step outputs and dispatched a now-retired autopatch workflow."
+          echo "Use bounded TV/TVC execution only. See SCW issues #22 and #23."
+          exit 1
