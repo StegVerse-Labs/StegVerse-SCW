@@ -1,101 +1,19 @@
-name: StegVerse Guardian – Workflows Health & Hygiene
+name: StegVerse Guardian – Workflows Health & Hygiene [CONTAINED]
 
 on:
-  # Manual trigger so you can run it whenever you want
   workflow_dispatch: {}
-  # Optional: enable scheduled runs once guardians are stable
-  # schedule:
-  #   - cron: "20 8 * * *"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  guardian_workflows:
+  contained:
     runs-on: ubuntu-latest
-
-    env:
-      # Prefer fine-grained PAT, then classic, then backup
-      PAT_WORKFLOW_FG: ${{ secrets.PAT_WORKFLOW_FG }}
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
-      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
-
     steps:
-      - name: Check out StegVerse-SCW
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Resolve token & configure git
+      - name: Block PAT-backed workflow mutation
+        shell: bash
         run: |
           set -euo pipefail
-
-          TOKEN="${PAT_WORKFLOW_FG:-${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}}"
-
-          if [ -z "${TOKEN}" ]; then
-            echo "ERROR: No PAT available (PAT_WORKFLOW_FG / PAT_WORKFLOW / GH_STEGVERSE_PAT are all empty)."
-            exit 1
-          fi
-
-          echo "::add-mask::${TOKEN}"
-
-          # Force ALL GitHub URLs to use the PAT instead of the GitHub Actions app token.
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "git@github.com:"
-
-          git config --global user.name  "StegVerse Guardian Worker"
-          git config --global user.email "guardian-worker@stegverse.local"
-
-          {
-            echo "GH_TOKEN=${TOKEN}"
-            echo "GITHUB_TOKEN=${TOKEN}"
-            echo "STEG_TOKEN=${TOKEN}"
-          } >> "$GITHUB_ENV"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install guardian dependencies
-        run: |
-          set -euo pipefail
-          python -m pip install --upgrade pip
-          pip install pyyaml tabulate
-
-      - name: Run Workflow Health Guardian (ASL-1, reports only)
-        run: |
-          set -euo pipefail
-          echo "=== StegVerse Guardian Worker: Workflow Health ==="
-          python scripts/genesis/guardian_worker_workflows_health.py
-
-      - name: Run Workflow Hygiene Guardian (ASL-2, auto-fix)
-        run: |
-          set -euo pipefail
-          echo "=== StegVerse Guardian Worker: Workflow Hygiene ==="
-          python scripts/genesis/guardian_worker_workflows_hygiene.py
-
-      - name: Show workflow diffs (if any)
-        run: |
-          set -euo pipefail
-          echo "=== git diff for .github/workflows ==="
-          git diff -- .github/workflows || true
-
-      - name: Commit guardian changes (workflows + reports)
-        run: |
-          set -euo pipefail
-
-          git config user.name  "StegVerse Guardian Worker"
-          git config user.email "guardian-worker@stegverse.local"
-
-          # Only look at workflow files + guardian reports
-          CHANGES="$(git status --porcelain '.github/workflows' 'scripts/reports/guardians' 2>/dev/null || true)"
-
-          if [ -n "${CHANGES}" ]; then
-            echo "Detected guardian changes; committing..."
-            git add .github/workflows scripts/reports/guardians
-            git commit -m "Guardian Worker: workflows health & hygiene"
-            git push origin "${GITHUB_REF_NAME:-main}"
-          else
-            echo "No guardian workflow/report changes to commit."
-          fi
+          echo "::error::Guardian workflow auto-fix is contained because PAT fallback/global credential rewriting and direct workflow pushes are outside admitted TV/TVC repair authority."
+          echo "Retain analysis as evidence-only; mutate only under a bounded TV/TVC repair decision. See SCW issue #22."
+          exit 1
