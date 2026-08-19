@@ -1,95 +1,25 @@
-name: StegTV Connectivity Autopatch
+name: StegTV Connectivity Autopatch [CONTAINED — TV/TVC AUTHORITY REQUIRED]
 
 on:
   workflow_dispatch:
-    inputs:
-      task:
-        description: "Optional label for this connectivity run"
-        required: false
-        default: "manual"
   schedule:
     - cron: "45 8 * * *"
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
 
 concurrency:
   group: stegtvc-connectivity-autopatch
   cancel-in-progress: false
 
 jobs:
-  stegtvc-connectivity:
+  contained:
     runs-on: ubuntu-latest
-
-    env:
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
-      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
-      CONNECTIVITY_TASK: ${{ github.event.inputs.task || 'scheduled' }}
-
     steps:
-      - name: Check out StegVerse-SCW
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Resolve token & configure git
+      - name: Block unresolved credential and mutation boundary
+        shell: bash
         run: |
           set -euo pipefail
-
-          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
-
-          if [ -z "${TOKEN}" ]; then
-            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
-            exit 1
-          fi
-
-          echo "::add-mask::${TOKEN}"
-          {
-            echo "GITHUB_TOKEN=${TOKEN}"
-            echo "GH_TOKEN=${TOKEN}"
-            echo "STEG_TOKEN=${TOKEN}"
-          } >> "$GITHUB_ENV"
-
-          git config --global user.name "StegVerse Autopatch Bot"
-          git config --global user.email "autopatch-bot@users.noreply.github.com"
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install connectivity deps
-        run: |
-          set -euo pipefail
-          pip install pyyaml
-
-      - name: Run StegTVC connectivity autopatch
-        run: |
-          set -euo pipefail
-          echo "=== StegTVC Connectivity Autopatch ==="
-          python scripts/stegtvc_connectivity_autopatch.py \
-            --manifest scripts/stegtvc_connectivity_manifest.json \
-            --task "${CONNECTIVITY_TASK:-scheduled}"
-
-      - name: Commit connectivity report
-        run: |
-          set -euo pipefail
-
-          REPORT="reports/stegtvc_connectivity_autopatch_report.md"
-          BRANCH="${GITHUB_REF_NAME:-main}"
-
-          git config user.name "StegVerse Autopatch Bot"
-          git config user.email "autopatch-bot@users.noreply.github.com"
-
-          if [ -z "$(git status --porcelain -- "$REPORT")" ]; then
-            echo "No connectivity report changes to commit."
-            exit 0
-          fi
-
-          git add "$REPORT"
-          git commit -m "Autopatch report: StegTV connectivity sync"
-          git fetch origin "$BRANCH"
-          git rebase "origin/$BRANCH"
-          git push origin "HEAD:$BRANCH"
+          echo "::error::StegTVC connectivity autopatch is contained while its cross-repository credential boundary remains unresolved."
+          echo "The replacement must obtain read/mutation authority through TV/TVC, preflight target scope, preserve exact actor/token provenance, and fail closed before any unauthorized mutation attempt."
+          exit 1
