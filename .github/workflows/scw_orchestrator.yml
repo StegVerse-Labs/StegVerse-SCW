@@ -1,79 +1,19 @@
-name: StegVerse SCW Orchestrator
+name: StegVerse SCW Orchestrator [CONTAINED — TV/TVC AUTHORITY REQUIRED]
 
 on:
-  workflow_dispatch:
-    inputs:
-      command:
-        description: "SCW command, e.g. self-test, autopatch, sync-templates, standardize-readme"
-        required: true
-        default: "self-test"
-      target_repo:
-        description: "Optional full repo name (e.g. StegVerse-Labs/TVC)"
-        required: false
-      args_json:
-        description: "Optional JSON args for the command"
-        required: false
-  repository_dispatch:
-    types: [scw-command]
+  workflow_dispatch: {}
 
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
-  actions: read
+  contents: read
 
 jobs:
-  scw:
+  contained:
     runs-on: ubuntu-latest
-
-    env:
-      GH_TOKEN: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
-      ORG_GITHUB: StegVerse-Labs
-
     steps:
-      - name: Checkout SCW
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install deps
+      - name: Block legacy SCW mutation/control authority
+        shell: bash
         run: |
-          python -m pip install --upgrade pip
-          pip install requests pytest
-
-      - name: Verify Stability Gate
-        run: |
-          pytest -q tests/stability_gate
-
-      - name: Validate Stability Gate continuation registry
-        run: |
-          python scripts/stability_gate_task_controller.py
-
-      - name: Generate representative Stability Gate evidence
-        run: |
-          python scripts/stability_gate_fixture_run.py
-
-      - name: Run SCW core
-        env:
-          SCW_EVENT_NAME: ${{ github.event_name }}
-          SCW_INPUT_COMMAND: ${{ github.event.inputs.command }}
-          SCW_INPUT_TARGET_REPO: ${{ github.event.inputs.target_repo }}
-          SCW_INPUT_ARGS_JSON: ${{ github.event.inputs.args_json }}
-          SCW_DISPATCH_PAYLOAD: ${{ toJson(github.event.client_payload) }}
-          SCW_REPO: ${{ github.repository }}
-        run: |
-          python scw/scw_core.py
-
-      - name: Upload Stability Gate evidence
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: stability-gate-evidence-${{ github.run_id }}
-          path: |
-            artifacts/receipts/stability_gate/
-            artifacts/reports/stability_gate/
-          if-no-files-found: ignore
-          retention-days: 30
+          set -euo pipefail
+          echo "::error::SCW orchestrator is contained because the prior workflow combined generic non-TV/TVC credential access with contents/PR/issues write authority and repository-dispatch command execution."
+          echo "Reactivation requires bounded TV/TVC route and mutation authority with exact target/ref provenance; GitHub Actions remains validation/transport only. See SCW issue #22."
+          exit 1
