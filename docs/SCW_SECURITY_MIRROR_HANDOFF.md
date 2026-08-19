@@ -2,10 +2,11 @@
 
 Status: ACTIVE — CREDENTIAL AUTHORITY MIGRATION / HISTORICAL PROVENANCE AUDIT
 
-Established: 2026-08-19
-Canonical repository: `StegVerse-Labs/StegVerse-SCW`
-Parent operational handoff: `SCW_MIRROR_HANDOFF.md`
-Canonical task: issue `#22`
+Established: 2026-08-19  
+Last reconciled: 2026-08-19  
+Canonical repository: `StegVerse-Labs/StegVerse-SCW`  
+Parent operational handoff: `SCW_MIRROR_HANDOFF.md`  
+Canonical task: issue `#22`  
 Audit evidence: `StegVerse-Labs/footprint-auditor/evidence/findings/2026-08-19-pat-backed-autopatch-authority-containment.json`
 
 ## Governing boundary
@@ -18,7 +19,9 @@ Audit evidence: `StegVerse-Labs/footprint-auditor/evidence/findings/2026-08-19-p
 
 ## Containment completed
 
-The following legacy workflows were changed in place to read-only, manual, fail-closed placeholders. Scheduled execution and direct mutation behavior were removed where present:
+Twenty-two legacy `StegVerse-Labs/StegVerse-SCW` workflow paths plus the related `StegVerse-Labs/hybrid-collab-bridge` autopatch path are now contained/retired in place (23 total paths in the audit finding). Scheduled execution and direct mutation behavior were removed where present.
+
+Contained/retired StegVerse-SCW paths:
 
 - `.github/workflows/autopatch.yml`
 - `.github/workflows/auto_patch.yml`
@@ -38,18 +41,25 @@ The following legacy workflows were changed in place to read-only, manual, fail-
 - `.github/workflows/pat_auditor.yml`
 - `.github/workflows/pat_secrets_guardian.yml`
 - `.github/workflows/multi-autopatch.yml`
+- `.github/workflows/export-hcb.yml`
+- `.github/workflows/propagate-commit-template.yml`
+- `.github/workflows/propagate-readme-badges.yml`
+- `.github/workflows/propagate-commit-template-v1_1.yml`
+
+Related contained path:
+
+- `StegVerse-Labs/hybrid-collab-bridge/.github/workflows/autopatch.yml`
 
 These paths previously included one or more of:
 
-- PAT-family credential interpolation;
-- PAT fallback between multiple secret names;
+- PAT/bot credential interpolation or fallback;
 - derived `GITHUB_TOKEN`, `GH_TOKEN`, or `STEG_TOKEN` values;
-- global `x-access-token` Git URL rewriting;
-- `contents`, `actions`, `workflows`, or `issues` write authority;
+- bearer `x-access-token` Git URLs;
+- `contents`, `actions`, `workflows`, `pull-requests`, `issues`, or OIDC write authority;
 - scheduled mutation;
-- cross-repository source access/synchronization;
-- direct `git push`;
-- workflow self-modification;
+- arbitrary/cross-repository source access, repository creation, synchronization, branch mutation, tagging, or release attempts;
+- direct `git push` or PR creation;
+- workflow self-modification or propagation of hosted write-authority workflows;
 - generated entity/memory/documentation/ledger state committed from GitHub-hosted execution.
 
 Containment is not historical remediation and does not erase prior executions.
@@ -70,7 +80,7 @@ Current activation state: NOT ACTIVATED. Source implementation exists, but actua
 
 ### Mutation / repair / publication
 
-No generic replacement mutation authority is inferred from the private-source-read capability. Any replacement for auto-fix, workflow mutation, report publication, entity state, README generation, revenue ledger writes, or cross-repository sync requires a separately admitted mutation capability binding:
+No generic replacement mutation authority is inferred from the private-source-read capability. Any replacement for auto-fix, workflow mutation, report publication, entity state, README generation, revenue ledger writes, cross-repository sync, HCB export, template propagation, repository creation, tagging, or release requires a separately admitted mutation capability binding:
 
 - exact caller;
 - exact source state;
