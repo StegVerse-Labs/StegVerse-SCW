@@ -1,74 +1,19 @@
-name: StegVerse Guardian Worker – Repo Alignment Check
+name: StegVerse Guardian Worker – Repo Alignment Check [CONTAINED]
 
 on:
   workflow_dispatch: {}
-  schedule:
-    - cron: "25 8 * * *"   # daily, safe read-only check
 
 permissions:
-  contents: write
-  issues: write
+  contents: read
 
 jobs:
-  alignment_check:
+  contained:
     runs-on: ubuntu-latest
-
-    env:
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
-      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
-
     steps:
-      - name: Check out StegVerse-SCW
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Resolve token & configure git
+      - name: Block unresolved private-source authority
+        shell: bash
         run: |
           set -euo pipefail
-          TOKEN="${PAT_WORKFLOW:-${GH_STEGVERSE_PAT:-}}"
-          if [ -z "$TOKEN" ]; then
-            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
-            exit 1
-          fi
-
-          echo "::add-mask::${TOKEN}"
-          {
-            echo "GITHUB_TOKEN=${TOKEN}"
-            echo "GH_TOKEN=${TOKEN}"
-            echo "STEG_TOKEN=${TOKEN}"
-          } >> "$GITHUB_ENV"
-
-          git config --global user.name  "StegVerse Guardian (Alignment Check)"
-          git config --global user.email "guardian-alignment@stegverse.local"
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install deps
-        run: |
-          set -euo pipefail
-          python -m pip install --upgrade pip
-          pip install PyYAML requests
-
-      - name: Run Repo Alignment Check (ASL-1)
-        run: |
-          set -euo pipefail
-          echo "=== Repo Alignment Check (ASL-1) ==="
-          python scripts/genesis/guardian_repo_alignment_check.py
-
-      - name: Commit alignment reports (if changed)
-        run: |
-          set -euo pipefail
-          if [ -n "$(git status --porcelain reports/guardians 2>/dev/null || true)" ]; then
-            git add reports/guardians/repo_alignment_latest.json reports/guardians/repo_alignment_latest.md
-            git commit -m "Guardian: update repo alignment report"
-            git fetch origin "${GITHUB_REF_NAME:-main}"
-            git rebase "origin/${GITHUB_REF_NAME:-main}"
-            git push origin "${GITHUB_REF_NAME:-main}"
-          else
-            echo "No alignment report changes to commit."
-          fi
+          echo "::error::Alignment check publication is contained because the prior workflow used PAT fallbacks, global GitHub credential rewriting, and direct report pushes."
+          echo "Use TVC private-source-read authority for private repository materialization and a separately admitted mutation path for durable publication. See SCW issue #22."
+          exit 1
