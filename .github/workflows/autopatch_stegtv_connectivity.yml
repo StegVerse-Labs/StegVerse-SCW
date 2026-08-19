@@ -1,158 +1,20 @@
-name: StegTV Connectivity Autopatch
+name: StegTV Connectivity Autopatch [CONTAINED — TV/TVC AUTHORITY REQUIRED]
 
 on:
   workflow_dispatch: {}
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  autopatch:
+  contained:
     runs-on: ubuntu-latest
-
-    env:
-      # Uses the PAT you just created & stored as a secret
-      GH_TOKEN: ${{ secrets.GH_STEGVERSE_PAT }}
-
     steps:
-      - name: Checkout StegVerse-SCW
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install GitHub CLI
-        run: |
-          if ! command -v gh >/dev/null 2>&1; then
-            echo "GitHub CLI not found, installing..."
-            type -p apt-get && sudo apt-get update && sudo apt-get install -y gh || true
-          fi
-
-      - name: Run autopatch across StegVerse repos
+      - name: Block legacy cross-repository mutation path
+        shell: bash
         run: |
           set -euo pipefail
-
-          echo "=== StegTV Connectivity Autopatch START ==="
-          echo "GH_TOKEN present? -> ${GH_TOKEN:+yes}"
-          echo
-
-          # ----------------------------------------------------------------
-          # 0. Setup
-          # ----------------------------------------------------------------
-          REPOS=(
-            "StegVerse-Labs/TVC"
-            "StegVerse-Labs/hybrid-collab-bridge"
-            "StegVerse-Labs/TV"
-            "StegVerse-Labs/StegVerse-SCW"
-          )
-
-          mkdir -p work
-          mkdir -p reports
-
-          REPORT="reports/stegtv_autopatch_report.md"
-
-          echo "# StegTV Connectivity Autopatch Report" > "$REPORT"
-          echo "" >> "$REPORT"
-          echo "- Run: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "$REPORT"
-          echo "" >> "$REPORT"
-
-          echo "Cloning TVC (source of truth)..."
-          if ! gh repo clone StegVerse-Labs/TVC work/TVC -- --depth 1; then
-            echo "❌ Failed to clone StegVerse-Labs/TVC – aborting."
-            exit 1
-          fi
-          echo "✅ TVC cloned."
-          echo
-
-          SRC_TVC="work/TVC"
-
-          echo "Sanity check: source files from TVC"
-          ls -l "$SRC_TVC/data" || true
-          ls -l "$SRC_TVC/app" || true
-
-          test -f "$SRC_TVC/data/tv_config.json"
-          test -f "$SRC_TVC/app/resolver.py"
-          test -f "$SRC_TVC/app/stegtvc_client.py" || true
-
-          # ----------------------------------------------------------------
-          # 1. Loop over target repositories
-          # ----------------------------------------------------------------
-          for REPO in "${REPOS[@]}"; do
-            SAFE_NAME=$(echo "$REPO" | tr '/.' '__')
-
-            echo
-            echo "======================================="
-            echo " Processing repo: $REPO"
-            echo " Local dir      : work/$SAFE_NAME"
-            echo "======================================="
-
-            echo "## $REPO" >> "$REPORT"
-
-            echo "Cloning $REPO..."
-            if ! gh repo clone "$REPO" "work/$SAFE_NAME" -- --depth 1; then
-              echo "❌ Clone failed for $REPO"
-              echo "- ❌ Clone failed" >> "$REPORT"
-              echo "" >> "$REPORT"
-              continue
-            fi
-            echo "✅ Clone OK for $REPO"
-
-            cd "work/$SAFE_NAME"
-
-            echo "Ensuring .github, app, data directories exist..."
-            mkdir -p .github app data
-
-            echo "Copying connectivity files from TVC into $REPO..."
-            cp "$SRC_TVC/data/tv_config.json" data/tv_config.json
-            cp "$SRC_TVC/app/resolver.py" app/resolver.py
-
-            # Prefer stegtvc_client.py if it exists in TVC, otherwise skip
-            if [ -f "$SRC_TVC/app/stegtvc_client.py" ]; then
-              echo "Copying stegtvc_client.py into .github/"
-              cp "$SRC_TVC/app/stegtvc_client.py" .github/stegtvc_client.py
-            else
-              echo "No stegtvc_client.py found in TVC; skipping."
-            fi
-
-            echo "Checking for changes in $REPO..."
-            if [ -n "$(git status --porcelain)" ]; then
-              echo "Changes detected; committing and pushing..."
-              git config user.name "StegVerse-Autopatch"
-              git config user.email "autopatch@stegverse.local"
-              git add .github app data
-              git commit -m "Autopatch: sync StegTVC connectivity files"
-              git push origin HEAD
-              RESULT="✅ Updated & pushed."
-              echo "✅ Push succeeded for $REPO"
-            else
-              RESULT="ℹ️ No changes; already up to date."
-              echo "ℹ️ No changes to commit for $REPO"
-            fi
-
-            cd ../../
-
-            echo "- $RESULT" >> "$REPORT"
-            echo "" >> "$REPORT"
-          done
-
-          # ----------------------------------------------------------------
-          # 2. Commit report back into StegVerse-SCW
-          # ----------------------------------------------------------------
-          cd "$GITHUB_WORKSPACE"
-
-          git config user.name "StegVerse-Autopatch"
-          git config user.email "autopatch@stegverse.local"
-
-          echo
-          echo "Checking if report changed..."
-          if [ -n "$(git status --porcelain reports/stegtv_autopatch_report.md 2>/dev/null || echo '')" ]; then
-            echo "Committing updated report..."
-            git add reports/stegtv_autopatch_report.md
-            git commit -m "Autopatch report: StegTV connectivity"
-            git push origin "${GITHUB_REF_NAME:-main}"
-            echo "✅ Report committed to StegVerse-SCW."
-          else
-            echo "No report changes to commit."
-          fi
-
-          echo
-          echo "=== StegTV Connectivity Autopatch COMPLETE ==="
+          echo "::error::This legacy workflow is contained because it used a generic PAT for cross-repository cloning, direct commits, and pushes under GitHub-hosted authority."
+          echo "TVC source reads and any downstream mutations must use separately admitted, bounded TV/TVC capabilities with target/ref evidence."
+          echo "See SCW issue #22."
+          exit 1
