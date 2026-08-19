@@ -1,96 +1,25 @@
-name: StegVerse Multi-Repo Autopatch
+name: StegVerse Multi-Repo Autopatch [CONTAINED — TV/TVC AUTHORITY REQUIRED]
 
 on:
   workflow_dispatch:
-    inputs:
-      task:
-        description: "Optional label for this autopatch run (e.g. workflows-sync, tv-sync)"
-        required: false
-        default: "manual"
   schedule:
     - cron: "30 8 * * *"
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
 
 concurrency:
   group: stegverse-multi-autopatch-main
   cancel-in-progress: false
 
 jobs:
-  multi-autopatch:
+  contained:
     runs-on: ubuntu-latest
-
-    env:
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
-      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
-      AUTOPATCH_TASK: ${{ github.event.inputs.task || 'scheduled' }}
-
     steps:
-      - name: Check out StegVerse-SCW
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Resolve token & configure git
+      - name: Block legacy cross-repository mutation authority
+        shell: bash
         run: |
           set -euo pipefail
-
-          TOKEN="${PAT_WORKFLOW:-$GH_STEGVERSE_PAT}"
-
-          if [ -z "${TOKEN}" ]; then
-            echo "ERROR: Neither PAT_WORKFLOW nor GH_STEGVERSE_PAT is set."
-            exit 1
-          fi
-
-          echo "::add-mask::${TOKEN}"
-          {
-            echo "GITHUB_TOKEN=${TOKEN}"
-            echo "GH_TOKEN=${TOKEN}"
-            echo "STEG_TOKEN=${TOKEN}"
-          } >> "$GITHUB_ENV"
-
-          git config --global user.name "StegVerse Autopatch Bot"
-          git config --global user.email "autopatch-bot@users.noreply.github.com"
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install autopatch deps
-        run: |
-          set -euo pipefail
-          pip install pyyaml
-
-      - name: Run StegVerse multi-repo autopatch
-        run: |
-          set -euo pipefail
-          echo "=== StegVerse Multi-Repo Autopatch ==="
-          python scripts/stegverse_autopatch.py \
-            --manifest scripts/stegverse_autopatch_manifest.json \
-            --task "${AUTOPATCH_TASK:-scheduled}"
-
-      - name: Commit multi-repo autopatch report
-        run: |
-          set -euo pipefail
-
-          REPORT="reports/stegverse_multi_autopatch_report.md"
-          BRANCH="${GITHUB_REF_NAME:-main}"
-
-          git config user.name "StegVerse Autopatch Bot"
-          git config user.email "autopatch-bot@users.noreply.github.com"
-
-          if [ -z "$(git status --porcelain -- "$REPORT")" ]; then
-            echo "No report changes to commit."
-            exit 0
-          fi
-
-          git add "$REPORT"
-          git commit -m "Autopatch report: StegVerse multi-repo sync"
-
-          git fetch origin "$BRANCH"
-          git rebase "origin/$BRANCH"
-          git push origin "HEAD:$BRANCH"
+          echo "::error::Scheduled multi-repository autopatch is contained because its PAT fallback/global bearer-token rewrite and direct pushes do not satisfy the bounded TV/TVC authority contract."
+          echo "Do not restore mutation until TV/TVC supplies admitted execution authority with exact provenance and bounded target scope."
+          exit 1
