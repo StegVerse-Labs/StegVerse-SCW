@@ -1,4 +1,4 @@
-name: Token Smoke Test
+name: Token Smoke Test [RETIRED — TV/TVC AUTHORITY REQUIRED]
 
 on:
   workflow_dispatch: {}
@@ -7,26 +7,13 @@ permissions:
   contents: read
 
 jobs:
-  smoke:
+  retired:
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GH_STEGVERSE_AI_TOKEN }}
     steps:
-      - name: Confirm token is present
+      - name: Block direct generic credential exercise
+        shell: bash
         run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "❌ GH_STEGVERSE_AI_TOKEN not injected."
-            exit 1
-          fi
-          echo "✅ Token injected (length ${#GH_TOKEN})."
-
-      - name: Who am I? (auth check)
-        run: |
-          echo "Checking authentication..."
-          gh auth status
-          gh api user --jq '{login: .login, id: .id}'
-
-      - name: List org repos (access check)
-        run: |
-          echo "Listing StegVerse-Labs repos visible to token..."
-          gh api orgs/StegVerse-Labs/repos --paginate --jq '.[].full_name' | head -n 50
+          set -euo pipefail
+          echo "::error::This smoke test is retired because it directly injected and exercised a non-TV/TVC credential against GitHub identity and organization repository APIs."
+          echo "Credential health checks must execute inside TV/TVC and emit only secret-free status evidence. See SCW issue #22."
+          exit 1
