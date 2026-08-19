@@ -1,104 +1,19 @@
-name: StegVerse Guardian Worker – Repo Alignment Auto-Fixer
+name: StegVerse Guardian Worker – Repo Alignment Auto-Fixer [CONTAINED]
 
 on:
   workflow_dispatch: {}
-  # Optional scheduled run once stable
-  # schedule:
-  #   - cron: "40 8 * * *"
 
 permissions:
-  contents: write
-  actions: write
-  issues: write
+  contents: read
 
 jobs:
-  alignment_fixer:
+  contained:
     runs-on: ubuntu-latest
-
-    env:
-      # Prefer fine-grained workflow PAT first (Option B)
-      PAT_WORKFLOW_FG: ${{ secrets.PAT_WORKFLOW_FG }}
-      PAT_WORKFLOW: ${{ secrets.PAT_WORKFLOW }}
-      GH_STEGVERSE_PAT: ${{ secrets.GH_STEGVERSE_PAT }}
-
     steps:
-      - name: Check out StegVerse-SCW
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Resolve token & configure git
+      - name: Block legacy PAT-backed auto-fix
         shell: bash
         run: |
           set -euo pipefail
-
-          TOKEN="${PAT_WORKFLOW_FG:-${PAT_WORKFLOW:-${GH_STEGVERSE_PAT:-}}}"
-
-          if [ -z "${TOKEN}" ]; then
-            echo "ERROR: No PAT found (PAT_WORKFLOW_FG / PAT_WORKFLOW / GH_STEGVERSE_PAT)."
-            exit 1
-          fi
-
-          echo "::add-mask::${TOKEN}"
-
-          {
-            echo "GITHUB_TOKEN=${TOKEN}"
-            echo "GH_TOKEN=${TOKEN}"
-            echo "STEG_TOKEN=${TOKEN}"
-          } >> "$GITHUB_ENV"
-
-          git config --global user.name  "StegVerse Guardian Worker"
-          git config --global user.email "guardian-worker@stegverse.local"
-
-          # Force https to use PAT
-          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install deps
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m pip install --upgrade pip
-          pip install requests pyyaml
-
-      - name: Run Repo Alignment Check (ASL-1)
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "=== Repo Alignment Check (pre-fix) ==="
-          python scripts/genesis/repo_alignment_check.py
-
-      - name: Run Repo Alignment Auto-Fixer (ASL-3)
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "=== Repo Alignment Auto-Fixer ==="
-          python scripts/genesis/repo_alignment_autofixer.py
-
-      - name: Commit fixer reports (if changed)
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          git config user.name  "StegVerse Guardian Worker"
-          git config user.email "guardian-worker@stegverse.local"
-
-          if [ -n "$(git status --porcelain 'reports/guardians' 2>/dev/null || echo '')" ]; then
-            echo "Detected fixer report changes; committing..."
-            git add reports/guardians
-            git commit -m "Guardian: update repo alignment fixer report"
-            git push origin "${GITHUB_REF_NAME:-main}"
-          else
-            echo "No fixer report changes to commit."
-          fi
-
-      - name: Re-run Alignment Check (post-fix)
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "=== Repo Alignment Check (post-fix) ==="
-          python scripts/genesis/repo_alignment_check.py
+          echo "::error::Guardian alignment auto-fixer is contained because PAT fallback/global credential rewriting and direct pushes are outside admitted TV/TVC authority."
+          echo "A replacement must bind exact source, decision, target, and repair authority before mutation. See SCW issue #22."
+          exit 1
