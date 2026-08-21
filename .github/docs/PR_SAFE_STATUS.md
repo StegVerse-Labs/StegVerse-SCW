@@ -70,7 +70,7 @@
 | `kick-yaml-bulk-autofix.yml` | not-inserted |
 | `ledger_integrity.yml` | not-inserted |
 | `log_revenue.yml` | not-inserted |
-| `multi-autopatch.yml` | parse-failed |
+| `multi-autopatch.yml` | not-inserted |
 | `neutralize_secrets_if.yml` | parse-failed |
 | `nightly_snapshot.yml` | not-inserted |
 | `one-shot-workflow-normalizer.yml` | not-inserted |
@@ -88,7 +88,7 @@
 | `patient-owned-monitoring-validation.yml` | not-inserted |
 | `ping.yml` | not-inserted |
 | `propagate-commit-template-v1_1.yml` | not-inserted |
-| `propagate-commit-template.yml` | parse-failed |
+| `propagate-commit-template.yml` | not-inserted |
 | `propagate-readme-badges.yml` | not-inserted |
 | `quickkick-sweep.yml` | not-inserted |
 | `readme-nudge-kicks.yml` | not-inserted |
@@ -114,7 +114,7 @@
 | `scw_orchestrator.yml` | not-inserted |
 | `scw_workflow_runnability_audit.yml` | not-inserted |
 | `seed-autodocs-verify.yml` | not-inserted |
-| `seed-steg-config.yml` | parse-failed |
+| `seed-steg-config.yml` | not-inserted |
 | `seed_config.yml` | not-inserted |
 | `self-healing-scan.yml` | not-inserted |
 | `self_repair_autopatch.yml` | parse-failed |
