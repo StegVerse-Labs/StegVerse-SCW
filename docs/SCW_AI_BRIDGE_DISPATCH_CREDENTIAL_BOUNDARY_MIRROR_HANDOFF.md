@@ -106,3 +106,32 @@ live TVC bridge transport: NOT OBSERVED
 ```
 
 PR #25 is now merged on the base and the two legacy JSON placeholders are no longer a Test Readiness blocker. Repository-wide Ruff/CodeQL debt remains separately owned and is not absorbed into CMC-034.
+
+
+## Merged source closure — 2026-08-28
+
+The bounded repair was rematerialized on current main after PR #25 and validated at the exact source head before merge.
+
+```text
+PR: #26
+validated exact head: 100821e8c9754cdda7461b7b0954e18fa5c2b7ae
+StegVerse AI Bridge Forwarding - Validation Only 33233244263: SUCCESS
+Test Readiness 33233244246: SUCCESS
+CI 33233244303: FAILURE — separate repository-wide Ruff debt
+CodeQL 33233244248: FAILURE — separate CodeQL lane
+merge: 12fc76a54a51bcf6cfed73bc48d3a60c2719e420
+```
+
+Current lifecycle:
+
+```text
+source repair: IMPLEMENTED
+bounded bridge validation: VALIDATED
+source: MERGED
+repository-wide validation: NOT GREEN
+live TVC bridge transport: NOT OBSERVED
+replacement state: TVC_ADMITTED_TRANSPORT_REQUIRED
+authority_effect: NONE
+```
+
+The merge retires the hosted credential/materialization and cross-repository dispatch path only. It does not create a replacement transport capability, provider execution path, deployment, activation, or runtime authority.
