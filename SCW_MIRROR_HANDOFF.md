@@ -204,3 +204,19 @@ The bounded repair retires that hosted credential/mutation path and converts the
 Canonical continuation: `docs/SCW_AI_BRIDGE_DISPATCH_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`.
 
 This does not authorize or implement the future TV/TVC transport route and does not change unrelated SCW workflow debt or the separate finance credential PR.
+
+
+## AI bridge dispatch source closure — 2026-08-28
+
+PR #26 merged the bounded retirement of the historical hosted AI-bridge credential/dispatch path.
+
+```text
+validated exact head: 100821e8c9754cdda7461b7b0954e18fa5c2b7ae
+bounded bridge validation 33233244263: SUCCESS
+Test Readiness 33233244246: SUCCESS
+merge: 12fc76a54a51bcf6cfed73bc48d3a60c2719e420
+repository-wide CI/CodeQL: NOT GREEN / separately owned
+live TVC bridge transport: NOT OBSERVED
+```
+
+Canonical bounded continuation remains `docs/SCW_AI_BRIDGE_DISPATCH_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`. This closure does not absorb finance PR #24, CodeQL PR #27, legacy PAT/bootstrap lanes, or future TV/TVC transport activation.
