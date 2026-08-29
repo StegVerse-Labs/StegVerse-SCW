@@ -1,4 +1,4 @@
-name: CodeQL
+name: CodeQL - Validation Transport Only
 
 on:
   push:
@@ -7,40 +7,73 @@ on:
     branches: [ "main" ]
   workflow_dispatch: {}
 
-# IMPORTANT: let the token upload SARIF
 permissions:
   contents: read
+  actions: read
 
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-    # Job-scoped perms for SARIF upload
     permissions:
       actions: read
       contents: read
-      security-events: write
 
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python', 'actions' ]  # scan Python + GitHub Actions
+        language: [ 'python', 'actions' ]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Read-only checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
-      # Try a build (harmless if there’s nothing to build)
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
         continue-on-error: true
 
-      - name: Perform CodeQL Analysis
+      - name: Perform CodeQL analysis without code-scanning publication
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
+          output: results
+          upload: never
+          upload-database: false
+
+      - name: Retain SARIF as validation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-${{ matrix.language }}-sarif-${{ github.sha }}
+          path: results/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Prove hosted validation-only authority
+        run: |
+          set -euo pipefail
+          test -z "${GITHUB_TOKEN:-}"
+          test -z "${GH_TOKEN:-}"
+          test -z "$(git config --local --get http.https://github.com/.extraheader || true)"
+          test -z "$(git config --local --get-all credential.helper || true)"
+          python - <<'PY'
+          from pathlib import Path
+          text = Path(".github/workflows/codeql.yml").read_text(encoding="utf-8")
+          stripped = [line.strip() for line in text.splitlines() if not line.lstrip().startswith("#")]
+          assert "contents: read" in stripped
+          assert "actions: read" in stripped
+          assert "security-events: write" not in stripped
+          assert "persist-credentials: false" in stripped
+          assert "upload: never" in stripped
+          assert "upload-database: false" in stripped
+          assert not any(line.endswith(": write") for line in stripped)
+          print("SCW_CODEQL_VALIDATION_TRANSPORT_ONLY_PASS")
+          PY
