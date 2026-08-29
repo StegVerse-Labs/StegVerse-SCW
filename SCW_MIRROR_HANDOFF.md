@@ -188,6 +188,39 @@ scripts/entities/registry.json
 This is repository-readiness hygiene only. It does not create or change ledger balances, entity definitions, credential authority, finance provider execution, or runtime authority.
 
 
+## AI bridge hosted-dispatch credential boundary — 2026-08-28
+
+The current repository still contained one uncontained bridge-forwarding path after `scw_bridge.yml` and `scw_orchestrator.yml` had already been contained:
+
+```text
+.github/workflows/forward-to-bridge.yml
+  GH_TOKEN <- secrets.GH_STEGVERSE_AI_TOKEN
+  gh auth login --with-token
+  cross-repository dispatch to hybrid-collab-bridge
+```
+
+The bounded repair retires that hosted credential/mutation path and converts the existing workflow to read-only validation of `TVC_ADMITTED_TRANSPORT_REQUIRED`.
+
+Canonical continuation: `docs/SCW_AI_BRIDGE_DISPATCH_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`.
+
+This does not authorize or implement the future TV/TVC transport route and does not change unrelated SCW workflow debt or the separate finance credential PR.
+
+
+## AI bridge dispatch source closure — 2026-08-28
+
+PR #26 merged the bounded retirement of the historical hosted AI-bridge credential/dispatch path.
+
+```text
+validated exact head: 100821e8c9754cdda7461b7b0954e18fa5c2b7ae
+bounded bridge validation 33233244263: SUCCESS
+Test Readiness 33233244246: SUCCESS
+merge: 12fc76a54a51bcf6cfed73bc48d3a60c2719e420
+repository-wide CI/CodeQL: NOT GREEN / separately owned
+live TVC bridge transport: NOT OBSERVED
+```
+
+Canonical bounded continuation remains `docs/SCW_AI_BRIDGE_DISPATCH_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`. This closure does not absorb finance PR #24, CodeQL PR #27, legacy PAT/bootstrap lanes, or future TV/TVC transport activation.
+
 ## Finance provider credential-boundary lane — 2026-08-27
 
 A separate non-overlapping finance lane owns `finance/stripe_handler.py`, `finance/coinbase_handler.py`, and `finance/payments_config.example.json`. Historical shape-only stubs still materialized provider secrets from the SCW environment. The bounded repair retires those reads and binds future authenticated provider execution to TV/TVC. Canonical continuation: `docs/SCW_FINANCE_PROVIDER_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`.
