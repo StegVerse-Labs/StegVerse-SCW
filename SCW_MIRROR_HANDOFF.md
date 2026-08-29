@@ -203,3 +203,35 @@ GitHub Actions production/runtime/control-plane authority: NONE
 The CodeQL action's current v3 interface explicitly supports `upload: never` while still producing local SARIF. This keeps CodeQL as a full validation step while avoiding dependence on the repository-level Code Security feature.
 
 This lane is repository validation transport only. It does not alter CMC-034 bridge semantics, credential authority, runtime activation, deployment, or provider behavior.
+
+
+### CodeQL exact validation evidence — 2026-08-28
+
+```text
+PR: #27
+validated head: 1d1845a1a8ed8d0f700e19070b5f51c02013e1ae
+CodeQL - Validation Transport Only 33232078691: SUCCESS
+languages: python + actions
+SARIF generation: SUCCESS
+Code Scanning publication dependency: REMOVED
+SARIF evidence transport: actions/upload-artifact
+security-events write permission: NONE
+checkout credential persistence: false
+authority_effect: NONE
+```
+
+Separate repository-wide checks on that same head remain red for pre-existing or independently owned reasons:
+
+```text
+Forward PR to StegVerse AI Bridge: FAILURE
+  repair owner: PR #26 / CMC-034
+
+Test Readiness: FAILURE
+  repair owner: PR #25 invalid JSON placeholders
+
+CI: FAILURE
+  repository-wide Ruff debt
+```
+
+Lifecycle:
+`CodeQL transport repair = IMPLEMENTED + BOUNDED_VALIDATED; NOT MERGED`.
