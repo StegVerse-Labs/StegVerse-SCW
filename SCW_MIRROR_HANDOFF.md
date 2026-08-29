@@ -166,3 +166,40 @@ Prefer existing declared scripts and task surfaces. Keep commit steps safe when 
 ## Next Integration Candidate
 
 Publish verified SCW status through existing Site and Publisher paths after local checks are green.
+
+
+## CodeQL validation-transport repair — 2026-08-28
+
+Repository-wide CodeQL analysis completed successfully but failed during SARIF publication because GitHub Code Security is not enabled for this repository.
+
+Observed failure class:
+
+```text
+analysis/database/query execution: COMPLETE
+SARIF generation: COMPLETE
+Code Scanning upload: FAILURE
+reason: Code Security must be enabled for this repository to use code scanning
+```
+
+This is repaired without weakening CodeQL analysis and without requesting repository security-event authority:
+
+```text
+github/codeql-action/analyze@v3:
+  queries executed: yes
+  SARIF generated: yes
+  upload: never
+  upload-database: false
+
+permissions:
+  contents: read
+  actions: read
+  security-events: NONE
+
+checkout credential persistence: false
+SARIF retention: actions/upload-artifact@v4 validation evidence only
+GitHub Actions production/runtime/control-plane authority: NONE
+```
+
+The CodeQL action's current v3 interface explicitly supports `upload: never` while still producing local SARIF. This keeps CodeQL as a full validation step while avoiding dependence on the repository-level Code Security feature.
+
+This lane is repository validation transport only. It does not alter CMC-034 bridge semantics, credential authority, runtime activation, deployment, or provider behavior.
