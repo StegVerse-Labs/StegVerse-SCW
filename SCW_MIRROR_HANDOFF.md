@@ -168,6 +168,26 @@ Prefer existing declared scripts and task surfaces. Keep commit steps safe when 
 Publish verified SCW status through existing Site and Publisher paths after local checks are green.
 
 
+## JSON placeholder readiness repair — 2026-08-28
+
+Repository-wide Test Readiness identified two syntactically invalid legacy JSON placeholders unrelated to the active finance credential lane:
+
+```text
+ledger/events/2025-11-20/ind_events.json
+  prior bytes: "$ 0.00\n"
+  reader found in current source: NONE
+  repair: preserve exact value as JSON string "$ 0.00"
+
+scripts/entities/registry.json
+  prior bytes: blank line
+  active entity registry reader path: ROOT/entities/registry.json
+  scripts/entities/registry.json reader found in current source: NONE
+  repair: normalize unused placeholder to empty JSON object {}
+```
+
+This is repository-readiness hygiene only. It does not create or change ledger balances, entity definitions, credential authority, finance provider execution, or runtime authority.
+
+
 ## Finance provider credential-boundary lane — 2026-08-27
 
 A separate non-overlapping finance lane owns `finance/stripe_handler.py`, `finance/coinbase_handler.py`, and `finance/payments_config.example.json`. Historical shape-only stubs still materialized provider secrets from the SCW environment. The bounded repair retires those reads and binds future authenticated provider execution to TV/TVC. Canonical continuation: `docs/SCW_FINANCE_PROVIDER_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`.
