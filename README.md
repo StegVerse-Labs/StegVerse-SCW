@@ -14,9 +14,9 @@ runs validations, and will progressively host Guardians (Autopatch, Readme, Gove
 
 ## Setup
 
-1. Ensure org secret `GH_STEGVERSE_AI_TOKEN` exists in **StegVerse-Labs**.
-2. Ensure repos are public or org plan allows org secrets for private repos.
-3. Run **SCW Orchestrator → self-test**.
+The historical `GH_STEGVERSE_AI_TOKEN` bridge-dispatch setup is retired. GitHub Actions is validation/evidence transport only and must not hold cross-repository command or mutation authority.
+
+Bridge continuation requires an already-admitted TV/TVC transport capability with exact caller, target, operation, and secret-free receipt evidence. Until that route is present, bridge forwarding remains fail-closed as `TVC_ADMITTED_TRANSPORT_REQUIRED`.
 
 ## Roadmap
 
