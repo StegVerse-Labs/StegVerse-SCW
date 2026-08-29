@@ -242,3 +242,21 @@ authority_effect: NONE
 ```
 
 Canonical continuation: `docs/SCW_FINANCE_PROVIDER_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`. This closure does not absorb CodeQL PR #27, legacy PAT/bootstrap work, or any provider/runtime activation lane.
+
+## CMC-036 hosted HCB nightly dispatch retirement — 2026-08-29
+
+The original PR #20 ownership has been rehabilitated in place onto current `main` and narrowed to the exact CMC-036 surface. The stale broad workflow-consolidation delta was discarded rather than duplicated.
+
+```text
+owner PR: #20
+owner branch: workflow-minimum-cleanup
+current-main base before repair: abe2f1e246abbdd013b02c1244739fcab1a1bbcb
+retired surface: .github/workflows/export-hcb-nightly.yml
+retirement commit: 64c435cb471f20d31bdbb08deaf78939513c5760
+existing contained target: .github/workflows/export-hcb.yml
+Stability Gate compatibility path: PRESERVED / scw_orchestrator.yml untouched
+provider/export runtime activation: NOT OBSERVED
+authority effect: NONE
+```
+
+The deleted workflow previously requested `actions: write`, materialized `GH_TOKEN` from `github.token`, and dispatched another workflow from GitHub-hosted execution. That hosted control-plane authority is not retained. The already-contained `export-hcb.yml` target remains in place; no TV/TVC transport route or external export execution is created by this repair.
