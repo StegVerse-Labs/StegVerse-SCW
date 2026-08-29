@@ -1,36 +1,31 @@
-"""
-Coinbase Commerce handler stub for StegVerse.
+"""Coinbase Commerce compatibility stub for StegVerse SCW.
 
-Like stripe_handler, this is a shape-only module for now.
-
-Eventually it will:
-- validate Coinbase webhooks
-- write events into Continuity and StegLedger
+Credential-bearing Coinbase Commerce authentication/webhook verification belongs
+inside an admitted TV/TVC provider-operation boundary. This consumer stub does
+not read or retain provider credentials.
 """
 
 from __future__ import annotations
-import os
 from dataclasses import dataclass
 from typing import Optional
 
+TVC_ROUTE_REQUIRED = "TVC_ADMITTED_PROVIDER_ROUTE_REQUIRED"
 
-@dataclass
+
+@dataclass(frozen=True)
 class CoinbaseConfig:
     enabled: bool
     api_key: Optional[str]
     webhook_secret: Optional[str]
+    credential_authority: str = "TV/TVC"
+    provider_route_state: str = TVC_ROUTE_REQUIRED
 
 
 def load_config() -> CoinbaseConfig:
-    return CoinbaseConfig(
-        enabled=os.getenv("STE G_COINBASE_ENABLED", "false").lower() == "true",
-        api_key=os.getenv("COINBASE_COMMERCE_API_KEY"),
-        webhook_secret=os.getenv("COINBASE_COMMERCE_WEBHOOK_SECRET"),
-    )
+    """Return a credential-neutral, fail-closed compatibility configuration."""
+    return CoinbaseConfig(enabled=False, api_key=None, webhook_secret=None)
 
 
 def record_event(event_id: str, event_type: str, payload: dict) -> None:
-    """
-    Placeholder for Coinbase Commerce events.
-    """
+    """Record only non-secret event-shape evidence."""
     print(f"[Coinbase] Event: {event_id} ({event_type}) - payload keys={list(payload.keys())}")

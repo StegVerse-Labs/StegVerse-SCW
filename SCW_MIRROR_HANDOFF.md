@@ -220,3 +220,7 @@ live TVC bridge transport: NOT OBSERVED
 ```
 
 Canonical bounded continuation remains `docs/SCW_AI_BRIDGE_DISPATCH_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`. This closure does not absorb finance PR #24, CodeQL PR #27, legacy PAT/bootstrap lanes, or future TV/TVC transport activation.
+
+## Finance provider credential-boundary lane — 2026-08-27
+
+A separate non-overlapping finance lane owns `finance/stripe_handler.py`, `finance/coinbase_handler.py`, and `finance/payments_config.example.json`. Historical shape-only stubs still materialized provider secrets from the SCW environment. The bounded repair retires those reads and binds future authenticated provider execution to TV/TVC. Canonical continuation: `docs/SCW_FINANCE_PROVIDER_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`.
