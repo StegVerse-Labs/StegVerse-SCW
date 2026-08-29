@@ -166,3 +166,8 @@ Prefer existing declared scripts and task surfaces. Keep commit steps safe when 
 ## Next Integration Candidate
 
 Publish verified SCW status through existing Site and Publisher paths after local checks are green.
+
+
+## Finance provider credential-boundary lane — 2026-08-27
+
+A separate non-overlapping finance lane owns `finance/stripe_handler.py`, `finance/coinbase_handler.py`, and `finance/payments_config.example.json`. Historical shape-only stubs still materialized provider secrets from the SCW environment. The bounded repair retires those reads and binds future authenticated provider execution to TV/TVC. Canonical continuation: `docs/SCW_FINANCE_PROVIDER_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`.
