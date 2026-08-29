@@ -41,3 +41,46 @@ validation: PENDING
 merge: PENDING
 provider runtime activation: NOT OBSERVED
 ```
+
+
+## Validation state — 2026-08-28
+
+Exact bounded finance validation is green on current branch head:
+
+```text
+branch head: fa3d8ddca9f8f3cf4d2aa591ed988b7daa8815b4
+Finance Credential Boundary Validation 33228282837: SUCCESS
+bounded pytest: 2 passed
+checkout credential persistence: false
+GitHub Actions authority effect: NONE
+```
+
+Repository-wide checks remain red for pre-existing or separately owned reasons:
+
+```text
+Forward PR to StegVerse AI Bridge 33228282842: FAILURE
+  separate hosted bridge dispatch/auth path
+
+Test Readiness 33228282859: FAILURE
+  invalid JSON already present in:
+    ledger/events/2025-11-20/ind_events.json
+    scripts/entities/registry.json
+
+CI 33228282826: FAILURE
+  repository-wide Ruff debt outside this finance lane
+
+CodeQL 33228282848: FAILURE
+  repository Code Security / code scanning configuration boundary
+```
+
+Classification:
+
+```text
+finance source repair: IMPLEMENTED
+bounded finance validation: VALIDATED
+repository-wide validation: NOT GREEN
+merge: BLOCKED / NOT MERGED
+provider runtime: NOT OBSERVED
+```
+
+Do not represent the bounded green check as repository-wide validation or provider activation. The finance repair may proceed to merge only when the applicable repository merge policy is satisfied without weakening unrelated gates.
