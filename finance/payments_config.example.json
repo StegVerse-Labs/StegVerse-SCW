@@ -1,14 +1,16 @@
 {
-  "version": 1,
+  "version": 2,
+  "credential_authority": "TV/TVC",
+  "consumer_secret_materialization_allowed": false,
   "stripe": {
     "enabled": false,
-    "publishable_key_env": "STRIPE_PUBLISHABLE_KEY",
-    "secret_key_env": "STRIPE_SECRET_KEY",
-    "webhook_secret_env": "STRIPE_WEBHOOK_SECRET"
+    "provider_route_state": "TVC_ADMITTED_PROVIDER_ROUTE_REQUIRED",
+    "publishable_configuration": "NON_SECRET_ONLY_IF_SEPARATELY_ADMITTED",
+    "secret_material_source": "TV/TVC_ONLY"
   },
   "coinbase": {
     "enabled": false,
-    "api_key_env": "COINBASE_COMMERCE_API_KEY",
-    "webhook_secret_env": "COINBASE_COMMERCE_WEBHOOK_SECRET"
+    "provider_route_state": "TVC_ADMITTED_PROVIDER_ROUTE_REQUIRED",
+    "secret_material_source": "TV/TVC_ONLY"
   }
 }
