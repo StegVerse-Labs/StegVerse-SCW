@@ -224,3 +224,21 @@ Canonical bounded continuation remains `docs/SCW_AI_BRIDGE_DISPATCH_CREDENTIAL_B
 ## Finance provider credential-boundary lane — 2026-08-27
 
 A separate non-overlapping finance lane owns `finance/stripe_handler.py`, `finance/coinbase_handler.py`, and `finance/payments_config.example.json`. Historical shape-only stubs still materialized provider secrets from the SCW environment. The bounded repair retires those reads and binds future authenticated provider execution to TV/TVC. Canonical continuation: `docs/SCW_FINANCE_PROVIDER_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`.
+
+
+## Finance credential-boundary source closure — 2026-08-28
+
+The bounded finance credential repair is merged. PR #24 was superseded solely to rematerialize the unchanged repair on current main; replacement PR #29 is the admitted source lane.
+
+```text
+validated source head: 28f56e6fc26ebfd9a599a4001a5aca6769598690
+Finance Credential Boundary Validation 33233653819: SUCCESS
+Test Readiness 33233653875: SUCCESS
+merge: c437a3320a9d901d3a398ee06c6668ba5b9db5fc
+repository-wide CI: NOT GREEN — separate Ruff debt
+provider runtime: NOT OBSERVED
+replacement state: TVC_ADMITTED_PROVIDER_ROUTE_REQUIRED
+authority_effect: NONE
+```
+
+Canonical continuation: `docs/SCW_FINANCE_PROVIDER_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`. This closure does not absorb CodeQL PR #27, legacy PAT/bootstrap work, or any provider/runtime activation lane.
