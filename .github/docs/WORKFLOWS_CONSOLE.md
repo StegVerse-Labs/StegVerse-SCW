@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2026-08-29 04:13 UTC**_
+_Last updated: **2026-08-29 04:24 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **126**
+- ➖ No dispatch: **127**
 - ❌ Broken: **32**
-- Total: **158**
+- Total: **159**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -48,6 +48,7 @@ _Last updated: **2026-08-29 04:13 UTC**_
 | `export-hcb-nightly.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/export-hcb-nightly.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/export-hcb-nightly.yml) · [File](.github/workflows/export-hcb-nightly.yml) |
 | `export-hcb-weekly.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/export-hcb-weekly.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/export-hcb-weekly.yml) · [File](.github/workflows/export-hcb-weekly.yml) |
 | `export-hcb.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/export-hcb.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/export-hcb.yml) · [File](.github/workflows/export-hcb.yml) |
+| `finance-credential-boundary-validation.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/finance-credential-boundary-validation.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/finance-credential-boundary-validation.yml) · [File](.github/workflows/finance-credential-boundary-validation.yml) |
 | `financial_rollup.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/financial_rollup.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/financial_rollup.yml) · [File](.github/workflows/financial_rollup.yml) |
 | `fix-dispatch-triggers.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/fix-dispatch-triggers.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/fix-dispatch-triggers.yml) · [File](.github/workflows/fix-dispatch-triggers.yml) |
 | `fix_it.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/fix_it.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/fix_it.yml) · [File](.github/workflows/fix_it.yml) |
