@@ -1,43 +1,37 @@
-"""
-Stripe handler stub for StegVerse.
+"""Stripe compatibility stub for StegVerse SCW.
 
-This module does NOT call Stripe directly yet.
-It defines the shape of the integration so that:
-- economy workers know where to plug in
-- you can later wire actual API calls safely
-
-Real keys should live in:
-- GitHub secrets
-- StegTV vault
+Credential-bearing Stripe API and webhook verification belong inside an
+admitted TV/TVC provider-operation boundary. SCW does not read provider secret
+material from its environment.
 """
 
 from __future__ import annotations
-import os
 from dataclasses import dataclass
 from typing import Optional
 
+TVC_ROUTE_REQUIRED = "TVC_ADMITTED_PROVIDER_ROUTE_REQUIRED"
 
-@dataclass
+
+@dataclass(frozen=True)
 class StripeConfig:
-  enabled: bool
-  publishable_key: Optional[str]
-  secret_key: Optional[str]
-  webhook_secret: Optional[str]
+    enabled: bool
+    publishable_key: Optional[str]
+    secret_key: Optional[str]
+    webhook_secret: Optional[str]
+    credential_authority: str = "TV/TVC"
+    provider_route_state: str = TVC_ROUTE_REQUIRED
 
 
 def load_config() -> StripeConfig:
+    """Return a credential-neutral, fail-closed compatibility configuration."""
     return StripeConfig(
-        enabled=os.getenv("STE G_STRIPE_ENABLED", "false").lower() == "true",
-        publishable_key=os.getenv("STRIPE_PUBLISHABLE_KEY"),
-        secret_key=os.getenv("STRIPE_SECRET_KEY"),
-        webhook_secret=os.getenv("STRIPE_WEBHOOK_SECRET"),
+        enabled=False,
+        publishable_key=None,
+        secret_key=None,
+        webhook_secret=None,
     )
 
 
 def record_event(event_id: str, event_type: str, payload: dict) -> None:
-    """
-    Placeholder function. In the future, this should:
-    - write to Continuity (global audit)
-    - write to StegLedger (for financial integrity)
-    """
+    """Record only non-secret event-shape evidence."""
     print(f"[Stripe] Event: {event_id} ({event_type}) - payload keys={list(payload.keys())}")
