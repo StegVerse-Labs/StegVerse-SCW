@@ -41,6 +41,7 @@
 | `export-hcb-nightly.yml` | not-inserted |
 | `export-hcb-weekly.yml` | not-inserted |
 | `export-hcb.yml` | not-inserted |
+| `finance-credential-boundary-validation.yml` | not-inserted |
 | `financial_rollup.yml` | not-inserted |
 | `fix-dispatch-triggers.yml` | not-inserted |
 | `fix_it.yml` | not-inserted |
