@@ -104,3 +104,26 @@ authority_effect: NONE
 ```
 
 The replacement branch exists only because the integration connector would not move the original PR #24 branch ref. PR #24 must be treated as superseded once the replacement PR is opened; this does not create a second finance implementation lane.
+
+
+## Merged source closure — 2026-08-28
+
+```text
+original PR #24: SUPERSEDED / CLOSED UNMERGED
+replacement PR: #29
+validated source head: 28f56e6fc26ebfd9a599a4001a5aca6769598690
+Finance Credential Boundary Validation 33233653819: SUCCESS
+Test Readiness 33233653875: SUCCESS
+StegVerse AI Bridge Forwarding - Validation Only 33233653795: SUCCESS
+CI 33233653792: FAILURE — separate repository-wide Ruff debt (516 findings)
+CodeQL 33233653788: IN_PROGRESS at merge observation
+merge: c437a3320a9d901d3a398ee06c6668ba5b9db5fc
+source repair: MERGED
+bounded finance validation: VALIDATED
+repository-wide validation: NOT GREEN
+provider runtime: NOT OBSERVED
+credential authority: TV/TVC ONLY
+authority_effect: NONE
+```
+
+The merged source retires SCW consumer reads of Stripe and Coinbase Commerce protected credentials. It does not create or activate a provider route; future authenticated provider execution still requires an already-admitted TV/TVC provider-operation boundary.
