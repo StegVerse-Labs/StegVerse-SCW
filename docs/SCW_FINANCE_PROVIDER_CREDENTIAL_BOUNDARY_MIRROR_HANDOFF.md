@@ -84,3 +84,23 @@ provider runtime: NOT OBSERVED
 ```
 
 Do not represent the bounded green check as repository-wide validation or provider activation. The finance repair may proceed to merge only when the applicable repository merge policy is satisfied without weakening unrelated gates.
+
+
+## Current-main rematerialization — 2026-08-28
+
+The bounded finance repair has been rematerialized with current SCW main `8a5c3136001f062f3967e5f78b15a8e974937394` while preserving the merged JSON-hygiene and AI-bridge closure state.
+
+```text
+prior finance PR: #24
+prior finance head: d29be737bc7009d4cfab1e57ea9fef104e0e5027
+current-main merge object: c55187ec6e1cd30122ad24470db423d99dd85190
+replacement branch: fix/tvtvc-finance-credential-boundary-current-20260828
+source semantics: UNCHANGED_BOUNDED_FINANCE_REPAIR
+fresh exact-head validation: PENDING
+merge: NOT MERGED
+provider runtime: NOT OBSERVED
+credential authority: TV/TVC ONLY
+authority_effect: NONE
+```
+
+The replacement branch exists only because the integration connector would not move the original PR #24 branch ref. PR #24 must be treated as superseded once the replacement PR is opened; this does not create a second finance implementation lane.
