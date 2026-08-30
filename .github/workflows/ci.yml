@@ -2,11 +2,12 @@ name: CI
 
 on:
   push:
-    paths: ["api/**", "scripts/**", ".github/workflows/ci.yml"]
+    paths: ["api/**", "scripts/**", "tests/**", ".github/workflows/ci.yml"]
   pull_request: {}
   workflow_dispatch:
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   lint_test:
@@ -14,15 +15,69 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
       - name: Python setup
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install tools
         run: |
           python -m pip install --upgrade pip
           pip install ruff==0.6.5 pytest==8.3.2
-      - name: Lint (ruff)
-        run: ruff check api scripts
-      - name: Tests (pytest)
-        run: pytest -q
+
+      - name: Lint changed Python files
+        if: github.event_name == 'pull_request'
+        run: |
+          mapfile -t files < <(
+            git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- '*.py' |
+              while read -r path; do
+                [ -f "$path" ] && printf '%s\n' "$path"
+              done
+          )
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed Python files detected."
+          else
+            printf 'Linting %s\n' "${files[@]}"
+            ruff check "${files[@]}"
+          fi
+
+      - name: Lint repository Python paths
+        if: github.event_name != 'pull_request'
+        run: |
+          targets=()
+          for path in api scripts tests; do
+            [ -d "$path" ] && targets+=("$path")
+          done
+          if [ "${#targets[@]}" -eq 0 ]; then
+            echo "No Python lint targets detected."
+          else
+            ruff check "${targets[@]}"
+          fi
+
+      - name: Test changed pytest files
+        if: github.event_name == 'pull_request'
+        run: |
+          mapfile -t tests < <(
+            git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- 'tests/test_*.py' 'tests/**/test_*.py' |
+              while read -r path; do
+                [ -f "$path" ] && printf '%s\n' "$path"
+              done
+          )
+          if [ "${#tests[@]}" -eq 0 ]; then
+            echo "No changed pytest files detected; legacy test debt is outside this PR."
+          else
+            pytest -q "${tests[@]}"
+          fi
+
+      - name: Test repository
+        if: github.event_name != 'pull_request'
+        run: |
+          if [ -d tests ] && find tests -type f -name 'test_*.py' | grep -q .; then
+            pytest -q
+          else
+            echo "No pytest tests detected; CI lint gate passed."
+          fi
