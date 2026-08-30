@@ -304,3 +304,36 @@ authority_effect: NONE
 ```
 
 This changes validation denominator by event type only. It does not mark legacy debt resolved, weaken production/runtime checks, grant credential authority, or change any CMC provider/transport lifecycle.
+
+
+## Workflow observability non-authorizing repair — 2026-08-30
+
+The GitHub failure-email cluster exposed two remaining hosted control-plane paths. Historical PR #35 owned the repair but became stale after concurrent SCW merges, so its exact three-file intent was rematerialized from current main.
+
+```text
+current-main base: e3bb0d4caf9e780bcbf445c76d7ae5b59af17843
+
+workflows-badges.yml:
+  Actions API dependency: REMOVED
+  contents permission: read
+  checkout credential persistence: false
+  status derivation: checked-out workflow files only
+  repository write-back: NONE
+  evidence: workflow artifact only
+
+workflows-first-aid-sweep.yml:
+  contents/actions write authority: REMOVED
+  direct git commit/push: REMOVED
+  proposed workflow repair: artifact only
+  regenerated Ops Console: artifact only
+
+known workflow YAML denominator:
+  invalid files: 38 (last observed)
+  state: REAL_FAIL_CLOSED_SOURCE_DEBT
+  masked by this repair: false
+
+GitHub Actions production/runtime/control-plane authority: NONE
+authority_effect: NONE
+```
+
+The 38 invalid workflow files remain separate bounded source debt. This repair changes observability and proposal transport only; it does not claim those files repaired or activate any runtime/provider/credential capability.
