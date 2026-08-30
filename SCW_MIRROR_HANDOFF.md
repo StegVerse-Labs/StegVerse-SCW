@@ -304,3 +304,35 @@ authority_effect: NONE
 ```
 
 This changes validation denominator by event type only. It does not mark legacy debt resolved, weaken production/runtime checks, grant credential authority, or change any CMC provider/transport lifecycle.
+
+
+## Email-monitor current operational failure repair — 2026-08-30
+
+The next full GitHub email-monitor pass observed new current-main failures after the CodeQL and PR-CI repairs.
+
+```text
+Ops Console Dispatcher run 33328183203 / e3bb0d4:
+  event: issue_comment
+  failure: inputless unrelated comment reached Validate and exited "No workflow given"
+  historical authority: actions:write + hosted workflow dispatch
+  repair: retain request parsing/evidence only; no hosted dispatch authority; unrelated comments become NO_DISPATCH_REQUEST
+
+Workflow Dispatch Guardian run 33328157932 / c28822a:
+  failure: scanner crashed on malformed workflow YAML before producing governance output
+  observed malformed source example: raw Python at YAML line 36
+  repair: catch parse failures, report them in evidence, never rewrite or push workflows from GitHub Actions
+
+Workflows Sanity Check run 33328157908 / c28822a:
+  files: 167
+  parse_valid: 129
+  parse_invalid: 38
+  state: REAL_FAIL_CLOSED_DENOMINATOR_UNCHANGED
+
+Verify UI Layout run 33328157946 / c28822a:
+  stale assertion: ui/public/index.html
+  current UI architecture: Next.js source at ui/pages/index.js + ui/package.json + ui/next.config.js
+  repair: validate current source layout; remove obsolete static/Render deployment assumptions
+```
+
+Bounded repair branch: `fix/scw-current-operational-failures-20260830`.
+This repair does not claim the 38 invalid workflow files are fixed. It removes hosted control-plane mutation behavior from the affected dispatcher/guardian surfaces and corrects a stale UI-source validator.
