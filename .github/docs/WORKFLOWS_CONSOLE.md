@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2026-08-30 18:34 UTC**_
+_Last updated: **2026-08-30 18:38 UTC**_
 
 - ✅ OK: **0**
 - ➖ No dispatch: **126**
-- ❌ Broken: **32**
-- Total: **158**
+- ❌ Broken: **25**
+- Total: **151**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -17,12 +17,7 @@ _Last updated: **2026-08-30 18:34 UTC**_
 | `auto_patch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/auto_patch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/auto_patch.yml) · [File](.github/workflows/auto_patch.yml) |
 | `autodocs-on-demand.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autodocs-on-demand.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autodocs-on-demand.yml) · [File](.github/workflows/autodocs-on-demand.yml) |
 | `autopatch-inspect.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-inspect.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-inspect.yml) · [File](.github/workflows/autopatch-inspect.yml) |
-| `autopatch-ops.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-ops.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-ops.yml) · [File](.github/workflows/autopatch-ops.yml) |
-| `autopatch-readme-quickcontrols.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-readme-quickcontrols.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-readme-quickcontrols.yml) · [File](.github/workflows/autopatch-readme-quickcontrols.yml) |
-| `autopatch-reindex.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-reindex.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-reindex.yml) · [File](.github/workflows/autopatch-reindex.yml) |
-| `autopatch-repotree-and-supercheck.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-repotree-and-supercheck.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-repotree-and-supercheck.yml) · [File](.github/workflows/autopatch-repotree-and-supercheck.yml) |
 | `autopatch-wire-ops-table-links.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-ops-table-links.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-ops-table-links.yml) · [File](.github/workflows/autopatch-wire-ops-table-links.yml) |
-| `autopatch-wire-quick-controls.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-quick-controls.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-quick-controls.yml) · [File](.github/workflows/autopatch-wire-quick-controls.yml) |
 | `autopatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch.yml) · [File](.github/workflows/autopatch.yml) |
 | `autopatch_apply.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_apply.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_apply.yml) · [File](.github/workflows/autopatch_apply.yml) |
 | `autopatch_deferred.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_deferred.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_deferred.yml) · [File](.github/workflows/autopatch_deferred.yml) |
@@ -124,7 +119,6 @@ _Last updated: **2026-08-30 18:34 UTC**_
 | `seed-steg-config.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-steg-config.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed-steg-config.yml) · [File](.github/workflows/seed-steg-config.yml) |
 | `seed_config.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed_config.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/seed_config.yml) · [File](.github/workflows/seed_config.yml) |
 | `self-healing-scan.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/self-healing-scan.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/self-healing-scan.yml) · [File](.github/workflows/self-healing-scan.yml) |
-| `self_repair_autopatch.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/self_repair_autopatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/self_repair_autopatch.yml) · [File](.github/workflows/self_repair_autopatch.yml) |
 | `setup-common-python.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/setup-common-python.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/setup-common-python.yml) · [File](.github/workflows/setup-common-python.yml) |
 | `smoke-tests.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/smoke-tests.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/smoke-tests.yml) · [File](.github/workflows/smoke-tests.yml) |
 | `smoke_api_worker.yml` | ❌ broken · `ParserError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/smoke_api_worker.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/smoke_api_worker.yml) · [File](.github/workflows/smoke_api_worker.yml) |
@@ -145,7 +139,6 @@ _Last updated: **2026-08-30 18:34 UTC**_
 | `telemetry-reusable.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/telemetry-reusable.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/telemetry-reusable.yml) · [File](.github/workflows/telemetry-reusable.yml) |
 | `test-readiness.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/test-readiness.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/test-readiness.yml) · [File](.github/workflows/test-readiness.yml) |
 | `token_smoke_test.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/token_smoke_test.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/token_smoke_test.yml) · [File](.github/workflows/token_smoke_test.yml) |
-| `universal_fixit.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/universal_fixit.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/universal_fixit.yml) · [File](.github/workflows/universal_fixit.yml) |
 | `validate-autopatch-manifest.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-autopatch-manifest.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-autopatch-manifest.yml) · [File](.github/workflows/validate-autopatch-manifest.yml) |
 | `validate-hcb.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-hcb.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-hcb.yml) · [File](.github/workflows/validate-hcb.yml) |
 | `validate-setup-common-python.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-setup-common-python.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-setup-common-python.yml) · [File](.github/workflows/validate-setup-common-python.yml) |
