@@ -118,3 +118,26 @@ This lane is not complete until:
 - unresolved gaps remain explicit in the footprint-auditor exception ledger.
 
 Do not repair a contained workflow by restoring its old token/PAT behavior.
+
+
+## Invalid hosted-mutation workflow retirement batch 1 — 2026-08-30
+
+Seven additional parse-invalid legacy workflow surfaces were found to violate the current SCW security boundary even before considering their YAML syntax. They are retired rather than repaired into executable form:
+
+```text
+.github/workflows/autopatch-ops.yml
+.github/workflows/autopatch-readme-quickcontrols.yml
+.github/workflows/autopatch-reindex.yml
+.github/workflows/autopatch-repotree-and-supercheck.yml
+.github/workflows/autopatch-wire-quick-controls.yml
+.github/workflows/self_repair_autopatch.yml
+.github/workflows/universal_fixit.yml
+```
+
+Observed prohibited patterns included hosted `contents/actions/workflows/pull-requests/checks: write`, direct `git push`, `github.token` / `GITHUB_TOKEN`-backed dispatch or PR creation, workflow self-modification, and broad source normalization from a hosted runner.
+
+No current indexed source reference to these workflow filenames was observed before retirement. No replacement mutation capability is introduced. Any future automated repair must use separately admitted exact-scope TV/TVC authority or remain proposal/evidence-only.
+
+`autopatch_dryrun.yml` is intentionally not included because its current semantics are read-only PR validation/artifact generation and should be repaired separately if its YAML can be made valid without authority expansion.
+
+The previous parse-invalid denominator was 38 at Workflows Sanity Check run `33327664669`. A fresh post-merge sanity run is required before recording a new denominator.
