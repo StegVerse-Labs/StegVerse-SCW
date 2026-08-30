@@ -285,3 +285,39 @@ authority_effect: NONE
 ```
 
 This repair removes the repository-level Code Security publication dependency without weakening analysis. It does not modify CMC-034/035/036 source semantics, provider execution, credential authority, or runtime activation.
+
+
+## Email-monitor operational workflow incident — 2026-08-30
+
+The broad GitHub failure-email monitor observed a post-CMC-036 cluster on SCW current main and separated four distinct conditions instead of treating the notification fanout as one generic failure.
+
+```text
+commit observed: 41586a3bf1a2d5f7a2eb2d96cd56593e667b0c42
+CodeQL run 33327664676:
+  analysis: COMPLETED
+  failure: SARIF publication rejected because repository Code Security is disabled
+  canonical repair owner: PR #33 / codeql-validation-transport-current-main
+  duplicate repair: NOT CREATED
+
+Workflows Status Badges run 33327664704:
+  failure: GitHub workflow-list API returned 403 Resource not accessible by integration
+  required permission reported by GitHub: actions=read
+  stronger repair: remove API dependency and hosted write-back; derive evidence from checked-out repository files only
+
+Workflows First-Aid Sweep run 33327664689:
+  analysis/repair proposal: completed
+  failure: direct push to main rejected non-fast-forward after concurrent main advancement
+  stronger repair: hosted workflow becomes non-authorizing proposal/evidence producer; no direct push to main
+
+Workflows Sanity Check run 33327664669:
+  files scanned: 167
+  parse-valid: 129
+  parse-invalid: 38
+  nested workflow files: 3
+  workflow-classified: 126
+  state: REAL_FAIL_CLOSED_DENOMINATOR
+```
+
+The 38 invalid YAML files remain real source debt and are not masked by this observability repair. Their repair must occur through bounded repository changes with validation; the hosted first-aid workflow may generate a proposed patch artifact but may not act as repository control-plane authority.
+
+Current bounded repair branch: `fix/workflow-observability-nonmutating-20260830`.
