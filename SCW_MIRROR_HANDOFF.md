@@ -262,3 +262,26 @@ authority_effect: NONE
 ```
 
 CMC-036 removes only the hosted nightly dispatcher. It creates no replacement credential path, no TV/TVC transport implementation, no provider/export runtime authority, and no repository mutation authority.
+
+
+## CodeQL validation-transport current-main repair — 2026-08-30
+
+Historical PR #27 proved the intended CodeQL transport correction but became stale as SCW main advanced. Its exact two-file intent has been rematerialized from current main rather than merging stale history.
+
+```text
+historical owner PR: #27
+current-main base: 4f0391a242f2dc0c5506cb91c6fb63f55b850a97
+analysis languages: python + actions
+CodeQL query execution: retained
+SARIF generation: retained
+code-scanning publication: disabled
+analyze upload: never
+database upload: false
+security-events write: NONE
+checkout credential persistence: false
+SARIF evidence retention: actions/upload-artifact
+GitHub Actions production/runtime/control-plane authority: NONE
+authority_effect: NONE
+```
+
+This repair removes the repository-level Code Security publication dependency without weakening analysis. It does not modify CMC-034/035/036 source semantics, provider execution, credential authority, or runtime activation.
