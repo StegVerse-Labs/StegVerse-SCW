@@ -242,3 +242,23 @@ authority_effect: NONE
 ```
 
 Canonical continuation: `docs/SCW_FINANCE_PROVIDER_CREDENTIAL_BOUNDARY_MIRROR_HANDOFF.md`. This closure does not absorb CodeQL PR #27, legacy PAT/bootstrap work, or any provider/runtime activation lane.
+
+
+## CMC-036 hosted HCB nightly dispatch retirement — current-main rematerialization
+
+The historical draft owner PR #20 preserved the exact CMC-036 intent but could not be marked ready through the connected GitHub mutation because of a GraphQL schema mismatch, and its old base no longer applied cleanly after concurrent main advancement. The same bounded two-file intent was rematerialized from current main without importing unrelated history.
+
+```text
+historical owner PR: #20 (closed, source preserved)
+failed exact-head ready-for-review mutation: connector GraphQL fullDatabaseId schema mismatch
+stale replacement PR: #31 (superseded by current-main rematerialization)
+current-main base: ba691599c0bb3e678422bf9b6aae6dbedec7119c
+retired surface: .github/workflows/export-hcb-nightly.yml
+historical hosted authority: actions: write + GH_TOKEN from github.token + workflow dispatch
+contained export target: .github/workflows/export-hcb.yml remains
+live TV/TVC export transport: NOT OBSERVED
+provider/export runtime activation: NOT OBSERVED
+authority_effect: NONE
+```
+
+CMC-036 removes only the hosted nightly dispatcher. It creates no replacement credential path, no TV/TVC transport implementation, no provider/export runtime authority, and no repository mutation authority.
