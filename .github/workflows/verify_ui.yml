@@ -1,39 +1,44 @@
 name: Verify UI Layout
+
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: Check required files
+      - name: Check current Next.js UI source layout
         run: |
-          set -e
+          set -euo pipefail
           for f in \
-            ui/public/index.html \
+            ui/package.json \
+            ui/next.config.js \
+            ui/pages/index.js \
             ui/public/stegtalk.html \
             ui/public/manifest.json \
             ui/public/sw.js \
-            ui/public/icons/icon-192.png \
-            ui/public/icons/icon-512.png \
             README-LAYMAN.md \
             README-DEV.md
           do
             if [ ! -e "$f" ]; then
-              echo "Missing: $f"; exit 1
-            else
-              echo "Found: $f"
+              echo "::error::Missing current UI source: $f"
+              exit 1
             fi
+            echo "Found: $f"
           done
-          echo "All files present."
+          echo "Current Next.js UI source layout is present."
 
-      - name: Print Render intent (for humans)
+      - name: Record authority boundary
         run: |
-          echo "Render scw-ui should be:"
-          echo "- Type: Static Site"
-          echo "- Root Directory: ui/public"
-          echo "- Publish Directory: ."
+          echo "github_runtime_authority=VALIDATION_EVIDENCE_ONLY"
+          echo "deployment_authority=NONE"
+          echo "authority_effect=NONE"
