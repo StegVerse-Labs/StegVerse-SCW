@@ -337,3 +337,34 @@ authority_effect: NONE
 ```
 
 The 38 invalid workflow files remain separate bounded source debt. This repair changes observability and proposal transport only; it does not claim those files repaired or activate any runtime/provider/credential capability.
+
+
+## Invalid hosted-mutation workflow retirement batch 1 — 2026-08-30
+
+The fail-closed workflow sanity denominator identified 38 parse-invalid workflow files on run `33327664669`. The first authority-classified batch was reviewed against current source and retired rather than syntax-repaired, because repairing syntax would have restored GitHub-hosted repository/control-plane mutation authority.
+
+```text
+retired:
+  autopatch-ops.yml
+  autopatch-readme-quickcontrols.yml
+  autopatch-reindex.yml
+  autopatch-repotree-and-supercheck.yml
+  autopatch-wire-quick-controls.yml
+  self_repair_autopatch.yml
+  universal_fixit.yml
+
+common retired behaviors:
+  contents/actions/workflows/pull-requests/checks write permission: PRESENT in one or more files
+  direct git commit/push from GitHub-hosted execution: PRESENT
+  github.token / GITHUB_TOKEN materialization or authenticated workflow dispatch: PRESENT in one or more files
+  workflow/self-repair or source mutation from hosted runner: PRESENT
+
+current source references to these filenames: NONE OBSERVED
+replacement mutation authority created: NONE
+autopatch_dryrun.yml: EXCLUDED / separate read-only validation candidate
+prior parse-invalid denominator: 38
+post-retirement denominator: NOT YET OBSERVED
+authority_effect: NONE
+```
+
+The next valid transition is a fresh Workflows Sanity Check on the merged retirement. Do not infer the expected denominator reduction before that run is observed.
