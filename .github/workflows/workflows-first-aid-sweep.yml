@@ -8,8 +8,7 @@ on:
       - ".github/workflows/**"
 
 permissions:
-  contents: write            # commit fixes
-  actions: write             # needed to call workflow-dispatch API (future use)
+  contents: read
 
 jobs:
   sweep:
@@ -199,25 +198,13 @@ jobs:
           )
           PY
 
-      - name: Commit fixes (if any)
+      - name: Preserve proposed workflow repairs as evidence
         shell: bash
         run: |
           set -euo pipefail
-          CHANGED="no"
-          if [ -f ".github/autopatch_out/FIRST_AID_SUMMARY.json" ]; then
-            if jq -e '.fixed | length > 0 or .added_dispatch | length > 0' .github/autopatch_out/FIRST_AID_SUMMARY.json >/dev/null 2>&1; then
-              CHANGED="yes"
-            fi
-          fi
-          if [ "$CHANGED" = "yes" ]; then
-            git config user.name  "StegVerse Bot"
-            git config user.email "bot@stegverse.org"
-            git add .github/workflows || true
-            git commit -m "chore(workflows): first-aid sweep (dispatch injection + yaml nits)" || true
-            git push origin HEAD:main || true
-          else
-            echo "No workflow fixes to commit."
-          fi
+          mkdir -p .github/autopatch_out
+          git diff -- .github/workflows > .github/autopatch_out/FIRST_AID_PROPOSED.patch || true
+          test -f .github/autopatch_out/FIRST_AID_SUMMARY.json
 
       - name: Regenerate Ops Console (inline)
         shell: bash
@@ -272,19 +259,16 @@ jobs:
           DOC.write_text("\n".join(lines) + "\n", encoding="utf-8")
           PY
 
-      - name: Commit console (if changed)
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add .github/docs/WORKFLOWS_CONSOLE.md || true
-          if ! git diff --cached --quiet; then
-            git config user.name  "StegVerse Bot"
-            git config user.email "bot@stegverse.org"
-            git commit -m "docs(ops): refresh Ops Console after first-aid sweep"
-            git push origin HEAD:main
-          else
-            echo "No console changes."
-          fi   # <-- this was missing
+      - name: Upload first-aid evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-first-aid-${{ github.run_id }}
+          path: |
+            .github/autopatch_out/FIRST_AID_SUMMARY.json
+            .github/autopatch_out/FIRST_AID_PROPOSED.patch
+            .github/docs/WORKFLOWS_CONSOLE.md
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Summary
         if: always()
