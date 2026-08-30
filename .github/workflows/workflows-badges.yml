@@ -10,7 +10,7 @@ on:
       - "README.md"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   badge:
@@ -19,74 +19,58 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          persist-credentials: false
+          fetch-depth: 1
 
-      - name: Determine totals (files on disk)
-        id: disk
-        run: |
-          total=$(ls .github/workflows/*.y*ml 2>/dev/null | wc -l | tr -d ' ')
-          echo "total=$total" >> "$GITHUB_OUTPUT"
-
-      - name: Query active workflows (API)
-        id: api
-        uses: actions/github-script@v7
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          script: |
-            const all = await github.paginate(github.rest.actions.listRepoWorkflows, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100
-            });
-            core.setOutput('active', String(all.length));
+          python-version: "3.11"
 
-      - name: Compute invalid count
-        id: math
-        run: |
-          active=${{ steps.api.outputs.active }}
-          total=${{ steps.disk.outputs.total }}
-          invalid=$(( total - active ))
-          echo "active=$active"   >> "$GITHUB_OUTPUT"
-          echo "invalid=$invalid" >> "$GITHUB_OUTPUT"
-          echo "total=$total"     >> "$GITHUB_OUTPUT"
+      - name: Install parser
+        run: python -m pip install --disable-pip-version-check "PyYAML==6.0.2"
 
-      - name: Generate badge
+      - name: Generate non-authorizing workflow status evidence
         run: |
-          mkdir -p .github/badges
-          active=${{ steps.math.outputs.active }}
-          total=${{ steps.math.outputs.total }}
-          invalid=${{ steps.math.outputs.invalid }}
-          cat > .github/badges/workflows.svg <<'SVG'
-          <svg xmlns="http://www.w3.org/2000/svg" width="190" height="20" role="img" aria-label="workflows">
-            <linearGradient id="s" x2="0" y2="100%">
-              <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
-              <stop offset="1" stop-opacity=".1"/>
-            </linearGradient>
-            <mask id="m"><rect width="190" height="20" rx="3" fill="#fff"/></mask>
-            <g mask="url(#m)">
-              <rect width="95" height="20" fill="#555"/>
-              <rect x="95" width="95" height="20" fill="#007ec6"/>
-              <rect width="190" height="20" fill="url(#s)"/>
-            </g>
-            <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-              <text x="48" y="14">workflows</text>
-              <text id="val" x="142" y="14">ACTIVE/TOTAL (-INVALID)</text>
-            </g>
-          </svg>
-          SVG
-          sed -i \
-            -e "s/ACTIVE/${active}/" \
-            -e "s/TOTAL/${total}/" \
-            -e "s/INVALID/${invalid}/" \
-            .github/badges/workflows.svg
+          set -euo pipefail
+          mkdir -p workflow-status-evidence
+          python - <<'PY'
+          import json
+          import pathlib
+          import yaml
 
-      - name: Commit badge
-        run: |
-          git config user.name  "StegVerse Bot"
-          git config user.email "bot@stegverse.org"
-          git add .github/badges/workflows.svg
-          if ! git diff --cached --quiet; then
-            git commit -m "docs(badges): update workflows status badge"
-            git push origin HEAD:main
-          else
-            echo "No badge changes."
-          fi
+          root = pathlib.Path(".github/workflows")
+          records = []
+          for path in sorted(root.glob("*.yml")) + sorted(root.glob("*.yaml")):
+              text = path.read_text(encoding="utf-8", errors="replace")
+              try:
+                  doc = yaml.safe_load(text)
+                  valid = isinstance(doc, dict)
+                  error = None if valid else "invalid_workflow_shape"
+              except Exception as exc:
+                  valid = False
+                  error = f"{type(exc).__name__}: {str(exc).splitlines()[0]}"
+              records.append({"path": path.as_posix(), "valid": valid, "error": error})
+
+          summary = {
+              "total": len(records),
+              "valid": sum(item["valid"] for item in records),
+              "invalid": sum(not item["valid"] for item in records),
+              "authority_effect": "NONE",
+              "github_runtime_authority": "VALIDATION_EVIDENCE_ONLY",
+          }
+          out = {"summary": summary, "records": records}
+          pathlib.Path("workflow-status-evidence/workflows-status.json").write_text(
+              json.dumps(out, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Upload workflow status evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflows-status-${{ github.run_id }}
+          path: workflow-status-evidence/workflows-status.json
+          if-no-files-found: error
+          retention-days: 14
