@@ -22,14 +22,14 @@ on:
 permissions:
   contents: read
   issues: read
-  actions: write
 
 jobs:
-  dispatch:
+  dispatch_request_evidence:
     runs-on: ubuntu-latest
     steps:
-      - name: Derive parameters
+      - name: Derive requested parameters
         id: params
+        shell: bash
         run: |
           set -euo pipefail
           MODE="${{ github.event_name }}"
@@ -37,17 +37,17 @@ jobs:
 
           if [ "$MODE" = "issues" ]; then
             BODY='${{ github.event.issue.body }}'
-            WF=$(printf "%s\n" "$BODY" | awk '/Select workflow to run/{getline; print}' | xargs)
-            REF_LINE=$(printf "%s\n" "$BODY" | awk '/Branch\/Ref/{getline; print}' | xargs)
+            WF=$(printf "%s\n" "$BODY" | awk '/Select workflow to run/{getline; print}' | xargs || true)
+            REF_LINE=$(printf "%s\n" "$BODY" | awk '/Branch\/Ref/{getline; print}' | xargs || true)
             [ -n "$REF_LINE" ] && REF="$REF_LINE"
-            INPUTS=$(printf "%s\n" "$BODY" | awk '/Inputs JSON/{getline; print}' | sed 's/^```//; s/```$//' | xargs)
+            INPUTS=$(printf "%s\n" "$BODY" | awk '/Inputs JSON/{getline; print}' | sed 's/^\x60\x60\x60//; s/\x60\x60\x60$//' | xargs || true)
             [ -z "$INPUTS" ] && INPUTS="{}"
           elif [ "$MODE" = "issue_comment" ]; then
             CMT='${{ github.event.comment.body }}'
             if echo "$CMT" | grep -qE '^/run[[:space:]]+'; then
               WF=$(echo "$CMT" | sed -n 's#^/run[[:space:]]\+\([^[:space:]]\+\).*#\1#p')
               JSON=$(echo "$CMT" | sed -n 's#^/run[[:space:]]\+[^[:space:]]\+[[:space:]]\+\(.*\)$#\1#p')
-              [ -n "$JSON" ] && INPUTS="$JSON" || INPUTS="{}"
+              [ -n "$JSON" ] && INPUTS="$JSON"
             fi
           else
             WF='${{ inputs.workflow }}'
@@ -55,33 +55,32 @@ jobs:
             INPUTS='${{ inputs.inputs_json }}'
           fi
 
-          echo "wf=$WF" >> $GITHUB_OUTPUT
-          echo "ref=$REF" >> $GITHUB_OUTPUT
-          echo "inputs=$INPUTS" >> $GITHUB_OUTPUT
+          echo "wf=$WF" >> "$GITHUB_OUTPUT"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "inputs=$INPUTS" >> "$GITHUB_OUTPUT"
 
-      - name: Validate
-        run: |
-          [ -n "${{ steps.params.outputs.wf }}" ] || { echo "::error::No workflow given"; exit 1; }
-          echo "Workflow: ${{ steps.params.outputs.wf }}"
-          echo "Ref     : ${{ steps.params.outputs.ref }}"
-          echo "Inputs  : ${{ steps.params.outputs.inputs }}"
-
-      - name: Dispatch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Record bounded dispatch-request evidence
         run: |
           set -euo pipefail
-          WF_FILE='${{ steps.params.outputs.wf }}'
-          REF='${{ steps.params.outputs.ref }}'
-          INPUTS='${{ steps.params.outputs.inputs }}'
-          OWNER_REPO='${{ github.repository }}'
+          mkdir -p ops-console-evidence
+          {
+            echo "event=${{ github.event_name }}"
+            echo "workflow=${{ steps.params.outputs.wf }}"
+            echo "ref=${{ steps.params.outputs.ref }}"
+            echo "inputs=${{ steps.params.outputs.inputs }}"
+            if [ -n "${{ steps.params.outputs.wf }}" ]; then
+              echo "state=REQUEST_OBSERVED_NOT_DISPATCHED"
+            else
+              echo "state=NO_DISPATCH_REQUEST"
+            fi
+            echo "github_runtime_authority=VALIDATION_EVIDENCE_ONLY"
+            echo "authority_effect=NONE"
+          } | tee ops-console-evidence/request.txt
 
-          WF_ID=$(gh api /repos/$OWNER_REPO/actions/workflows \
-                  --jq '.workflows[] | select(.path | endswith($ENV.WF_FILE)) | .id' | head -n1)
-          [ -n "$WF_ID" ] || { echo "::error::Workflow not found: $WF_FILE"; exit 1; }
-
-          gh api --method POST \
-            /repos/$OWNER_REPO/actions/workflows/$WF_ID/dispatches \
-            -f ref="$REF" -f inputs="$INPUTS"
-
-          echo "✅ Dispatched $WF_FILE on $REF"
+      - name: Upload request evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops-console-request-${{ github.run_id }}
+          path: ops-console-evidence/request.txt
+          if-no-files-found: error
+          retention-days: 14
