@@ -285,3 +285,22 @@ authority_effect: NONE
 ```
 
 This repair removes the repository-level Code Security publication dependency without weakening analysis. It does not modify CMC-034/035/036 source semantics, provider execution, credential authority, or runtime activation.
+
+
+## PR-scoped CI validation repair — 2026-08-30
+
+The historical repo-alignment PR #19 demonstrated that narrow SCW repairs were being blocked by unrelated repository-wide Ruff/test debt. The CI-scoping portion is rematerialized independently from current main after the CodeQL transport repair merged.
+
+```text
+current-main base: 34258a9c46acee73631d60e6ecbcebcb0fbf61cb
+pull_request lint scope: changed Python files only
+pull_request pytest scope: changed pytest files only
+push/workflow_dispatch lint scope: repository api/scripts/tests
+push/workflow_dispatch pytest scope: repository tests
+checkout credential persistence: false
+permissions: contents read
+legacy repository-wide Ruff/test debt: STILL VISIBLE ON NON-PR RUNS
+authority_effect: NONE
+```
+
+This changes validation denominator by event type only. It does not mark legacy debt resolved, weaken production/runtime checks, grant credential authority, or change any CMC provider/transport lifecycle.
