@@ -10,12 +10,7 @@
 | `auto_patch.yml` | not-inserted |
 | `autodocs-on-demand.yml` | parse-failed |
 | `autopatch-inspect.yml` | not-inserted |
-| `autopatch-ops.yml` | parse-failed |
-| `autopatch-readme-quickcontrols.yml` | parse-failed |
-| `autopatch-reindex.yml` | parse-failed |
-| `autopatch-repotree-and-supercheck.yml` | parse-failed |
 | `autopatch-wire-ops-table-links.yml` | not-inserted |
-| `autopatch-wire-quick-controls.yml` | parse-failed |
 | `autopatch.yml` | not-inserted |
 | `autopatch_apply.yml` | not-inserted |
 | `autopatch_deferred.yml` | not-inserted |
@@ -38,7 +33,6 @@
 | `emergency_orchestrator_lite.yml` | parse-failed |
 | `enqueue-test.yml` | not-inserted |
 | `entities_runner.yml` | not-inserted |
-| `export-hcb-nightly.yml` | not-inserted |
 | `export-hcb-weekly.yml` | not-inserted |
 | `export-hcb.yml` | not-inserted |
 | `finance-credential-boundary-validation.yml` | not-inserted |
@@ -118,7 +112,6 @@
 | `seed-steg-config.yml` | not-inserted |
 | `seed_config.yml` | not-inserted |
 | `self-healing-scan.yml` | not-inserted |
-| `self_repair_autopatch.yml` | parse-failed |
 | `setup-common-python.yml` | not-inserted |
 | `smoke-tests.yml` | not-inserted |
 | `smoke_api_worker.yml` | parse-failed |
@@ -139,7 +132,6 @@
 | `telemetry-reusable.yml` | not-inserted |
 | `test-readiness.yml` | not-inserted |
 | `token_smoke_test.yml` | not-inserted |
-| `universal_fixit.yml` | parse-failed |
 | `validate-autopatch-manifest.yml` | not-inserted |
 | `validate-hcb.yml` | not-inserted |
 | `validate-setup-common-python.yml` | not-inserted |
