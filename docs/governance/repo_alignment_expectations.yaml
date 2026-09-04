@@ -1,7 +1,12 @@
-version: 2
+version: 3
 description: "Cross-repo StegTVC connectivity and file-sharing alignment baseline"
 source_manifest: "scripts/stegtvc_connectivity_manifest.json"
+input_contract: "credential-free exact materialized snapshots with source SHA and receipt reference"
+credential_authority: "TV/TVC"
 
+# Target source is materialized before this checker runs. The checker itself has
+# no repository credential, source-read authority, mutation authority, or
+# publication authority.
 targets:
   - repo: "StegVerse-Labs/TVC"
   - repo: "StegVerse-Labs/hybrid-collab-bridge"
@@ -21,6 +26,3 @@ required_workflows: []
 
 optional_checks:
   ensure_workflow_dispatch: true
-  check_repo_secrets_names:
-    - "PAT_WORKFLOW"
-    - "GH_STEGVERSE_PAT"
