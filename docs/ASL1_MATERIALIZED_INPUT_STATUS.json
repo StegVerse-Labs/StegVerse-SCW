@@ -1,0 +1,10 @@
+{
+  "schema": "stegverse.scw.asl1-source-repair-status/v1",
+  "state": "SOURCE_REPAIR_IMPLEMENTED_VALIDATION_PENDING",
+  "workflow_reactivated": false,
+  "tvc_private_source_read_activation_observed": false,
+  "credential_path_in_checker": false,
+  "network_path_in_checker": false,
+  "durable_report_publication_authority": false,
+  "operational_asl1_proof": false
+}
