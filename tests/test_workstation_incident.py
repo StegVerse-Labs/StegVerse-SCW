@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CAPTURE = ROOT / "scripts" / "capture_workstation_incident.py"
 CORRELATE = ROOT / "scripts" / "correlate_workstation_incidents.py"
 PROJECT = ROOT / "scripts" / "project_workstation_incident.py"
+TRANSITION = ROOT / "scripts" / "apply_workstation_incident_transition.py"
 FIXTURE = ROOT / "data" / "workstation-incidents" / "WGI-chatgpt-ios-plus-control-20260904.json"
 
 
@@ -91,6 +92,64 @@ class WorkstationIncidentTests(unittest.TestCase):
             result = json.loads(proc.stdout)
             self.assertEqual(len(result["matches"]), 1)
             self.assertGreater(result["matches"][0]["score"], 0)
+
+    def test_transition_emits_receipt_and_updates_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            incident = Path(tmp) / "incident.json"
+            transition_dir = Path(tmp) / "transitions"
+            incident.write_text(FIXTURE.read_text(encoding="utf-8"), encoding="utf-8")
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(TRANSITION),
+                    str(incident),
+                    "--to",
+                    "CORRELATED",
+                    "--actor",
+                    "test",
+                    "--reason",
+                    "candidate match accepted for review",
+                    "--transition-dir",
+                    str(transition_dir),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            receipt_path = Path(proc.stdout.strip())
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            updated = json.loads(incident.read_text(encoding="utf-8"))
+            self.assertEqual(receipt["from_status"], "OBSERVED")
+            self.assertEqual(receipt["to_status"], "CORRELATED")
+            self.assertFalse(receipt["authority_effect"])
+            self.assertEqual(updated["status"], "CORRELATED")
+
+    def test_strong_transition_requires_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            incident = Path(tmp) / "incident.json"
+            record = json.loads(FIXTURE.read_text(encoding="utf-8"))
+            record["status"] = "REPRODUCED"
+            record["root_cause"]["state"] = "CONFIRMED"
+            record["root_cause"]["evidence_refs"] = ["evidence:root-cause"]
+            incident.write_text(json.dumps(record), encoding="utf-8")
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(TRANSITION),
+                    str(incident),
+                    "--to",
+                    "ROOT_CAUSED",
+                    "--actor",
+                    "test",
+                    "--reason",
+                    "root cause review",
+                    "--transition-dir",
+                    str(Path(tmp) / "transitions"),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(proc.returncode, 0)
 
 
 if __name__ == "__main__":
