@@ -33,19 +33,32 @@ def render_incident(record: dict) -> str:
     root_cause = record.get("root_cause", {})
     workaround = record.get("workaround", {})
     fix = record.get("fix", {})
+    machine_record = esc(json.dumps(record, indent=2, sort_keys=True))
+    product = (
+        f"{esc(classification.get('vendor'))} / "
+        f"{esc(classification.get('product'))}"
+    )
+    root_cause_text = (
+        f"{esc(root_cause.get('state'))} — "
+        f"{esc(root_cause.get('statement'))}"
+    )
+    workaround_text = (
+        f"{esc(workaround.get('state'))} — "
+        f"{esc(workaround.get('procedure'))}"
+    )
     return f"""
     <article class="incident">
       <h2>{esc(record.get('incident_id'))}</h2>
       <p><strong>Status:</strong> {esc(record.get('status'))}</p>
-      <p><strong>Product:</strong> {esc(classification.get('vendor'))} / {esc(classification.get('product'))}</p>
+      <p><strong>Product:</strong> {product}</p>
       <p><strong>Platform:</strong> {esc(classification.get('platform'))}</p>
       <p><strong>Surface:</strong> {esc(classification.get('surface'))}</p>
       <p><strong>Summary:</strong> {esc(observation.get('summary'))}</p>
       <p><strong>Observed:</strong> {esc(observation.get('observed_behavior'))}</p>
-      <p><strong>Root cause:</strong> {esc(root_cause.get('state'))} — {esc(root_cause.get('statement'))}</p>
-      <p><strong>Workaround:</strong> {esc(workaround.get('state'))} — {esc(workaround.get('procedure'))}</p>
+      <p><strong>Root cause:</strong> {root_cause_text}</p>
+      <p><strong>Workaround:</strong> {workaround_text}</p>
       <p><strong>Fix:</strong> {esc(fix.get('state'))} — {esc(fix.get('statement'))}</p>
-      <details><summary>Machine record</summary><pre>{esc(json.dumps(record, indent=2, sort_keys=True))}</pre></details>
+      <details><summary>Machine record</summary><pre>{machine_record}</pre></details>
     </article>
     """
 
@@ -86,7 +99,12 @@ def main() -> int:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>StegVerse Workstation Incident Inspector</title>
 <style>
-body {{ font-family: system-ui, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }}
+body {{
+  font-family: system-ui, sans-serif;
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}}
 .incident {{ border: 1px solid #aaa; border-radius: .5rem; padding: 1rem; margin: 1rem 0; }}
 table {{ border-collapse: collapse; width: 100%; }}
 th, td {{ border: 1px solid #aaa; padding: .5rem; vertical-align: top; }}
@@ -95,7 +113,10 @@ pre {{ overflow-x: auto; white-space: pre-wrap; }}
 </head>
 <body>
 <h1>Workstation Incident Inspector</h1>
-<p>Local evidence/provenance inspection only. This report grants no publication, remediation, vendor, activation, or authority effect.</p>
+<p>
+Local evidence/provenance inspection only. This report grants no publication,
+remediation, vendor, activation, or authority effect.
+</p>
 <section>
 <h2>Incidents</h2>
 {incident_html or '<p>No incidents found.</p>'}
@@ -103,7 +124,12 @@ pre {{ overflow-x: auto; white-space: pre-wrap; }}
 <section>
 <h2>Correlation decisions</h2>
 <table>
-<thead><tr><th>ID</th><th>Left</th><th>Right</th><th>Score</th><th>Decision</th><th>Relationship</th><th>Reason</th></tr></thead>
+<thead>
+<tr>
+<th>ID</th><th>Left</th><th>Right</th><th>Score</th>
+<th>Decision</th><th>Relationship</th><th>Reason</th>
+</tr>
+</thead>
 <tbody>{decision_html}</tbody>
 </table>
 </section>
