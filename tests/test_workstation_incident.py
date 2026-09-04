@@ -10,6 +10,8 @@ CAPTURE = ROOT / "scripts" / "capture_workstation_incident.py"
 CORRELATE = ROOT / "scripts" / "correlate_workstation_incidents.py"
 CORRELATION_DECISION = ROOT / "scripts" / "accept_workstation_incident_correlation.py"
 PROJECT = ROOT / "scripts" / "project_workstation_incident.py"
+PUBLICATION_REVIEW = ROOT / "scripts" / "review_workstation_incident_publication.py"
+INSPECTOR = ROOT / "scripts" / "render_workstation_incident_inspector.py"
 TRANSITION = ROOT / "scripts" / "apply_workstation_incident_transition.py"
 FIXTURE = ROOT / "data" / "workstation-incidents" / "WGI-chatgpt-ios-plus-control-20260904.json"
 
@@ -68,6 +70,36 @@ class WorkstationIncidentTests(unittest.TestCase):
             )
             self.assertEqual(proc.returncode, 3)
             self.assertIn("denied", proc.stderr)
+
+    def test_publication_review_passes_public_nonsensitive_fixture(self):
+        proc = subprocess.run(
+            [sys.executable, str(PUBLICATION_REVIEW), str(FIXTURE)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        result = json.loads(proc.stdout)
+        self.assertEqual(result["decision"], "PASS")
+        self.assertEqual(result["blockers"], [])
+        self.assertFalse(result["publication_effect"])
+
+    def test_publication_review_denies_unredacted_sensitive_environment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            incident = Path(tmp) / "incident.json"
+            record = json.loads(FIXTURE.read_text(encoding="utf-8"))
+            record["observation"]["environment"]["ip_address"] = "192.0.2.1"
+            incident.write_text(json.dumps(record), encoding="utf-8")
+            proc = subprocess.run(
+                [sys.executable, str(PUBLICATION_REVIEW), str(incident)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 3)
+            result = json.loads(proc.stdout)
+            self.assertIn(
+                "UNREDACTED_SENSITIVE_FIELD:observation.environment.ip_address",
+                result["blockers"],
+            )
 
     def test_correlation_emits_candidates_only(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -171,6 +203,30 @@ class WorkstationIncidentTests(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(proc.returncode, 0)
+
+    def test_inspector_renders_incident_without_publication(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "inspector.html"
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSPECTOR),
+                    "--incident-dir",
+                    str(FIXTURE.parent),
+                    "--decision-dir",
+                    str(Path(tmp) / "decisions"),
+                    "--output",
+                    str(output),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(Path(proc.stdout.strip()), output)
+            document = output.read_text(encoding="utf-8")
+            self.assertIn("Workstation Incident Inspector", document)
+            self.assertIn("WGI-chatgpt-ios-plus-control-20260904", document)
+            self.assertIn("grants no publication", document)
 
     def test_transition_emits_receipt_and_updates_status(self):
         with tempfile.TemporaryDirectory() as tmp:
