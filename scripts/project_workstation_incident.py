@@ -48,12 +48,21 @@ def machine_projection(record: dict) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("incident")
-    parser.add_argument("--view", choices=["user", "sme", "machine"], default="user")
-    parser.add_argument("--public", action="store_true", help="enforce public-projection authorization")
+    parser.add_argument(
+        "--view",
+        choices=["user", "sme", "machine"],
+        default="user",
+    )
+    parser.add_argument(
+        "--public",
+        action="store_true",
+        help="enforce public-projection authorization",
+    )
     args = parser.parse_args()
 
     record = json.loads(Path(args.incident).read_text(encoding="utf-8"))
-    if args.public and not record.get("provenance", {}).get("public_projection_allowed", False):
+    allowed = record.get("provenance", {}).get("public_projection_allowed", False)
+    if args.public and not allowed:
         print("public projection denied by incident provenance", file=sys.stderr)
         return 3
 
