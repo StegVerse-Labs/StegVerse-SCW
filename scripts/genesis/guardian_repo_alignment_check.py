@@ -1,200 +1,195 @@
 #!/usr/bin/env python3
-"""
-StegVerse Guardian Worker — Repo Alignment Check (ASL-1)
+"""StegVerse Guardian Worker — Repo Alignment Check (ASL-1).
 
-Scans target repos and reports ✅/❌ for:
-  - required files (connectivity & sharing)
-  - required workflows
-  - optional checks (workflow_dispatch present, secret names exist)
+The checker is deliberately credential-free. It never contacts GitHub and never
+accepts PAT/GITHUB_TOKEN style credentials. Repository source must already be
+materialized by an admitted source-read capability and described by a
+secret-free manifest that binds each target to an exact source SHA and receipt
+reference.
 
-Writes:
-  reports/guardians/repo_alignment_latest.json
-  reports/guardians/repo_alignment_latest.md
-
-Notes:
-- Secret VALUES are never read (impossible + unsafe). If PAT lacks permission
-  to list secret names, we mark secrets status as "unknown" rather than fail.
+This program only evaluates those local snapshots and writes reports. It grants
+no source-read, mutation, publication, release, runtime, or credential authority.
 """
 
 from __future__ import annotations
-import json, os, sys, time
+
+import argparse
+import json
+import os
+import re
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-import requests
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-CFG_PATH = ROOT / "docs" / "governance" / "repo_alignment_expectations.yaml"
-OUT_DIR = ROOT / "reports" / "guardians"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+DEFAULT_CFG = ROOT / "docs" / "governance" / "repo_alignment_expectations.yaml"
+DEFAULT_OUT = ROOT / "reports" / "guardians"
+MANIFEST_SCHEMA = "stegverse.scw.repo-alignment-materialization/v1"
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+FORBIDDEN_MANIFEST_KEYS = {
+    "token",
+    "secret",
+    "credential",
+    "password",
+    "pat",
+    "github_token",
+    "gh_token",
+}
 
-API = "https://api.github.com"
 
-def load_cfg() -> Dict[str, Any]:
-    if not CFG_PATH.exists():
-        raise SystemExit(f"Missing config at {CFG_PATH}")
-    return yaml.safe_load(CFG_PATH.read_text(encoding="utf-8")) or {}
+def load_yaml(path: Path) -> Dict[str, Any]:
+    if not path.is_file():
+        raise ValueError(f"missing config: {path}")
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not isinstance(data, dict):
+        raise ValueError("config must be a mapping")
+    return data
 
-def gh_headers(token: str) -> Dict[str, str]:
-    return {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "StegVerse-Repo-Alignment-Check"
-    }
 
-def api_get(url: str, token: str) -> requests.Response:
-    return requests.get(url, headers=gh_headers(token), timeout=30)
+def _reject_secret_fields(value: Any, where: str = "manifest") -> None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            normalized = str(key).strip().lower()
+            if normalized in FORBIDDEN_MANIFEST_KEYS or normalized.endswith("_token"):
+                raise ValueError(f"secret-bearing field prohibited at {where}.{key}")
+            _reject_secret_fields(child, f"{where}.{key}")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            _reject_secret_fields(child, f"{where}[{index}]")
 
-def file_exists(owner: str, repo: str, path: str, token: str) -> Tuple[bool, str]:
-    url = f"{API}/repos/{owner}/{repo}/contents/{path}"
-    r = api_get(url, token)
-    if r.status_code == 200:
-        return True, "present"
-    if r.status_code == 404:
-        return False, "missing"
-    return False, f"error:{r.status_code}"
 
-def list_workflows(owner: str, repo: str, token: str) -> Tuple[List[str], str]:
-    url = f"{API}/repos/{owner}/{repo}/contents/.github/workflows"
-    r = api_get(url, token)
-    if r.status_code != 200:
-        return [], f"error:{r.status_code}"
-    items = r.json()
-    paths = []
-    for it in items if isinstance(items, list) else []:
-        if it.get("type") == "file":
-            paths.append(f".github/workflows/{it.get('name')}")
-    return paths, "ok"
+def load_materialization_manifest(path: Path) -> Dict[str, Dict[str, Any]]:
+    if not path.is_file():
+        raise ValueError(f"missing materialization manifest: {path}")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or data.get("schema") != MANIFEST_SCHEMA:
+        raise ValueError(f"materialization manifest schema must be {MANIFEST_SCHEMA}")
+    _reject_secret_fields(data)
 
-def fetch_file_text(owner: str, repo: str, path: str, token: str) -> Tuple[str, str]:
-    url = f"{API}/repos/{owner}/{repo}/contents/{path}"
-    r = api_get(url, token)
-    if r.status_code != 200:
-        return "", f"error:{r.status_code}"
-    data = r.json()
-    download_url = data.get("download_url")
-    if not download_url:
-        return "", "no_download_url"
-    raw = requests.get(download_url, timeout=30)
-    if raw.status_code != 200:
-        return "", f"raw_error:{raw.status_code}"
-    return raw.text, "ok"
+    entries = data.get("targets")
+    if not isinstance(entries, list) or not entries:
+        raise ValueError("materialization manifest targets must be a non-empty list")
 
-def has_workflow_dispatch(yaml_text: str) -> bool:
-    # text-level check is enough
-    return "workflow_dispatch" in yaml_text
+    by_repo: Dict[str, Dict[str, Any]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError("materialization target must be an object")
+        repo = entry.get("repo")
+        source_sha = entry.get("source_sha")
+        source_root = entry.get("path")
+        receipt_ref = entry.get("receipt_ref")
+        authority = entry.get("authority")
+        if not isinstance(repo, str) or "/" not in repo:
+            raise ValueError("materialization target repo must be owner/name")
+        if repo in by_repo:
+            raise ValueError(f"duplicate materialization target: {repo}")
+        if not isinstance(source_sha, str) or not SHA_RE.fullmatch(source_sha):
+            raise ValueError(f"{repo}: source_sha must be a lowercase 40-hex commit")
+        if not isinstance(source_root, str) or not source_root.strip():
+            raise ValueError(f"{repo}: path is required")
+        if not isinstance(receipt_ref, str) or not receipt_ref.strip():
+            raise ValueError(f"{repo}: receipt_ref is required")
+        if authority != "TV/TVC":
+            raise ValueError(f"{repo}: authority must be TV/TVC")
 
-def list_secret_names(owner: str, repo: str, token: str) -> Tuple[List[str], str]:
-    # Requires repo admin + actions:read for secrets listing.
-    url = f"{API}/repos/{owner}/{repo}/actions/secrets"
-    r = api_get(url, token)
-    if r.status_code == 200:
-        names = [s.get("name") for s in (r.json().get("secrets") or [])]
-        return names, "ok"
-    # if not permitted, mark unknown
-    return [], f"unknown:{r.status_code}"
-
-def main():
-    token = os.getenv("PAT_WORKFLOW") or os.getenv("GH_STEGVERSE_PAT") or os.getenv("GITHUB_TOKEN")
-    if not token:
-        print("❌ No token available. Set PAT_WORKFLOW or GH_STEGVERSE_PAT.")
-        return 1
-
-    cfg = load_cfg()
-    targets = cfg.get("targets") or []
-    required_files = cfg.get("required_files") or []
-    required_wfs = cfg.get("required_workflows") or []
-    opts = cfg.get("optional_checks") or {}
-
-    results = []
-    summary = {
-        "repos_total": len(targets),
-        "repos_pass": 0,
-        "repos_fail": 0,
-        "repos_error": 0,
-        "ts_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "rid": os.getenv("GITHUB_RUN_ID", "local"),
-    }
-
-    for t in targets:
-        full = t["repo"]
-        owner, repo = full.split("/", 1)
-
-        repo_entry = {
-            "repo": full,
-            "status": "unknown",
-            "required_files": {},
-            "required_workflows": {},
-            "optional": {},
-            "notes": []
-        }
-
-        # ---- required files
-        file_ok = True
-        for f in required_files:
-            ok, msg = file_exists(owner, repo, f, token)
-            repo_entry["required_files"][f] = {"ok": ok, "msg": msg}
-            if not ok:
-                file_ok = False
-
-        # ---- required workflows (by file path existence)
-        wf_ok = True
-        wf_paths, wf_msg = list_workflows(owner, repo, token)
-        if wf_msg != "ok":
-            wf_ok = False
-            repo_entry["notes"].append(f"workflow_list:{wf_msg}")
-        wf_set = set(wf_paths)
-        for w in required_wfs:
-            ok = w in wf_set
-            repo_entry["required_workflows"][w] = {"ok": ok, "msg": "present" if ok else "missing"}
-            if not ok:
-                wf_ok = False
-
-        # ---- optional: ensure workflow_dispatch
-        if opts.get("ensure_workflow_dispatch"):
-            dispatch_fail = []
-            for w in wf_paths:
-                text, tmsg = fetch_file_text(owner, repo, w, token)
-                if tmsg == "ok" and text:
-                    if not has_workflow_dispatch(text):
-                        dispatch_fail.append(w)
-            repo_entry["optional"]["workflow_dispatch_missing_in"] = dispatch_fail
-
-        # ---- optional: secrets presence (names only)
-        check_names = opts.get("check_repo_secrets_names") or []
-        if check_names:
-            names, smsg = list_secret_names(owner, repo, token)
-            if smsg.startswith("unknown"):
-                repo_entry["optional"]["secrets_status"] = smsg
-                repo_entry["optional"]["secrets_missing"] = []
-            else:
-                missing = [n for n in check_names if n not in names]
-                repo_entry["optional"]["secrets_status"] = "ok"
-                repo_entry["optional"]["secrets_missing"] = missing
-
-        # ---- status decision
-        if file_ok and wf_ok:
-            repo_entry["status"] = "pass"
-            summary["repos_pass"] += 1
+        root = Path(source_root)
+        if not root.is_absolute():
+            root = (path.parent / root).resolve()
         else:
-            repo_entry["status"] = "fail"
-            summary["repos_fail"] += 1
+            root = root.resolve()
+        if not root.is_dir():
+            raise ValueError(f"{repo}: materialized path does not exist: {root}")
 
-        results.append(repo_entry)
+        normalized = dict(entry)
+        normalized["resolved_path"] = str(root)
+        by_repo[repo] = normalized
+    return by_repo
 
-    # write JSON
-    out_json = OUT_DIR / "repo_alignment_latest.json"
-    payload = {"summary": summary, "results": results}
-    out_json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
-    # write MD
+def list_workflows(repo_root: Path) -> Tuple[List[str], str]:
+    workflow_root = repo_root / ".github" / "workflows"
+    if not workflow_root.exists():
+        return [], "missing"
+    if not workflow_root.is_dir():
+        return [], "not_directory"
+    paths = [
+        str(path.relative_to(repo_root)).replace(os.sep, "/")
+        for path in workflow_root.iterdir()
+        if path.is_file()
+    ]
+    return sorted(paths), "ok"
+
+
+def has_workflow_dispatch(path: Path) -> bool:
+    try:
+        return "workflow_dispatch" in path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def evaluate_repo(
+    full_repo: str,
+    materialized: Dict[str, Any],
+    required_files: List[str],
+    required_workflows: List[str],
+    ensure_dispatch: bool,
+) -> Dict[str, Any]:
+    repo_root = Path(materialized["resolved_path"])
+    entry: Dict[str, Any] = {
+        "repo": full_repo,
+        "source_sha": materialized["source_sha"],
+        "materialization_receipt_ref": materialized["receipt_ref"],
+        "status": "unknown",
+        "required_files": {},
+        "required_workflows": {},
+        "optional": {},
+        "notes": [],
+    }
+
+    files_ok = True
+    for relative in required_files:
+        present = (repo_root / relative).is_file()
+        entry["required_files"][relative] = {
+            "ok": present,
+            "msg": "present" if present else "missing",
+        }
+        files_ok = files_ok and present
+
+    workflow_paths, workflow_state = list_workflows(repo_root)
+    workflows_ok = workflow_state == "ok"
+    if workflow_state != "ok":
+        entry["notes"].append(f"workflow_list:{workflow_state}")
+    workflow_set = set(workflow_paths)
+    for relative in required_workflows:
+        present = relative in workflow_set
+        entry["required_workflows"][relative] = {
+            "ok": present,
+            "msg": "present" if present else "missing",
+        }
+        workflows_ok = workflows_ok and present
+
+    if ensure_dispatch and workflow_state == "ok":
+        missing_dispatch = [
+            relative
+            for relative in workflow_paths
+            if not has_workflow_dispatch(repo_root / relative)
+        ]
+        entry["optional"]["workflow_dispatch_missing_in"] = missing_dispatch
+
+    entry["status"] = "pass" if files_ok and workflows_ok else "fail"
+    return entry
+
+
+def render_markdown(payload: Dict[str, Any]) -> str:
+    summary = payload["summary"]
     lines = [
         "# StegVerse Repo Alignment Report",
         "",
         f"- Run: {summary['ts_utc']}",
         f"- RID: `{summary['rid']}`",
+        "- Input mode: credential-free exact materialized snapshots",
         "",
         "## Summary",
         f"- Total repos: **{summary['repos_total']}**",
@@ -202,55 +197,111 @@ def main():
         f"- Fail: **{summary['repos_fail']}**",
         "",
         "## Per-repo results",
-        ""
+        "",
     ]
-
-    for r in results:
-        badge = "✅" if r["status"] == "pass" else "❌"
-        lines.append(f"### {badge} {r['repo']}")
+    for result in payload["results"]:
+        badge = "✅" if result["status"] == "pass" else "❌"
+        lines.extend(
+            [
+                f"### {badge} {result['repo']}",
+                "",
+                f"- Source SHA: `{result['source_sha']}`",
+                f"- Materialization receipt: `{result['materialization_receipt_ref']}`",
+                "",
+                "**Required files:**",
+            ]
+        )
+        for relative, state in result["required_files"].items():
+            marker = "✅" if state["ok"] else "❌"
+            lines.append(f"- {marker} `{relative}` — {state['msg']}")
+        lines.extend(["", "**Required workflows:**"])
+        if result["required_workflows"]:
+            for relative, state in result["required_workflows"].items():
+                marker = "✅" if state["ok"] else "❌"
+                lines.append(f"- {marker} `{relative}` — {state['msg']}")
+        else:
+            lines.append("- none declared")
         lines.append("")
-        lines.append("**Required files:**")
-        for f, st in r["required_files"].items():
-            fb = "✅" if st["ok"] else "❌"
-            lines.append(f"- {fb} `{f}` — {st['msg']}")
-        lines.append("")
-        lines.append("**Required workflows:**")
-        for w, st in r["required_workflows"].items():
-            wb = "✅" if st["ok"] else "❌"
-            lines.append(f"- {wb} `{w}` — {st['msg']}")
-        lines.append("")
-
-        opt = r.get("optional") or {}
-        if "workflow_dispatch_missing_in" in opt:
-            miss = opt["workflow_dispatch_missing_in"]
-            if miss:
+        optional = result.get("optional") or {}
+        if "workflow_dispatch_missing_in" in optional:
+            missing = optional["workflow_dispatch_missing_in"]
+            if missing:
                 lines.append("**Optional:** workflow_dispatch missing in:")
-                for m in miss:
-                    lines.append(f"- ⚠️ `{m}`")
+                lines.extend(f"- ⚠️ `{relative}`" for relative in missing)
             else:
                 lines.append("**Optional:** workflow_dispatch present in all workflows.")
             lines.append("")
-
-        if "secrets_status" in opt:
-            lines.append(f"**Optional secrets check:** {opt['secrets_status']}")
-            if opt.get("secrets_missing"):
-                for n in opt["secrets_missing"]:
-                    lines.append(f"- ❌ missing secret name `{n}`")
-            elif opt["secrets_status"] == "ok":
-                lines.append("- ✅ all required secret names present")
-            lines.append("")
-
-        if r["notes"]:
+        if result["notes"]:
             lines.append("**Notes:**")
-            for n in r["notes"]:
-                lines.append(f"- {n}")
+            lines.extend(f"- {note}" for note in result["notes"])
             lines.append("")
+    return "\n".join(lines)
 
-    out_md = OUT_DIR / "repo_alignment_latest.md"
-    out_md.write_text("\n".join(lines), encoding="utf-8")
 
-    print(json.dumps(summary, indent=2))
+def run(config_path: Path, manifest_path: Path, out_dir: Path) -> Dict[str, Any]:
+    config = load_yaml(config_path)
+    materialized = load_materialization_manifest(manifest_path)
+    targets = config.get("targets") or []
+    required_files = config.get("required_files") or []
+    required_workflows = config.get("required_workflows") or []
+    ensure_dispatch = bool((config.get("optional_checks") or {}).get("ensure_workflow_dispatch"))
+
+    configured_repos = [target.get("repo") for target in targets if isinstance(target, dict)]
+    missing = [repo for repo in configured_repos if repo not in materialized]
+    extra = [repo for repo in materialized if repo not in configured_repos]
+    if missing:
+        raise ValueError(f"materialization manifest missing configured targets: {', '.join(missing)}")
+    if extra:
+        raise ValueError(f"materialization manifest contains undeclared targets: {', '.join(extra)}")
+
+    results = [
+        evaluate_repo(
+            repo,
+            materialized[repo],
+            required_files,
+            required_workflows,
+            ensure_dispatch,
+        )
+        for repo in configured_repos
+    ]
+    summary = {
+        "repos_total": len(results),
+        "repos_pass": sum(result["status"] == "pass" for result in results),
+        "repos_fail": sum(result["status"] == "fail" for result in results),
+        "repos_error": 0,
+        "ts_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "rid": os.getenv("STEGVERSE_EXECUTION_ID", "local"),
+        "materialization_manifest_schema": MANIFEST_SCHEMA,
+    }
+    payload = {"summary": summary, "results": results}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "repo_alignment_latest.json").write_text(
+        json.dumps(payload, indent=2) + "\n", encoding="utf-8"
+    )
+    (out_dir / "repo_alignment_latest.md").write_text(
+        render_markdown(payload) + "\n", encoding="utf-8"
+    )
+    return payload
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=Path, default=DEFAULT_CFG)
+    parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        payload = run(args.config, args.manifest, args.out_dir)
+    except (OSError, ValueError, json.JSONDecodeError, yaml.YAMLError) as exc:
+        print(f"BLOCKED_DEPENDENCY: {exc}")
+        return 2
+    print(json.dumps(payload["summary"], indent=2))
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
