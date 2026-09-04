@@ -81,20 +81,7 @@ Canonical fixture: data/workstation-incidents/WGI-chatgpt-ios-plus-control-20260
 
 ## Semantic boundary
 
-Never collapse these states into one another:
-
-```text
-observation
-suspected cause
-reproduced behavior
-confirmed root cause
-workaround
-fix available
-fix verified
-superseded/closed
-```
-
-A successful workaround is not evidence of root cause or permanent remediation. Strong transition states require evidence references. Candidate correlation never mutates an incident. Explicit correlation decisions are append-only, and `SAME_ROOT_CAUSE` requires an accepted `RELATED` decision plus independent evidence.
+Never collapse observation, suspected cause, reproduced behavior, confirmed root cause, workaround, fix available, fix verified, and superseded/closed. A successful workaround is not evidence of root cause or permanent remediation. Strong transition states require evidence references. Candidate correlation never mutates an incident. Explicit correlation decisions are append-only, and `SAME_ROOT_CAUSE` requires an accepted `RELATED` decision plus independent evidence.
 
 ## Publication/privacy boundary
 
@@ -140,7 +127,7 @@ The current `SCW_MIRROR_HANDOFF.md` still names repository operational repair an
 
 ## Machine-owned remaining work
 
-Local SCW source work is complete for the bounded capability except an optional JSON Schema engine check that is intentionally non-blocking because no existing dependency was found.
+No required SCW-local source modules remain for this bounded capability. The optional JSON Schema engine check is intentionally non-blocking because no existing dependency was found.
 
 Remaining work is integration/admission work:
 
