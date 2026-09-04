@@ -9,7 +9,25 @@ import sys
 from pathlib import Path
 
 INCIDENT_SCHEMA = "stegverse.workstation-incident/v1"
-VALID_STATUS = {"OBSERVED", "CORRELATED", "REPRODUCED", "ROOT_CAUSED", "FIX_AVAILABLE", "FIX_VERIFIED", "SUPERSEDED", "CLOSED"}
+VALID_STATUS = {
+    "OBSERVED",
+    "CORRELATED",
+    "REPRODUCED",
+    "ROOT_CAUSED",
+    "FIX_AVAILABLE",
+    "FIX_VERIFIED",
+    "SUPERSEDED",
+    "CLOSED",
+}
+ROOT_CAUSE_STATES = {"UNKNOWN", "SUSPECTED", "CONFIRMED"}
+WORKAROUND_STATES = {
+    "NONE",
+    "PROPOSED",
+    "OBSERVED_SUCCESS",
+    "REPRODUCED_SUCCESS",
+    "FAILED",
+}
+FIX_STATES = {"UNKNOWN", "AVAILABLE_UNVERIFIED", "VERIFIED", "REGRESSED"}
 
 
 def fail(message: str) -> None:
@@ -24,31 +42,50 @@ def validate(record: dict) -> None:
     if not str(record.get("incident_id", "")).startswith("WGI-"):
         fail("invalid incident_id")
 
-    for key in ("classification", "observation", "root_cause", "workaround", "fix", "provenance"):
+    required_objects = (
+        "classification",
+        "observation",
+        "root_cause",
+        "workaround",
+        "fix",
+        "provenance",
+    )
+    for key in required_objects:
         if not isinstance(record.get(key), dict):
             fail(f"missing object: {key}")
 
-    if record["root_cause"].get("state") not in {"UNKNOWN", "SUSPECTED", "CONFIRMED"}:
+    if record["root_cause"].get("state") not in ROOT_CAUSE_STATES:
         fail("invalid root cause state")
-    if record["workaround"].get("state") not in {"NONE", "PROPOSED", "OBSERVED_SUCCESS", "REPRODUCED_SUCCESS", "FAILED"}:
+    if record["workaround"].get("state") not in WORKAROUND_STATES:
         fail("invalid workaround state")
-    if record["fix"].get("state") not in {"UNKNOWN", "AVAILABLE_UNVERIFIED", "VERIFIED", "REGRESSED"}:
+    if record["fix"].get("state") not in FIX_STATES:
         fail("invalid fix state")
 
-    if record["status"] == "ROOT_CAUSED" and record["root_cause"].get("state") != "CONFIRMED":
+    status = record["status"]
+    root_state = record["root_cause"].get("state")
+    fix_state = record["fix"].get("state")
+    workaround_state = record["workaround"].get("state")
+
+    if status == "ROOT_CAUSED" and root_state != "CONFIRMED":
         fail("ROOT_CAUSED requires confirmed root cause")
-    if record["status"] == "FIX_AVAILABLE" and record["fix"].get("state") not in {"AVAILABLE_UNVERIFIED", "VERIFIED"}:
+    if status == "FIX_AVAILABLE" and fix_state not in {
+        "AVAILABLE_UNVERIFIED",
+        "VERIFIED",
+    }:
         fail("FIX_AVAILABLE requires an available fix")
-    if record["status"] == "FIX_VERIFIED" and record["fix"].get("state") != "VERIFIED":
+    if status == "FIX_VERIFIED" and fix_state != "VERIFIED":
         fail("FIX_VERIFIED requires verified fix evidence state")
-    if record["workaround"].get("state") in {"OBSERVED_SUCCESS", "REPRODUCED_SUCCESS"} and record["root_cause"].get("state") == "CONFIRMED":
-        # Legal, but only when root-cause evidence is independently present.
-        if not record["root_cause"].get("evidence_refs"):
-            fail("confirmed root cause requires independent evidence refs")
+    if (
+        workaround_state in {"OBSERVED_SUCCESS", "REPRODUCED_SUCCESS"}
+        and root_state == "CONFIRMED"
+        and not record["root_cause"].get("evidence_refs")
+    ):
+        fail("confirmed root cause requires independent evidence refs")
 
     if record["provenance"].get("confidence") not in {"LOW", "MEDIUM", "HIGH"}:
         fail("invalid provenance confidence")
-    if not isinstance(record["provenance"].get("public_projection_allowed"), bool):
+    public_allowed = record["provenance"].get("public_projection_allowed")
+    if not isinstance(public_allowed, bool):
         fail("public_projection_allowed must be boolean")
 
 
