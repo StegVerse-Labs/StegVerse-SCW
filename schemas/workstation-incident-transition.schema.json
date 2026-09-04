@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/workstation-incident-transition.schema.json",
+  "title": "StegVerse Workstation Incident Transition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "transition_id", "incident_id", "timestamp", "from_status", "to_status", "actor", "reason", "evidence_refs"],
+  "properties": {
+    "schema": {"const": "stegverse.workstation-incident-transition/v1"},
+    "transition_id": {"type": "string", "pattern": "^WGIT-[A-Za-z0-9._-]+$"},
+    "incident_id": {"type": "string", "pattern": "^WGI-[A-Za-z0-9._-]+$"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "from_status": {"enum": ["OBSERVED", "CORRELATED", "REPRODUCED", "ROOT_CAUSED", "FIX_AVAILABLE", "FIX_VERIFIED", "SUPERSEDED", "CLOSED"]},
+    "to_status": {"enum": ["OBSERVED", "CORRELATED", "REPRODUCED", "ROOT_CAUSED", "FIX_AVAILABLE", "FIX_VERIFIED", "SUPERSEDED", "CLOSED"]},
+    "actor": {"type": "string", "minLength": 1},
+    "reason": {"type": "string", "minLength": 1},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "authority_effect": {"type": "boolean", "const": false},
+    "publication_effect": {"type": "boolean", "const": false}
+  }
+}
