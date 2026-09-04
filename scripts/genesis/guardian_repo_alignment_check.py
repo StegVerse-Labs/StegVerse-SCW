@@ -19,7 +19,7 @@ import os
 import re
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import yaml
 
@@ -39,7 +39,7 @@ FORBIDDEN_MANIFEST_KEYS = {
 }
 
 
-def load_yaml(path: Path) -> Dict[str, Any]:
+def load_yaml(path: Path) -> dict[str, Any]:
     if not path.is_file():
         raise ValueError(f"missing config: {path}")
     data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -60,7 +60,7 @@ def _reject_secret_fields(value: Any, where: str = "manifest") -> None:
             _reject_secret_fields(child, f"{where}[{index}]")
 
 
-def load_materialization_manifest(path: Path) -> Dict[str, Dict[str, Any]]:
+def load_materialization_manifest(path: Path) -> dict[str, dict[str, Any]]:
     if not path.is_file():
         raise ValueError(f"missing materialization manifest: {path}")
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -72,7 +72,7 @@ def load_materialization_manifest(path: Path) -> Dict[str, Dict[str, Any]]:
     if not isinstance(entries, list) or not entries:
         raise ValueError("materialization manifest targets must be a non-empty list")
 
-    by_repo: Dict[str, Dict[str, Any]] = {}
+    by_repo: dict[str, dict[str, Any]] = {}
     for entry in entries:
         if not isinstance(entry, dict):
             raise ValueError("materialization target must be an object")
@@ -108,7 +108,7 @@ def load_materialization_manifest(path: Path) -> Dict[str, Dict[str, Any]]:
     return by_repo
 
 
-def list_workflows(repo_root: Path) -> Tuple[List[str], str]:
+def list_workflows(repo_root: Path) -> tuple[list[str], str]:
     workflow_root = repo_root / ".github" / "workflows"
     if not workflow_root.exists():
         return [], "missing"
@@ -131,13 +131,13 @@ def has_workflow_dispatch(path: Path) -> bool:
 
 def evaluate_repo(
     full_repo: str,
-    materialized: Dict[str, Any],
-    required_files: List[str],
-    required_workflows: List[str],
+    materialized: dict[str, Any],
+    required_files: list[str],
+    required_workflows: list[str],
     ensure_dispatch: bool,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     repo_root = Path(materialized["resolved_path"])
-    entry: Dict[str, Any] = {
+    entry: dict[str, Any] = {
         "repo": full_repo,
         "source_sha": materialized["source_sha"],
         "materialization_receipt_ref": materialized["receipt_ref"],
@@ -182,7 +182,7 @@ def evaluate_repo(
     return entry
 
 
-def render_markdown(payload: Dict[str, Any]) -> str:
+def render_markdown(payload: dict[str, Any]) -> str:
     summary = payload["summary"]
     lines = [
         "# StegVerse Repo Alignment Report",
@@ -238,7 +238,7 @@ def render_markdown(payload: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def run(config_path: Path, manifest_path: Path, out_dir: Path) -> Dict[str, Any]:
+def run(config_path: Path, manifest_path: Path, out_dir: Path) -> dict[str, Any]:
     config = load_yaml(config_path)
     materialized = load_materialization_manifest(manifest_path)
     targets = config.get("targets") or []
@@ -250,9 +250,13 @@ def run(config_path: Path, manifest_path: Path, out_dir: Path) -> Dict[str, Any]
     missing = [repo for repo in configured_repos if repo not in materialized]
     extra = [repo for repo in materialized if repo not in configured_repos]
     if missing:
-        raise ValueError(f"materialization manifest missing configured targets: {', '.join(missing)}")
+        raise ValueError(
+            "materialization manifest missing configured targets: " + ", ".join(missing)
+        )
     if extra:
-        raise ValueError(f"materialization manifest contains undeclared targets: {', '.join(extra)}")
+        raise ValueError(
+            "materialization manifest contains undeclared targets: " + ", ".join(extra)
+        )
 
     results = [
         evaluate_repo(
