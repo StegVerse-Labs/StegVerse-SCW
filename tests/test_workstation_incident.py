@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CAPTURE = ROOT / "scripts" / "capture_workstation_incident.py"
 CORRELATE = ROOT / "scripts" / "correlate_workstation_incidents.py"
+CORRELATION_DECISION = ROOT / "scripts" / "accept_workstation_incident_correlation.py"
 PROJECT = ROOT / "scripts" / "project_workstation_incident.py"
 TRANSITION = ROOT / "scripts" / "apply_workstation_incident_transition.py"
 FIXTURE = ROOT / "data" / "workstation-incidents" / "WGI-chatgpt-ios-plus-control-20260904.json"
@@ -92,6 +93,84 @@ class WorkstationIncidentTests(unittest.TestCase):
             result = json.loads(proc.stdout)
             self.assertEqual(len(result["matches"]), 1)
             self.assertGreater(result["matches"][0]["score"], 0)
+
+    def test_correlation_decision_is_append_only_record(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            first = Path(tmp) / "first.json"
+            second = Path(tmp) / "second.json"
+            base = json.loads(FIXTURE.read_text(encoding="utf-8"))
+            first.write_text(json.dumps(base), encoding="utf-8")
+            base["incident_id"] = "WGI-second"
+            second.write_text(json.dumps(base), encoding="utf-8")
+            output_dir = Path(tmp) / "decisions"
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(CORRELATION_DECISION),
+                    str(first),
+                    str(second),
+                    "--score",
+                    "0.8",
+                    "--decision",
+                    "RELATED",
+                    "--relationship",
+                    "SAME_PRESENTATION",
+                    "--reason",
+                    "same user-visible symptom",
+                    "--actor-type",
+                    "SYSTEM",
+                    "--actor-id",
+                    "test",
+                    "--output-dir",
+                    str(output_dir),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            decision_path = Path(proc.stdout.strip())
+            decision = json.loads(decision_path.read_text(encoding="utf-8"))
+            self.assertEqual(decision["decision"], "RELATED")
+            self.assertEqual(decision["relationship"], "SAME_PRESENTATION")
+            self.assertEqual(decision["evidence_refs"], [])
+            self.assertEqual(
+                json.loads(first.read_text(encoding="utf-8"))["status"],
+                "OBSERVED",
+            )
+
+    def test_same_root_cause_correlation_requires_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            first = Path(tmp) / "first.json"
+            second = Path(tmp) / "second.json"
+            base = json.loads(FIXTURE.read_text(encoding="utf-8"))
+            first.write_text(json.dumps(base), encoding="utf-8")
+            base["incident_id"] = "WGI-second"
+            second.write_text(json.dumps(base), encoding="utf-8")
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(CORRELATION_DECISION),
+                    str(first),
+                    str(second),
+                    "--score",
+                    "0.9",
+                    "--decision",
+                    "RELATED",
+                    "--relationship",
+                    "SAME_ROOT_CAUSE",
+                    "--reason",
+                    "candidate root cause match",
+                    "--actor-type",
+                    "SME",
+                    "--actor-id",
+                    "test",
+                    "--output-dir",
+                    str(Path(tmp) / "decisions"),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(proc.returncode, 0)
 
     def test_transition_emits_receipt_and_updates_status(self):
         with tempfile.TemporaryDirectory() as tmp:
