@@ -25,17 +25,20 @@ concept_definition: IMPLEMENTED
 canonical_lifecycle: DOCUMENTED
 minimum_incident_object: IMPLEMENTED_AS_SCHEMA
 transition_object: IMPLEMENTED_AS_SCHEMA
+correlation_decision_object: IMPLEMENTED_AS_SCHEMA
 capture_runtime: IMPLEMENTED_LOCAL_ONLY
 command_adapter_add_this_glitch: IMPLEMENTED_LOCAL_ONLY
 correlation_runtime: IMPLEMENTED_LOCAL_NON_MUTATING
+correlation_acceptance: IMPLEMENTED_APPEND_ONLY_DECISION
 projection_runtime: IMPLEMENTED_LOCAL_FAIL_CLOSED
 semantic_validator: IMPLEMENTED_LOCAL_FAIL_CLOSED
 append_only_transition_application: IMPLEMENTED_LOCAL_ONLY
+publication_redaction_preflight: IMPLEMENTED_LOCAL_FAIL_CLOSED
+SME_inspector: IMPLEMENTED_STATIC_LOCAL_GENERATOR
 initial_incident_fixture: IMPLEMENTED
-local_unit_tests: IMPLEMENTED_AND_HOSTED_VALIDATION_OBSERVED
-workstation_graphical_UI_action: NOT_IMPLEMENTED
+local_unit_tests: IMPLEMENTED
+workstation_graphical_or_conversational_binding: NOT_IMPLEMENTED_NO_CANONICAL_SCW_SURFACE_IDENTIFIED
 public_browser: NOT_IMPLEMENTED
-SME_graphical_inspector: NOT_IMPLEMENTED
 external_repository_projection: NOT_IMPLEMENTED
 sovereign_runtime_evidence: NONE
 activation_effect: NONE
@@ -49,13 +52,17 @@ Destination: `StegVerse-Labs/StegVerse-SCW`
 ```text
 schemas/workstation-incident.schema.json
 schemas/workstation-incident-transition.schema.json
+schemas/workstation-incident-correlation-decision.schema.json
 data/workstation-incidents/WGI-chatgpt-ios-plus-control-20260904.json
 scripts/capture_workstation_incident.py
 scripts/add_this_glitch.py
 scripts/correlate_workstation_incidents.py
+scripts/accept_workstation_incident_correlation.py
 scripts/project_workstation_incident.py
 scripts/validate_workstation_incident.py
 scripts/apply_workstation_incident_transition.py
+scripts/review_workstation_incident_publication.py
+scripts/render_workstation_incident_inspector.py
 tests/test_workstation_incident.py
 ```
 
@@ -87,19 +94,28 @@ fix verified
 superseded/closed
 ```
 
-A successful workaround is not evidence of root cause or permanent remediation. The local semantic validator enforces the strongest state implications presently encoded, including that `ROOT_CAUSED` requires confirmed root cause and `FIX_VERIFIED` requires verified fix state. Strong transition states additionally require transition evidence references.
+A successful workaround is not evidence of root cause or permanent remediation. The local semantic validator enforces the strongest state implications presently encoded. Strong transition states require transition evidence references. Candidate correlation never mutates an incident. Explicit correlation decisions are append-only, and `SAME_ROOT_CAUSE` requires an accepted `RELATED` decision plus at least one independent evidence reference.
+
+## Publication/privacy boundary
+
+`review_workstation_incident_publication.py` is a preflight only. It returns `DENY` when public projection is not explicitly authorized or when recognized sensitive environment/observer fields are populated without corresponding redaction markers. A `PASS` result grants no publication authority and performs no publication.
+
+The static SME inspector is a local generated evidence/provenance view. It performs no network operation and grants no publication, remediation, vendor, activation, or authority effect.
 
 ## Machine-owned remaining work
 
 Destination: `StegVerse-Labs/StegVerse-SCW`
 
 ```text
-add duplicate/correlation acceptance logic with explicit evidence and transition linkage
-bind add-this-glitch adapter into an actual workstation conversational/UI surface
-add SME evidence/provenance inspection surface
-add privacy/redaction review before public projection
-add public browsing/search surface only after local validation and governance admission
-add JSON Schema execution validation if the repository adopts a schema validator dependency
+complete latest hosted validation for correlation-decision/privacy/inspector extension
+add JSON Schema execution validation if the repository adopts a schema-validator dependency
+preserve this branch until repository operational-repair ownership permits merge or explicit supersession
+```
+
+Integration destination after local lane admission:
+
+```text
+identify/bind the canonical StegVerse workstation conversational interaction surface
 ```
 
 Potential downstream destinations after implementation and appropriate authorization:
@@ -113,47 +129,50 @@ StegVerse-002/stegguardian-wiki
 ERL/research surfaces when incident significance warrants it
 ```
 
-Downstream propagation is intentionally not implemented on this branch. Correlation currently returns candidate similarity only and creates no claim that incidents share a root cause.
+Downstream propagation is intentionally not implemented on this branch.
+
+## Workstation-surface discovery result
+
+Repository search found SCW's visible Ops Console/documentation surfaces, but no canonical end-user conversational/message-entry surface suitable for binding `add this glitch`. The Ops Console is a workflow/repository-control surface and must not be repurposed as a user incident-entry UI merely to satisfy the feature. The command adapter therefore remains correctly local/unbound until the actual workstation interaction owner is identified or provided through an admitted integration lane.
 
 ## Validation evidence
 
 ```text
 PR: StegVerse-Labs/StegVerse-SCW#40
-validated source head before transition extension: 0d9296028d2ee38c5ccebdbb2d49ff06e8dba0f1
-Test Readiness run 33907095172: SUCCESS
-  repository JSON parse smoke: PASS
-  new incident/schema JSON syntax: PASS as repository JSON parse
-initial CI run 33907094800: FAILURE
-  cause: bounded Ruff style defects only (7 E501, 1 unused import)
-  repair: applied on implementation branch
-current source head after transition extension: 45951893f0e7d08f17f8fb78b26765d0dc68938c
-Test Readiness run 33907278271: SUCCESS
-CI run 33907278388:
-  changed Python lint step: SUCCESS observed
-  changed pytest step: SUCCESS observed
-  final workflow conclusion: pending at time of this handoff update
+prior fully validated head: 76b6a6d7de58fe120343e7a9c6ab346e7bcf82a9
+CI run 33907346176: SUCCESS
+Test Readiness run 33907346167: SUCCESS
+CodeQL Validation Transport run 33907346120: SUCCESS
+AI Bridge Forwarding Validation Only run 33907346037: SUCCESS
+
+current executable head before this handoff-only update: eb1c4d6d706fb183f93a0dd142998e74f8ba03b1
+latest extension includes:
+  explicit append-only correlation decision schema/runtime
+  SAME_ROOT_CAUSE evidence requirement
+  fail-closed publication/redaction preflight
+  static local SME inspector
+  extended unit tests
+latest hosted validation: IN_PROGRESS at handoff update
 schema semantic execution against JSON Schema engine: NOT OBSERVED
 sovereign/local resident runtime execution: NOT OBSERVED
 external publication/runtime execution: NONE
 ```
 
-The changed pytest execution covers local capture, semantic-boundary fixture checks, fail-closed public projection, candidate-only correlation, append-only transition receipt creation, and evidence-required strong transitions.
-
 Hosted validation is source/test evidence only. It is not sovereign runtime, publication, activation, vendor remediation, credential, or provider authority.
 
 ## Next integration goal candidate
 
-Identify the actual admissible workstation interaction surface and bind the validated local command adapter there without creating a second runtime or credential path. After that, add an SME inspection projection and explicit redaction review. Only then should a separate authorized projection lane target StegIndex/Site/Publisher/wiki consumers.
+After the latest local validation is green and the parent SCW operational-repair ownership permits admission, mark PR #40 ready and merge the bounded local provenance capability. The next separate integration goal is to bind `add this glitch` to the canonical workstation conversational surface, then route only explicitly authorized/redaction-passed projections toward StegIndex/Site/Publisher/wiki consumers.
 
 ## Completion accounting
 
 ```text
 fully developed capability/documentation files: 2
-implemented schema/runtime/fixture/test files: 10
-hosted execution-validated local machine files: majority of executable lane
-remaining major local modules/surfaces: 4-6
+implemented schema/runtime/fixture/test files: 14
+remaining major local SCW source modules: 0-1 optional schema-engine validator
+remaining cross-surface integration: canonical workstation interaction binding + downstream browser/publication lanes
 concept completion: 100%
-local implementation completion: approximately 78%
+local SCW implementation completion: approximately 94%
 goal activation: 0%
 ```
 
@@ -161,12 +180,12 @@ goal activation: 0%
 
 ```text
 NONE currently required.
-Future real-world observations may be supplied to enrich incident records or verify a vendor fix, but no user action is required to continue repository development.
+Future real-world observations may enrich incident records or verify vendor fixes, but no user action is required for current repository implementation or validation.
 ```
 
 ## Authority boundary
 
-This source implementation creates no sovereign runtime execution, external publication, credential, admissibility, vendor, remediation, security-severity, release, or activation authority. Downstream propagation must remain fail-closed until implemented, validated, and admitted by the relevant repository/runtime governance.
+This source implementation creates no sovereign runtime execution, external publication, credential, admissibility, vendor, remediation, security-severity, release, or activation authority. Downstream propagation remains fail-closed until implemented, validated, and admitted by the relevant repository/runtime governance.
 
 ## Archive readiness
 
