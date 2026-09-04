@@ -1,4 +1,3 @@
-import importlib.util
 import json
 import subprocess
 import sys
@@ -27,14 +26,22 @@ class WorkstationIncidentTests(unittest.TestCase):
                 [
                     sys.executable,
                     str(CAPTURE),
-                    "--product", "ExampleApp",
-                    "--platform", "iOS",
-                    "--surface", "composer",
-                    "--category", "UI",
-                    "--summary", "Control disappeared",
-                    "--observed-behavior", "No attachment control",
-                    "--workaround", "Restart app",
-                    "--output-dir", tmp,
+                    "--product",
+                    "ExampleApp",
+                    "--platform",
+                    "iOS",
+                    "--surface",
+                    "composer",
+                    "--category",
+                    "UI",
+                    "--summary",
+                    "Control disappeared",
+                    "--observed-behavior",
+                    "No attachment control",
+                    "--workaround",
+                    "Restart app",
+                    "--output-dir",
+                    tmp,
                 ],
                 check=True,
                 capture_output=True,
@@ -69,7 +76,14 @@ class WorkstationIncidentTests(unittest.TestCase):
             base["incident_id"] = "WGI-second"
             second.write_text(json.dumps(base), encoding="utf-8")
             proc = subprocess.run(
-                [sys.executable, str(CORRELATE), "--incident-dir", tmp, "--threshold", "0.1"],
+                [
+                    sys.executable,
+                    str(CORRELATE),
+                    "--incident-dir",
+                    tmp,
+                    "--threshold",
+                    "0.1",
+                ],
                 check=True,
                 capture_output=True,
                 text=True,
