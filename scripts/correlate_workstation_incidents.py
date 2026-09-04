@@ -59,12 +59,18 @@ def main() -> int:
         for right in incidents[index + 1 :]:
             score = similarity(left_fp, fingerprint(right))
             if score >= args.threshold:
-                rows.append({
-                    "left": left["incident_id"],
-                    "right": right["incident_id"],
-                    "score": round(score, 4),
-                })
-    print(json.dumps({"schema": "stegverse.workstation-incident-correlation/v1", "matches": rows}, indent=2, sort_keys=True))
+                rows.append(
+                    {
+                        "left": left["incident_id"],
+                        "right": right["incident_id"],
+                        "score": round(score, 4),
+                    }
+                )
+    result = {
+        "schema": "stegverse.workstation-incident-correlation/v1",
+        "matches": rows,
+    }
+    print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 
