@@ -12,11 +12,11 @@ Implementation branch: `feat/workstation-glitch-provenance`
 
 Draft pull request: `#40`
 
-This file is the bounded continuation record for the workstation glitch/incident provenance capability. It does not supersede the repository's current operational repair goal.
+This is the bounded continuation record for the workstation glitch/incident provenance capability. It does not supersede the repository's current operational-repair goal or admission order.
 
 ## Goal
 
-Provide a StegVerse workstation capability in which a user can say `add this glitch` and have the system create or enrich a canonical, provenance-preserving incident record, distinguish observations from inferences and verified fixes, and project authorized portions to appropriate browsable repositories for users and SMEs.
+Provide a StegVerse workstation capability in which a user can say `add this glitch` and the system creates or enriches a canonical provenance-preserving incident record, keeps observations distinct from inference and verified remediation, and can later project explicitly authorized/redaction-passed portions to appropriate browsable surfaces for users and SMEs.
 
 ## Current state
 
@@ -37,7 +37,7 @@ publication_redaction_preflight: IMPLEMENTED_LOCAL_FAIL_CLOSED
 SME_inspector: IMPLEMENTED_STATIC_LOCAL_GENERATOR
 initial_incident_fixture: IMPLEMENTED
 local_unit_tests: IMPLEMENTED_AND_HOSTED_EXECUTION_VALIDATED
-workstation_graphical_or_conversational_binding: NOT_IMPLEMENTED_NO_CANONICAL_SCW_SURFACE_IDENTIFIED
+workstation_graphical_or_conversational_binding: NOT_IMPLEMENTED_NO_CANONICAL_SURFACE_IDENTIFIED
 public_browser: NOT_IMPLEMENTED
 external_repository_projection: NOT_IMPLEMENTED
 sovereign_runtime_evidence: NONE
@@ -79,7 +79,7 @@ Classification: UI / iOS / ChatGPT / composer / attachment-control / transient-s
 Canonical fixture: data/workstation-incidents/WGI-chatgpt-ios-plus-control-20260904.json
 ```
 
-## Required semantic boundary
+## Semantic boundary
 
 Never collapse these states into one another:
 
@@ -94,31 +94,64 @@ fix verified
 superseded/closed
 ```
 
-A successful workaround is not evidence of root cause or permanent remediation. The local semantic validator enforces the strongest state implications presently encoded. Strong transition states require transition evidence references. Candidate correlation never mutates an incident. Explicit correlation decisions are append-only, and `SAME_ROOT_CAUSE` requires an accepted `RELATED` decision plus at least one independent evidence reference.
+A successful workaround is not evidence of root cause or permanent remediation. Strong transition states require evidence references. Candidate correlation never mutates an incident. Explicit correlation decisions are append-only, and `SAME_ROOT_CAUSE` requires an accepted `RELATED` decision plus independent evidence.
 
 ## Publication/privacy boundary
 
-`review_workstation_incident_publication.py` is a preflight only. It returns `DENY` when public projection is not explicitly authorized or when recognized sensitive environment/observer fields are populated without corresponding redaction markers. A `PASS` result grants no publication authority and performs no publication.
+`review_workstation_incident_publication.py` is preflight only. It returns `DENY` when public projection is not explicitly authorized or when recognized sensitive environment/observer fields are populated without corresponding redaction markers. `PASS` grants no publication authority and performs no publication.
 
 The static SME inspector is a local generated evidence/provenance view. It performs no network operation and grants no publication, remediation, vendor, activation, or authority effect.
 
+## Validation evidence
+
+```text
+PR: StegVerse-Labs/StegVerse-SCW#40
+latest executable head: 242f64fe4778aa1cb202d4f322d75bfec2b19361
+CI run 33911539294: SUCCESS
+  changed Python lint: SUCCESS
+  changed pytest: SUCCESS
+Test Readiness run 33911539301: SUCCESS
+AI Bridge Forwarding Validation Only run 33911539344: SUCCESS
+CodeQL Validation Transport run 33911539150: SUCCESS
+
+subsequent handoff-only head: 0dad1ad9e72361c6a611c78e8040888f487c1fd3
+CI run 33911658612: SUCCESS
+Test Readiness run 33911658670: SUCCESS
+AI Bridge Forwarding Validation Only run 33911658675: SUCCESS
+CodeQL Validation Transport run 33911658701: SUCCESS
+
+schema semantic execution against a JSON Schema engine: NOT OBSERVED
+reason: repository search found no existing jsonschema dependency; no new third-party dependency was introduced solely for this optional check
+sovereign/local resident runtime execution: NOT OBSERVED
+external publication/runtime execution: NONE
+```
+
+Hosted validation is source/test evidence only. It is not sovereign runtime, publication, activation, vendor remediation, credential, or provider authority.
+
+## Workstation-surface discovery result
+
+SCW repository search found Ops Console/documentation surfaces but no canonical end-user conversational/message-entry surface suitable for binding `add this glitch`. The Ops Console is a workflow/repository-control surface and must not be repurposed as incident-entry UI merely to satisfy the feature.
+
+Organization and Site searches found no current `Worksite`, `My Worksite`, or equivalent canonical user-entry implementation that could be safely bound without inventing a new owner. `StegVerse-Labs/Site` is an eventual public/browser integration candidate, but its canonical handoff requires repository-orchestration admission and its live sequence must not be bypassed.
+
+## Parent repository admission boundary
+
+The current `SCW_MIRROR_HANDOFF.md` still names repository operational repair and verification as the current priority. PR #40 is presently the only open SCW pull request and is mergeable, but it remains a draft because feature readiness must not silently supersede the parent goal or its admission ordering.
+
 ## Machine-owned remaining work
 
-Destination: `StegVerse-Labs/StegVerse-SCW`
+Local SCW source work is complete for the bounded capability except an optional JSON Schema engine check that is intentionally non-blocking because no existing dependency was found.
+
+Remaining work is integration/admission work:
 
 ```text
-allow CodeQL validation transport for the latest executable head to finish
-add JSON Schema execution validation if the repository adopts a schema-validator dependency
-preserve this branch until repository operational-repair ownership permits merge or explicit supersession
+1. Preserve PR #40 until parent SCW operational-repair ownership permits ready/merge or explicitly supersedes it.
+2. Identify or materialize the canonical StegVerse workstation conversational interaction surface through an admitted owner lane.
+3. Bind the existing add-this-glitch adapter there without creating a second runtime, scheduler, credential path, or authority plane.
+4. Only after admission, route explicitly authorized/redaction-passed projections toward public/search consumers.
 ```
 
-Integration destination after local lane admission:
-
-```text
-identify/bind the canonical StegVerse workstation conversational interaction surface
-```
-
-Potential downstream destinations after implementation and appropriate authorization:
+Potential downstream destinations after appropriate admission:
 
 ```text
 StegVerse-Labs/StegIndex
@@ -129,60 +162,19 @@ StegVerse-002/stegguardian-wiki
 ERL/research surfaces when incident significance warrants it
 ```
 
-Downstream propagation is intentionally not implemented on this branch.
-
-## Workstation-surface discovery result
-
-Repository search found SCW's visible Ops Console/documentation surfaces, but no canonical end-user conversational/message-entry surface suitable for binding `add this glitch`. The Ops Console is a workflow/repository-control surface and must not be repurposed as a user incident-entry UI merely to satisfy the feature. Site and org-wide code search also found no current `Worksite` implementation suitable for a direct binding. The command adapter therefore remains correctly local/unbound until the actual workstation interaction owner is identified or materialized through an admitted integration lane.
-
-## Validation evidence
-
-```text
-PR: StegVerse-Labs/StegVerse-SCW#40
-prior fully validated head: 76b6a6d7de58fe120343e7a9c6ab346e7bcf82a9
-CI run 33907346176: SUCCESS
-Test Readiness run 33907346167: SUCCESS
-CodeQL Validation Transport run 33907346120: SUCCESS
-AI Bridge Forwarding Validation Only run 33907346037: SUCCESS
-
-latest executable head: 242f64fe4778aa1cb202d4f322d75bfec2b19361
-CI run 33911539294: SUCCESS
-  changed Python lint: SUCCESS
-  changed pytest: SUCCESS
-Test Readiness run 33911539301: SUCCESS
-AI Bridge Forwarding Validation Only run 33911539344: SUCCESS
-CodeQL Validation Transport run 33911539150: IN_PROGRESS at handoff update
-
-latest executable extension covers:
-  explicit append-only correlation decision schema/runtime
-  SAME_ROOT_CAUSE independent-evidence requirement
-  fail-closed publication/redaction preflight
-  static local SME inspector
-  expanded unit tests
-schema semantic execution against JSON Schema engine: NOT OBSERVED
-sovereign/local resident runtime execution: NOT OBSERVED
-external publication/runtime execution: NONE
-```
-
-Hosted validation is source/test evidence only. It is not sovereign runtime, publication, activation, vendor remediation, credential, or provider authority.
-
-## Parent repository admission boundary
-
-The current `SCW_MIRROR_HANDOFF.md` still names repository operational repair and verification as the current priority. Therefore PR #40 remains a draft even though its bounded implementation is mergeable and its local CI/test lane is green. Feature readiness must not silently supersede the parent repository goal or bypass its admission ordering.
-
 ## Next integration goal candidate
 
-After CodeQL finishes and the parent SCW operational-repair ownership permits admission, mark PR #40 ready and merge the bounded local provenance capability. The next separate integration goal is to materialize or identify the canonical workstation conversational surface and bind `add this glitch` there, then route only explicitly authorized/redaction-passed projections toward StegIndex/Site/Publisher/wiki consumers.
+When the parent SCW handoff permits admission, mark PR #40 ready and merge the bounded local provenance capability. The next separate integration goal is canonical workstation conversational binding; public browsing/propagation remains later and fail-closed.
 
 ## Completion accounting
 
 ```text
 fully developed capability/documentation files: 2
 implemented schema/runtime/fixture/test files: 14
-remaining major local SCW source modules: 0-1 optional schema-engine validator
-remaining cross-surface integration: canonical workstation interaction binding + downstream browser/publication lanes
+remaining major local SCW source modules: 0 required
+remaining integration: canonical workstation binding + downstream browser/publication lanes
 concept completion: 100%
-local SCW implementation completion: approximately 96%
+local SCW implementation completion: 100% of bounded required local source scope
 goal activation: 0%
 ```
 
@@ -190,13 +182,13 @@ goal activation: 0%
 
 ```text
 NONE currently required.
-Future real-world observations may enrich incident records or verify vendor fixes, but no user action is required for current repository implementation or validation.
+Future real-world observations may enrich incident records or verify vendor fixes, but no user action is required for the current repository implementation or validation state.
 ```
 
 ## Authority boundary
 
-This source implementation creates no sovereign runtime execution, external publication, credential, admissibility, vendor, remediation, security-severity, release, or activation authority. Downstream propagation remains fail-closed until implemented, validated, and admitted by the relevant repository/runtime governance.
+This implementation creates no sovereign runtime execution, external publication, credential, admissibility, vendor, remediation, security-severity, release, or activation authority. Downstream propagation remains fail-closed until implemented, validated, and admitted by the relevant repository/runtime governance.
 
 ## Archive readiness
 
-The capability, current implementation state, validation evidence, remaining work, and authority boundaries are durably captured here. The originating chat thread is not required for continuation.
+The capability, implementation state, complete hosted-validation evidence, integration boundary, remaining work, and authority constraints are durably captured here. The originating chat thread is not required for continuation.
