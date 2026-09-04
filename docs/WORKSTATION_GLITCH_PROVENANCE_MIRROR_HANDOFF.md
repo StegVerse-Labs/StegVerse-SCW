@@ -36,7 +36,7 @@ append_only_transition_application: IMPLEMENTED_LOCAL_ONLY
 publication_redaction_preflight: IMPLEMENTED_LOCAL_FAIL_CLOSED
 SME_inspector: IMPLEMENTED_STATIC_LOCAL_GENERATOR
 initial_incident_fixture: IMPLEMENTED
-local_unit_tests: IMPLEMENTED
+local_unit_tests: IMPLEMENTED_AND_HOSTED_EXECUTION_VALIDATED
 workstation_graphical_or_conversational_binding: NOT_IMPLEMENTED_NO_CANONICAL_SCW_SURFACE_IDENTIFIED
 public_browser: NOT_IMPLEMENTED
 external_repository_projection: NOT_IMPLEMENTED
@@ -107,7 +107,7 @@ The static SME inspector is a local generated evidence/provenance view. It perfo
 Destination: `StegVerse-Labs/StegVerse-SCW`
 
 ```text
-complete latest hosted validation for correlation-decision/privacy/inspector extension
+allow CodeQL validation transport for the latest executable head to finish
 add JSON Schema execution validation if the repository adopts a schema-validator dependency
 preserve this branch until repository operational-repair ownership permits merge or explicit supersession
 ```
@@ -133,7 +133,7 @@ Downstream propagation is intentionally not implemented on this branch.
 
 ## Workstation-surface discovery result
 
-Repository search found SCW's visible Ops Console/documentation surfaces, but no canonical end-user conversational/message-entry surface suitable for binding `add this glitch`. The Ops Console is a workflow/repository-control surface and must not be repurposed as a user incident-entry UI merely to satisfy the feature. The command adapter therefore remains correctly local/unbound until the actual workstation interaction owner is identified or provided through an admitted integration lane.
+Repository search found SCW's visible Ops Console/documentation surfaces, but no canonical end-user conversational/message-entry surface suitable for binding `add this glitch`. The Ops Console is a workflow/repository-control surface and must not be repurposed as a user incident-entry UI merely to satisfy the feature. Site and org-wide code search also found no current `Worksite` implementation suitable for a direct binding. The command adapter therefore remains correctly local/unbound until the actual workstation interaction owner is identified or materialized through an admitted integration lane.
 
 ## Validation evidence
 
@@ -145,14 +145,20 @@ Test Readiness run 33907346167: SUCCESS
 CodeQL Validation Transport run 33907346120: SUCCESS
 AI Bridge Forwarding Validation Only run 33907346037: SUCCESS
 
-current executable head before this handoff-only update: eb1c4d6d706fb183f93a0dd142998e74f8ba03b1
-latest extension includes:
+latest executable head: 242f64fe4778aa1cb202d4f322d75bfec2b19361
+CI run 33911539294: SUCCESS
+  changed Python lint: SUCCESS
+  changed pytest: SUCCESS
+Test Readiness run 33911539301: SUCCESS
+AI Bridge Forwarding Validation Only run 33911539344: SUCCESS
+CodeQL Validation Transport run 33911539150: IN_PROGRESS at handoff update
+
+latest executable extension covers:
   explicit append-only correlation decision schema/runtime
-  SAME_ROOT_CAUSE evidence requirement
+  SAME_ROOT_CAUSE independent-evidence requirement
   fail-closed publication/redaction preflight
   static local SME inspector
-  extended unit tests
-latest hosted validation: IN_PROGRESS at handoff update
+  expanded unit tests
 schema semantic execution against JSON Schema engine: NOT OBSERVED
 sovereign/local resident runtime execution: NOT OBSERVED
 external publication/runtime execution: NONE
@@ -160,9 +166,13 @@ external publication/runtime execution: NONE
 
 Hosted validation is source/test evidence only. It is not sovereign runtime, publication, activation, vendor remediation, credential, or provider authority.
 
+## Parent repository admission boundary
+
+The current `SCW_MIRROR_HANDOFF.md` still names repository operational repair and verification as the current priority. Therefore PR #40 remains a draft even though its bounded implementation is mergeable and its local CI/test lane is green. Feature readiness must not silently supersede the parent repository goal or bypass its admission ordering.
+
 ## Next integration goal candidate
 
-After the latest local validation is green and the parent SCW operational-repair ownership permits admission, mark PR #40 ready and merge the bounded local provenance capability. The next separate integration goal is to bind `add this glitch` to the canonical workstation conversational surface, then route only explicitly authorized/redaction-passed projections toward StegIndex/Site/Publisher/wiki consumers.
+After CodeQL finishes and the parent SCW operational-repair ownership permits admission, mark PR #40 ready and merge the bounded local provenance capability. The next separate integration goal is to materialize or identify the canonical workstation conversational surface and bind `add this glitch` there, then route only explicitly authorized/redaction-passed projections toward StegIndex/Site/Publisher/wiki consumers.
 
 ## Completion accounting
 
@@ -172,7 +182,7 @@ implemented schema/runtime/fixture/test files: 14
 remaining major local SCW source modules: 0-1 optional schema-engine validator
 remaining cross-surface integration: canonical workstation interaction binding + downstream browser/publication lanes
 concept completion: 100%
-local SCW implementation completion: approximately 94%
+local SCW implementation completion: approximately 96%
 goal activation: 0%
 ```
 
