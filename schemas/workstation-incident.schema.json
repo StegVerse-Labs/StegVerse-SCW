@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/workstation-incident.schema.json",
+  "title": "StegVerse Workstation Incident",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "incident_id", "created_at", "updated_at", "status", "classification", "observation", "root_cause", "workaround", "fix", "provenance"],
+  "properties": {
+    "schema": {"const": "stegverse.workstation-incident/v1"},
+    "incident_id": {"type": "string", "pattern": "^WGI-[A-Za-z0-9._-]+$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["OBSERVED", "CORRELATED", "REPRODUCED", "ROOT_CAUSED", "FIX_AVAILABLE", "FIX_VERIFIED", "SUPERSEDED", "CLOSED"]},
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["product", "platform", "surface", "category"],
+      "properties": {
+        "vendor": {"type": ["string", "null"]},
+        "product": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "minLength": 1},
+        "surface": {"type": "string", "minLength": 1},
+        "category": {"type": "string", "minLength": 1},
+        "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "observed_behavior"],
+      "properties": {
+        "summary": {"type": "string", "minLength": 1},
+        "observed_behavior": {"type": "string", "minLength": 1},
+        "expected_behavior": {"type": ["string", "null"]},
+        "reproduction_steps": {"type": "array", "items": {"type": "string"}},
+        "environment": {"type": "object"},
+        "attachments": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "suspected_causes": {"type": "array", "items": {"type": "string"}},
+    "root_cause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["UNKNOWN", "SUSPECTED", "CONFIRMED"]},
+        "statement": {"type": ["string", "null"]},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "workaround": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["NONE", "PROPOSED", "OBSERVED_SUCCESS", "REPRODUCED_SUCCESS", "FAILED"]},
+        "procedure": {"type": ["string", "null"]},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "fix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": {"enum": ["UNKNOWN", "AVAILABLE_UNVERIFIED", "VERIFIED", "REGRESSED"]},
+        "version": {"type": ["string", "null"]},
+        "statement": {"type": ["string", "null"]},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "related_incident_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capture_source", "confidence", "public_projection_allowed"],
+      "properties": {
+        "capture_source": {"type": "string", "minLength": 1},
+        "observer": {"type": ["string", "null"]},
+        "confidence": {"enum": ["LOW", "MEDIUM", "HIGH"]},
+        "source_refs": {"type": "array", "items": {"type": "string"}},
+        "public_projection_allowed": {"type": "boolean"},
+        "redactions": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

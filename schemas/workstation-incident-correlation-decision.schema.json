@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stegverse.org/schemas/workstation-incident-correlation-decision.schema.json",
+  "title": "StegVerse Workstation Incident Correlation Decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "decision_id",
+    "left_incident_id",
+    "right_incident_id",
+    "candidate_score",
+    "decision",
+    "reason",
+    "decided_at",
+    "actor",
+    "evidence_refs"
+  ],
+  "properties": {
+    "schema": {
+      "const": "stegverse.workstation-incident-correlation-decision/v1"
+    },
+    "decision_id": {
+      "type": "string",
+      "pattern": "^WGCD-[A-Za-z0-9._-]+$"
+    },
+    "left_incident_id": {
+      "type": "string",
+      "pattern": "^WGI-[A-Za-z0-9._-]+$"
+    },
+    "right_incident_id": {
+      "type": "string",
+      "pattern": "^WGI-[A-Za-z0-9._-]+$"
+    },
+    "candidate_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "decision": {
+      "enum": ["RELATED", "NOT_RELATED", "UNRESOLVED"]
+    },
+    "relationship": {
+      "enum": [
+        "SAME_PRESENTATION",
+        "SAME_COMPONENT",
+        "SAME_ROOT_CAUSE",
+        "POSSIBLY_RELATED",
+        "NONE",
+        "UNKNOWN"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": {
+          "enum": ["USER", "SME", "SYSTEM"]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "relationship": {
+            "const": "SAME_ROOT_CAUSE"
+          }
+        },
+        "required": ["relationship"]
+      },
+      "then": {
+        "properties": {
+          "decision": {
+            "const": "RELATED"
+          },
+          "evidence_refs": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

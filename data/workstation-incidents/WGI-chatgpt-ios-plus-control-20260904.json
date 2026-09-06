@@ -1,0 +1,52 @@
+{
+  "schema": "stegverse.workstation-incident/v1",
+  "incident_id": "WGI-chatgpt-ios-plus-control-20260904",
+  "created_at": "2026-09-04T16:19:00Z",
+  "updated_at": "2026-09-04T16:19:00Z",
+  "status": "OBSERVED",
+  "classification": {
+    "vendor": "OpenAI",
+    "product": "ChatGPT",
+    "platform": "iOS",
+    "surface": "message composer attachment control",
+    "category": "UI transient-state recovery",
+    "tags": ["attachment-control", "composer", "ios", "plus-button", "transient"]
+  },
+  "observation": {
+    "summary": "The + attachment selector temporarily disappeared from the ChatGPT iOS message composer.",
+    "observed_behavior": "The composer did not display the + control used to select camera, photos, and related attachment/plugin surfaces.",
+    "expected_behavior": "The + attachment selector is visible and usable in the message composer.",
+    "reproduction_steps": [],
+    "environment": {
+      "device_class": "iPhone",
+      "application": "ChatGPT iOS"
+    },
+    "attachments": []
+  },
+  "suspected_causes": [],
+  "root_cause": {
+    "state": "UNKNOWN",
+    "statement": null,
+    "evidence_refs": []
+  },
+  "workaround": {
+    "state": "OBSERVED_SUCCESS",
+    "procedure": "Force-close the ChatGPT iOS app and restart it.",
+    "evidence_refs": ["conversation-observation:2026-09-04"]
+  },
+  "fix": {
+    "state": "UNKNOWN",
+    "version": null,
+    "statement": null,
+    "evidence_refs": []
+  },
+  "related_incident_ids": [],
+  "provenance": {
+    "capture_source": "workstation-command:add-this-glitch",
+    "observer": null,
+    "confidence": "HIGH",
+    "source_refs": ["conversation-observation:2026-09-04"],
+    "public_projection_allowed": true,
+    "redactions": []
+  }
+}
