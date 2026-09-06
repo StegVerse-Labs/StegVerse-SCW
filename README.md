@@ -28,6 +28,12 @@ Before ASL-1 evaluation, every configured target repository must already have be
 
 The checker evaluates only those local snapshots and writes `reports/guardians/repo_alignment_latest.json` and `reports/guardians/repo_alignment_latest.md`. Source materialization, report publication, repository mutation, release, deployment, runtime, or production authority are separate governed capabilities and are not created by ASL-1 evaluation. `.github/workflows/alignment_check.yml` remains contained until the required admitted source-materialization and any separately required publication predicates are satisfied.
 
+### TaskOps nightly validation
+
+`.github/workflows/taskops-nightly.yml` is a scheduled/manual **validation and evidence-transport** surface only. It runs the existing AutoDocs probe against the checked-out repository, captures any proposed `README.md` / `.github/docs/` delta as `taskops-proposed.patch`, and retains the proposed outputs as a workflow artifact.
+
+The TaskOps workflow has `contents: read`, does not persist checkout credentials, does not configure a bot identity, and must not commit or push generated documentation to `main`. The historical call to the absent `scripts/readme_ci_dashboard.py` is retired. Artifact generation does not authorize repository mutation or publication; applying proposed documentation requires a separately admitted bounded mutation/publication path.
+
 ## Roadmap
 
 Phase 2 will add real template syncing and autopatch PR generation.
