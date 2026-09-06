@@ -20,6 +20,8 @@ Current `main` intentionally contains `.github/workflows/alignment_check.yml` be
 
 That implementation is incompatible with issue #22 and with the current TV/TVC-only credential boundary.
 
+PR #41 source validation additionally exposed an undeclared `PyYAML` prerequisite in the checker. Root/API development dependency files do not declare PyYAML, and adding it solely to make this checker executable would introduce an unnecessary third-party dependency. The repair therefore removes that prerequisite rather than expanding it.
+
 ## Repair
 
 Changed surfaces:
@@ -41,6 +43,10 @@ New checker contract:
 source acquisition: OUTSIDE CHECKER / PRE-MATERIALIZED ONLY
 credential inputs: PROHIBITED
 network/provider calls: NONE
+third-party parser dependency: NONE
+policy path: docs/governance/repo_alignment_expectations.yaml
+policy bytes: JSON serialization (valid YAML)
+policy parser: Python stdlib json
 input: secret-free exact-source materialization manifest
 required per target: repo + exact 40-hex source SHA + local path + receipt reference + authority=TV/TVC
 alignment evaluation: LOCAL / CREDENTIAL-FREE
@@ -53,16 +59,20 @@ Manifest schema identifier:
 
 `stegverse.scw.repo-alignment-materialization/v1`
 
-The checker fails closed when a configured target is absent, an undeclared target is supplied, an exact SHA is malformed, authority is not `TV/TVC`, a local materialized path is absent, or a secret/token/credential field is present.
+The checker fails closed when a configured target is absent, an undeclared target is supplied, an exact SHA is malformed, authority is not `TV/TVC`, a local materialized path is absent, a secret/token/credential field is present, or the policy bytes are not valid JSON.
 
 The legacy optional checks for `PAT_WORKFLOW` and `GH_STEGVERSE_PAT` secret names are removed from the alignment policy.
 
+The policy retains its historical `.yaml` path to avoid breaking existing SCW references. JSON is valid YAML, so existing YAML-capable consumers remain compatible while the ASL-1 checker itself uses only Python's standard library.
+
 ## README completeness predicate
 
-This repair materially changes ASL-1 prerequisites, credential semantics, checker input, failure behavior, and authority boundaries. The repository README is therefore part of the required change set rather than optional documentation.
+This repair materially changes ASL-1 prerequisites, credential semantics, checker input, failure behavior, authority boundaries, and parser/dependency semantics. The repository README is therefore part of the required change set rather than optional documentation.
 
 `README.md` now states that:
 - the checker is credential-free and must not resolve PAT/GitHub/provider credentials;
+- the checker is stdlib-only and does not require PyYAML;
+- the canonical `.yaml` policy path contains JSON serialization, preserving YAML compatibility while enabling stdlib parsing;
 - target repositories must already be materialized through an admitted TV/TVC exact-source path;
 - the manifest must be secret-free and exact-SHA/receipt bound;
 - report generation is local evaluation only;
@@ -82,6 +92,8 @@ source implementation: VALIDATED + MERGED
 credential/grant activation: NOT OBSERVED
 live private materialization: NOT OBSERVED
 resident exact-source admission: NOT OBSERVED
+current admitted private-source progression: exact StegCore PR #146
+SCW ASL-1 status: NONCURRENT/BACKLOG CONSUMER
 ```
 
 SCW ASL-1 has been recorded as a bounded noncurrent/backlog consumer relationship of the existing TVC private-source-read lane without changing TVC credential semantics or interrupting the currently admitted progression.
@@ -107,18 +119,22 @@ No separate WorkerCoordinator or canonical Task Registry claim for this exact br
 Focused source tests cover:
 - exact local materialized snapshot evaluation while `GITHUB_TOKEN` is present but unused;
 - rejection of secret-bearing manifest fields;
-- fail-closed rejection when configured targets are not supplied.
+- fail-closed rejection when configured targets are not supplied;
+- stdlib-only policy parsing with no PyYAML installation.
 
-Historical PR-head validation before the latest README/handoff reconciliation showed:
+Observed validation progression on PR #41:
 
 ```text
-Test Readiness: SUCCESS
-CodeQL - Validation Transport Only: SUCCESS
-StegVerse AI Bridge Forwarding - Validation Only: SUCCESS
-CI: FAILURE — one Ruff import-order defect in tests/test_guardian_repo_alignment_check.py
+initial CI: Ruff formatting defects
+subsequent CI: import-order defect
+subsequent CI: lint PASS; pytest reached checker and exposed undeclared PyYAML dependency
+repair response: remove PyYAML prerequisite rather than add dependency
+Test Readiness: repeatedly SUCCESS on observed heads
+StegVerse AI Bridge Forwarding - Validation Only: repeatedly SUCCESS on observed heads
+CodeQL - Validation Transport Only: SUCCESS on the last completed head before stdlib refactor; fresh current-head evidence required
 ```
 
-That exact Ruff defect has been corrected. Fresh validation for the current PR #41 head is required and must be evaluated as source/test evidence only. It does not prove TVC activation or operational ASL-1 execution.
+Fresh validation for the current PR #41 head is required and must be evaluated as source/test evidence only. It does not prove TVC activation or operational ASL-1 execution.
 
 ## Remaining machine work
 
@@ -126,7 +142,7 @@ That exact Ruff defect has been corrected. Fresh validation for the current PR #
 1. Require fresh PR #41 current-head source/test validation to complete successfully.
 2. If source validation is green, advance PR #41 through the repository's admitted source-integration controls without claiming runtime activation.
 3. Keep the existing hosted alignment workflow contained.
-4. After actual TVC materialization activation, bind exact target snapshots to this checker and execute credential-free validation.
+4. After actual TVC materialization activation and SCW admission, bind exact target snapshots to this checker and execute credential-free validation.
 5. Reintroduce durable report publication only through a separately admitted bounded mutation/publication capability, if publication remains required.
 ```
 
