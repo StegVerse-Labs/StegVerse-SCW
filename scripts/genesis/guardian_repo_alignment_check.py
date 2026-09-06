@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """StegVerse Guardian Worker — Repo Alignment Check (ASL-1).
 
-The checker is deliberately credential-free. It never contacts GitHub and never
-accepts PAT/GITHUB_TOKEN style credentials. Repository source must already be
-materialized by an admitted source-read capability and described by a
-secret-free manifest that binds each target to an exact source SHA and receipt
-reference.
+The checker is deliberately credential-free and stdlib-only. It never contacts
+GitHub and never accepts PAT/GITHUB_TOKEN style credentials. Repository source
+must already be materialized by an admitted source-read capability and described
+by a secret-free manifest that binds each target to an exact source SHA and
+receipt reference.
+
+The canonical policy file keeps its historical `.yaml` path but is serialized as
+JSON, which is valid YAML, so this checker does not require PyYAML while legacy
+YAML-capable readers remain compatible.
 
 This program only evaluates those local snapshots and writes reports. It grants
 no source-read, mutation, publication, release, runtime, or credential authority.
@@ -20,8 +24,6 @@ import re
 import time
 from pathlib import Path
 from typing import Any
-
-import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CFG = ROOT / "docs" / "governance" / "repo_alignment_expectations.yaml"
@@ -39,10 +41,10 @@ FORBIDDEN_MANIFEST_KEYS = {
 }
 
 
-def load_yaml(path: Path) -> dict[str, Any]:
+def load_config(path: Path) -> dict[str, Any]:
     if not path.is_file():
         raise ValueError(f"missing config: {path}")
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("config must be a mapping")
     return data
@@ -239,7 +241,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
 
 
 def run(config_path: Path, manifest_path: Path, out_dir: Path) -> dict[str, Any]:
-    config = load_yaml(config_path)
+    config = load_config(config_path)
     materialized = load_materialization_manifest(manifest_path)
     targets = config.get("targets") or []
     required_files = config.get("required_files") or []
@@ -300,7 +302,7 @@ def main() -> int:
     args = parse_args()
     try:
         payload = run(args.config, args.manifest, args.out_dir)
-    except (OSError, ValueError, json.JSONDecodeError, yaml.YAMLError) as exc:
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"BLOCKED_DEPENDENCY: {exc}")
         return 2
     print(json.dumps(payload["summary"], indent=2))
