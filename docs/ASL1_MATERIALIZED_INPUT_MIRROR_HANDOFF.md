@@ -10,21 +10,20 @@ Parent handoffs:
 
 Canonical security task: issue `#22`
 Source repair PR: `#41`
-Branch: `repair/asl1-materialized-input`
+Source repair merge: `224c6c662e010b9ef49397cf59224476452548a1`
+Validated PR head: `0ab3b4b4ac3e15933d194d868b3f8476d154561e`
 
-This bounded repair removes credential acquisition and provider reads from the ASL-1 repository alignment checker. It does not reactivate the contained hosted workflow and does not grant source-read, mutation, report-publication, runtime, release, or credential authority.
+This bounded repair removes credential acquisition, provider reads, and the undeclared PyYAML prerequisite from the ASL-1 repository-alignment checker. It does not reactivate the contained hosted workflow and does not grant source-read, mutation, report-publication, runtime, release, credential, WorkerCoordinator, or InTr authority.
 
 ## Finding
 
-Current `main` intentionally contains `.github/workflows/alignment_check.yml` because the historical lane used PAT fallbacks, global Git credential rewriting, and direct report pushes. The canonical checker on `main` also directly resolves `PAT_WORKFLOW`, `GH_STEGVERSE_PAT`, or `GITHUB_TOKEN`, calls GitHub APIs, and inspects repository secret names.
+Historical ASL-1 source directly resolved `PAT_WORKFLOW`, `GH_STEGVERSE_PAT`, or `GITHUB_TOKEN`, called GitHub APIs, inspected repository secret names, and was paired with a hosted workflow that performed credential rewriting and direct report pushes. Current security policy contains that hosted workflow and requires TV/TVC-only source materialization.
 
-That implementation is incompatible with issue #22 and with the current TV/TVC-only credential boundary.
+PR #41 validation also exposed that the rewritten checker still imported `yaml` even though neither the root/API development dependency chain nor the focused CI install declared PyYAML. Adding PyYAML solely to satisfy the checker would have introduced an unnecessary third-party prerequisite.
 
-PR #41 source validation additionally exposed an undeclared `PyYAML` prerequisite in the checker. Root/API development dependency files do not declare PyYAML, and adding it solely to make this checker executable would introduce an unnecessary third-party dependency. The repair therefore removes that prerequisite rather than expanding it.
+## Integrated repair
 
-## Repair
-
-Changed surfaces:
+Merged surfaces:
 
 ```text
 README.md
@@ -37,7 +36,7 @@ docs/ASL1_MATERIALIZED_INPUT_MIRROR_HANDOFF.md
 docs/ASL1_MATERIALIZED_INPUT_STATUS.json
 ```
 
-New checker contract:
+Integrated checker contract:
 
 ```text
 source acquisition: OUTSIDE CHECKER / PRE-MATERIALIZED ONLY
@@ -59,27 +58,63 @@ Manifest schema identifier:
 
 `stegverse.scw.repo-alignment-materialization/v1`
 
-The checker fails closed when a configured target is absent, an undeclared target is supplied, an exact SHA is malformed, authority is not `TV/TVC`, a local materialized path is absent, a secret/token/credential field is present, or the policy bytes are not valid JSON.
+The checker fails closed when a configured target is absent, an undeclared target is supplied, an exact SHA is malformed, authority is not `TV/TVC`, a local materialized path is absent, a secret/token/credential field is present, or policy bytes are invalid JSON.
 
-The legacy optional checks for `PAT_WORKFLOW` and `GH_STEGVERSE_PAT` secret names are removed from the alignment policy.
-
-The policy retains its historical `.yaml` path to avoid breaking existing SCW references. JSON is valid YAML, so existing YAML-capable consumers remain compatible while the ASL-1 checker itself uses only Python's standard library.
+The canonical policy retains its historical `.yaml` path to preserve existing SCW references. JSON is valid YAML, so YAML-capable legacy readers remain compatible while the ASL-1 checker itself is Python-stdlib-only.
 
 ## README completeness predicate
 
-This repair materially changes ASL-1 prerequisites, credential semantics, checker input, failure behavior, authority boundaries, and parser/dependency semantics. The repository README is therefore part of the required change set rather than optional documentation.
+The source repair materially changed ASL-1 prerequisites, credential semantics, checker input, failure behavior, authority boundaries, and parser/dependency semantics. README update was therefore mandatory and was included in PR #41 before merge.
 
 `README.md` now states that:
-- the checker is credential-free and must not resolve PAT/GitHub/provider credentials;
+- the checker is credential-free and does not resolve PAT/GitHub/provider credentials;
 - the checker is stdlib-only and does not require PyYAML;
 - the canonical `.yaml` policy path contains JSON serialization, preserving YAML compatibility while enabling stdlib parsing;
 - target repositories must already be materialized through an admitted TV/TVC exact-source path;
 - the manifest must be secret-free and exact-SHA/receipt bound;
 - report generation is local evaluation only;
 - materialization, report publication, repository mutation, release, deployment, runtime, and production authority remain separate governed capabilities;
-- `.github/workflows/alignment_check.yml` remains contained until the required predicates are actually satisfied.
+- `.github/workflows/alignment_check.yml` remains contained until required runtime predicates are actually satisfied.
 
 README completeness state: `SATISFIED_IN_PR_41`.
+
+## Exact source validation and integration evidence
+
+Exact validated PR head:
+
+`0ab3b4b4ac3e15933d194d868b3f8476d154561e`
+
+Observed validation:
+
+```text
+CI 34002152391: SUCCESS
+  changed Python lint: PASS
+  focused pytest: PASS
+Test Readiness 34002152430: SUCCESS
+StegVerse AI Bridge Forwarding - Validation Only 34002152399: SUCCESS
+CodeQL - Validation Transport Only 34002152388: SUCCESS
+```
+
+Current-main collision check before merge:
+
+```text
+main advancement from PR merge base: 3 commits
+changed main-only files: 3 generated financial/ledger report files
+ASL-1 overlap: NONE
+review objections: NONE
+unresolved review threads: NONE
+```
+
+Source integration:
+
+```text
+PR #41: MERGED
+merge commit: 224c6c662e010b9ef49397cf59224476452548a1
+source repair state: COMPLETE_MERGED
+runtime activation effect: NONE
+```
+
+Hosted validation proves source/test behavior only. It does not prove TVC activation, private-source materialization, operational ASL-1 execution, report publication, or production activation.
 
 ## TVC dependency
 
@@ -96,9 +131,9 @@ current admitted private-source progression: exact StegCore PR #146
 SCW ASL-1 status: NONCURRENT/BACKLOG CONSUMER
 ```
 
-SCW ASL-1 has been recorded as a bounded noncurrent/backlog consumer relationship of the existing TVC private-source-read lane without changing TVC credential semantics or interrupting the currently admitted progression.
+SCW ASL-1 is a bounded noncurrent/backlog consumer of the existing TVC private-source-read lane. It may not interrupt or masquerade as the current StegCore PR #146 progression. When SCW becomes the admitted target, TVC must bind a fresh exact-source grant to then-current SCW target coordinates and retain secret-free evidence.
 
-Therefore this repair deliberately does not reactivate `.github/workflows/alignment_check.yml`. A future admitted execution owner must supply exact materialized snapshots and secret-free receipt references through TV/TVC authority. GitHub Actions may transport/validate evidence but may not become the source-read or production control plane.
+Therefore `.github/workflows/alignment_check.yml` remains contained. A future admitted execution owner must supply exact materialized snapshots and secret-free receipt references through TV/TVC authority. GitHub Actions may transport or validate evidence but may not become source-read or production control-plane authority.
 
 ## Coordination / authority state
 
@@ -107,49 +142,42 @@ canonical work intent authority: StegVerse Canonical Work Coordination System
 Master Records authority: observed events / custody / reconstructable evidence only
 WorkerCoordinator authority: execution claim/fence ownership
 Interlock/InTr authority: task admission / governed state transitions
-SCW repair owner: issue #22 + PR #41
-new competing canonical task identity created by this repair: NO
-source/CI implies runtime activation: NO
+SCW source repair owner: issue #22 + PR #41
+source repair state: COMPLETE_MERGED
+new competing canonical task identity created: NO
+source/merge/CI implies runtime activation: NO
 ```
 
-No separate WorkerCoordinator or canonical Task Registry claim for this exact branch was observed during the 2026-09-05 preflight. PR #41 remains the bounded source owner; absence of a central task record is not treated as execution admission or completion evidence.
-
-## Validation
-
-Focused source tests cover:
-- exact local materialized snapshot evaluation while `GITHUB_TOKEN` is present but unused;
-- rejection of secret-bearing manifest fields;
-- fail-closed rejection when configured targets are not supplied;
-- stdlib-only policy parsing with no PyYAML installation.
-
-Observed validation progression on PR #41:
-
-```text
-initial CI: Ruff formatting defects
-subsequent CI: import-order defect
-subsequent CI: lint PASS; pytest reached checker and exposed undeclared PyYAML dependency
-repair response: remove PyYAML prerequisite rather than add dependency
-Test Readiness: repeatedly SUCCESS on observed heads
-StegVerse AI Bridge Forwarding - Validation Only: repeatedly SUCCESS on observed heads
-CodeQL - Validation Transport Only: SUCCESS on the last completed head before stdlib refactor; fresh current-head evidence required
-```
-
-Fresh validation for the current PR #41 head is required and must be evaluated as source/test evidence only. It does not prove TVC activation or operational ASL-1 execution.
+No separate WorkerCoordinator or canonical Task Registry claim for this exact source-repair branch was observed during preflight. PR #41 was used as the existing bounded source owner rather than fabricating duplicate task identity.
 
 ## Remaining machine work
 
 ```text
-1. Require fresh PR #41 current-head source/test validation to complete successfully.
-2. If source validation is green, advance PR #41 through the repository's admitted source-integration controls without claiming runtime activation.
-3. Keep the existing hosted alignment workflow contained.
-4. After actual TVC materialization activation and SCW admission, bind exact target snapshots to this checker and execute credential-free validation.
+1. Keep the existing hosted alignment workflow contained.
+2. Do not compete with TVC's current exact StegCore PR #146 private-source progression.
+3. When TVC actually activates private-source materialization and SCW becomes the admitted consumer, bind then-current exact target snapshots to this checker and execute credential-free ASL-1 validation.
+4. Retain the generated alignment reports as execution evidence.
 5. Reintroduce durable report publication only through a separately admitted bounded mutation/publication capability, if publication remains required.
+6. Reconcile operational evidence through canonical Task Registry / Master Records / WorkerCoordinator / InTr surfaces without inferring completion from source merge.
 ```
 
 ## User work
 
 NONE currently required.
 
+## Completion accounting
+
+```text
+bounded source repair: 100% COMPLETE_MERGED
+README completeness: SATISFIED
+source validation: PASS
+contained workflow reactivation: NO
+TVC private-source activation for SCW: NOT OBSERVED
+operational exact-source ASL-1 execution: NOT OBSERVED
+durable report publication: NOT OBSERVED / separately governed if required
+runtime/production activation effect: NONE
+```
+
 ## Completion boundary
 
-Source repair can be complete before runtime activation. ASL-1 operational proof remains incomplete until admitted exact-source materialization, credential-free checker execution, declared report generation, and any separately required safe publication are actually observed.
+The bounded source repair is complete. ASL-1 operational proof remains incomplete until admitted exact-source materialization, credential-free checker execution against those exact snapshots, declared report generation, and any separately required safe publication are actually observed.
