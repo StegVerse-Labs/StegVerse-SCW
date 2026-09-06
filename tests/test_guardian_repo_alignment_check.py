@@ -16,15 +16,15 @@ MODULE = run_path(str(SCRIPT))
 
 def write_config(path: Path) -> None:
     path.write_text(
-        """version: 3
-targets:
-  - repo: StegVerse-Labs/example
-required_files:
-  - required.txt
-required_workflows: []
-optional_checks:
-  ensure_workflow_dispatch: true
-""",
+        json.dumps(
+            {
+                "version": 3,
+                "targets": [{"repo": "StegVerse-Labs/example"}],
+                "required_files": ["required.txt"],
+                "required_workflows": [],
+                "optional_checks": {"ensure_workflow_dispatch": True},
+            }
+        ),
         encoding="utf-8",
     )
 
