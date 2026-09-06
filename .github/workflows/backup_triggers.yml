@@ -1,4 +1,4 @@
-name: Backup Trigger Folders
+name: Backup Trigger Folders [VALIDATION ONLY]
 
 on:
   push:
@@ -11,21 +11,18 @@ on:
 permissions:
   contents: read
 
-env:
-  BACKUP_OWNER: StegVerse
-  BACKUP_REPO: StegVerse-Trigger-Backups
-  BACKUP_SUBDIR: StegVerse-SCW
-
 jobs:
-  mirror:
+  bundle:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: Read-only checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Prepare bundle of trigger folders
+      - name: Prepare trigger backup evidence
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p out
@@ -37,66 +34,29 @@ jobs:
             tar -czf out/trigger.tgz .github/trigger
           fi
 
-      - name: Preflight backup destination
-        id: preflight
-        env:
-          BACKUP_PAT: ${{ secrets.BACKUP_PAT }}
-        run: |
-          set -euo pipefail
-          if [ -z "${BACKUP_PAT:-}" ]; then
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "Backup skipped: BACKUP_PAT is not configured."
-            exit 0
-          fi
+          jq -n \
+            --arg repo "${{ github.repository }}" \
+            --arg sha "${{ github.sha }}" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg event "${{ github.event_name }}" \
+            --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              schema:"stegverse.scw.trigger-backup-evidence/v1",
+              source:$repo,
+              source_sha:$sha,
+              workflow_run_id:$run_id,
+              event:$event,
+              generated_at:$time,
+              authority_effect:"NONE_VALIDATION_EVIDENCE_ONLY",
+              external_repository_mutation:false,
+              publication:false
+            }' > out/manifest.json
 
-          code="$(curl -sS -o /dev/null -w '%{http_code}' \
-            -H "Authorization: Bearer ${BACKUP_PAT}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${BACKUP_OWNER}/${BACKUP_REPO}")"
-
-          if [ "$code" = "200" ]; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "Backup skipped: destination unavailable (HTTP ${code})."
-          fi
-
-      - name: Checkout backup repo
-        if: steps.preflight.outputs.available == 'true'
-        uses: actions/checkout@v4
+      - name: Retain trigger backup evidence
+        uses: actions/upload-artifact@v4
         with:
-          repository: ${{ env.BACKUP_OWNER }}/${{ env.BACKUP_REPO }}
-          token: ${{ secrets.BACKUP_PAT }}
-          path: backup
-          fetch-depth: 0
-
-      - name: Unpack into backup subtree
-        if: steps.preflight.outputs.available == 'true'
-        run: |
-          set -euo pipefail
-          DEST="backup/${BACKUP_SUBDIR}"
-          rm -rf "${DEST}"
-          mkdir -p "${DEST}"
-          tar -xzf out/trigger.tgz -C "${DEST}"
-          mkdir -p "${DEST}/_meta"
-          jq -n --arg repo "${{ github.repository }}" \
-                --arg sha "${{ github.sha }}" \
-                --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-                '{source:$repo, sha:$sha, mirrored_at:$time}' \
-            > "${DEST}/_meta/manifest.json"
-
-      - name: Commit and push backup
-        if: steps.preflight.outputs.available == 'true'
-        run: |
-          set -euo pipefail
-          cd backup
-          git config user.name "trigger-backup-bot"
-          git config user.email "bot@stegverse.local"
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "No changes to mirror."
-            exit 0
-          fi
-          git add -A
-          git commit -m "mirror: update triggers from ${{ github.repository }}@${{ github.sha }}"
-          git pull --rebase
-          git push
+          name: trigger-backup-evidence
+          path: |
+            out/trigger.tgz
+            out/manifest.json
+          if-no-files-found: error
