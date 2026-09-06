@@ -1,26 +1,22 @@
-version: 2
-description: "Cross-repo StegTVC connectivity and file-sharing alignment baseline"
-source_manifest: "scripts/stegtvc_connectivity_manifest.json"
-
-targets:
-  - repo: "StegVerse-Labs/TVC"
-  - repo: "StegVerse-Labs/hybrid-collab-bridge"
-  - repo: "StegVerse-Labs/TV"
-  - repo: "StegVerse-Labs/StegVerse-SCW"
-
-# Canonical connectivity files are defined by scripts/stegtvc_connectivity_manifest.json.
-required_files:
-  - "data/stegtvc_config.json"
-  - "app/stegtvc_resolver.py"
-  - "stegtvc_client.py"
-
-# Local workflow names vary by repository. Required workflow enforcement is
-# intentionally empty until a cross-repo workflow contract is declared by a
-# governed manifest rather than inferred from SCW-local filenames.
-required_workflows: []
-
-optional_checks:
-  ensure_workflow_dispatch: true
-  check_repo_secrets_names:
-    - "PAT_WORKFLOW"
-    - "GH_STEGVERSE_PAT"
+{
+  "version": 3,
+  "description": "Cross-repo StegTVC connectivity and file-sharing alignment baseline",
+  "source_manifest": "scripts/stegtvc_connectivity_manifest.json",
+  "input_contract": "credential-free exact materialized snapshots with source SHA and receipt reference",
+  "credential_authority": "TV/TVC",
+  "targets": [
+    {"repo": "StegVerse-Labs/TVC"},
+    {"repo": "StegVerse-Labs/hybrid-collab-bridge"},
+    {"repo": "StegVerse-Labs/TV"},
+    {"repo": "StegVerse-Labs/StegVerse-SCW"}
+  ],
+  "required_files": [
+    "data/stegtvc_config.json",
+    "app/stegtvc_resolver.py",
+    "stegtvc_client.py"
+  ],
+  "required_workflows": [],
+  "optional_checks": {
+    "ensure_workflow_dispatch": true
+  }
+}

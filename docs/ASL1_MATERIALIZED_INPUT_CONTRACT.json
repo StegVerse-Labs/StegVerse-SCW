@@ -1,0 +1,17 @@
+{
+  "schema": "stegverse.scw.repo-alignment-materialization/v1",
+  "authority": "TV/TVC",
+  "description": "Non-secret example shape only. Runtime instances must bind every configured target to an exact observed source SHA and a secret-free admitted materialization receipt reference.",
+  "target_shape": {
+    "repo": "owner/name",
+    "source_sha": "0000000000000000000000000000000000000000",
+    "path": "/admitted/materialized/source/root",
+    "receipt_ref": "secret-free receipt reference",
+    "authority": "TV/TVC"
+  },
+  "credential_fields_permitted": false,
+  "network_authority_created": false,
+  "source_read_authority_created": false,
+  "mutation_authority_created": false,
+  "publication_authority_created": false
+}
