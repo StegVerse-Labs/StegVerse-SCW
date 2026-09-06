@@ -18,6 +18,14 @@ The historical `GH_STEGVERSE_AI_TOKEN` bridge-dispatch setup is retired. GitHub 
 
 Bridge continuation requires an already-admitted TV/TVC transport capability with exact caller, target, operation, and secret-free receipt evidence. Until that route is present, bridge forwarding remains fail-closed as `TVC_ADMITTED_TRANSPORT_REQUIRED`.
 
+### ASL-1 repository alignment
+
+The repository-alignment checker is credential-free. `scripts/genesis/guardian_repo_alignment_check.py` must not fetch repositories, inspect provider secrets, or resolve `PAT_WORKFLOW`, `GH_STEGVERSE_PAT`, `GITHUB_TOKEN`, or equivalent credentials.
+
+Before ASL-1 evaluation, every configured target repository must already have been materialized by an admitted TV/TVC exact-source read path. The checker accepts a secret-free materialization manifest that binds each target to its repository identity, exact 40-character commit SHA, local materialized path, receipt reference, and `authority=TV/TVC`. Secret-, token-, password-, PAT-, or credential-bearing manifest fields fail closed.
+
+The checker evaluates only those local snapshots and writes `reports/guardians/repo_alignment_latest.json` and `reports/guardians/repo_alignment_latest.md`. Source materialization, report publication, repository mutation, release, deployment, runtime, or production authority are separate governed capabilities and are not created by ASL-1 evaluation. `.github/workflows/alignment_check.yml` remains contained until the required admitted source-materialization and any separately required publication predicates are satisfied.
+
 ## Roadmap
 
 Phase 2 will add real template syncing and autopatch PR generation.
