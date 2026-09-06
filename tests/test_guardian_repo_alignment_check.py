@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-import runpy
+from runpy import run_path
 
 import pytest
 
@@ -11,7 +11,7 @@ SCRIPT = (
     / "genesis"
     / "guardian_repo_alignment_check.py"
 )
-MODULE = runpy.run_path(str(SCRIPT))
+MODULE = run_path(str(SCRIPT))
 
 
 def write_config(path: Path) -> None:
