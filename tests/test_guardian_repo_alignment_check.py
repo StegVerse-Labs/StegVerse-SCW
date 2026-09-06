@@ -1,6 +1,6 @@
 import json
-import runpy
 from pathlib import Path
+import runpy
 
 import pytest
 
@@ -37,30 +37,28 @@ def write_repo(root: Path) -> None:
     )
 
 
-def write_manifest(path: Path, targets: list[dict]) -> None:
-    path.write_text(
-        json.dumps({"schema": MODULE["MANIFEST_SCHEMA"], "targets": targets}),
-        encoding="utf-8",
-    )
-
-
 def test_run_uses_exact_local_materialization_without_credentials(tmp_path, monkeypatch):
     config = tmp_path / "config.yml"
     write_config(config)
     repo = tmp_path / "materialized" / "example"
     write_repo(repo)
     manifest = tmp_path / "materialization.json"
-    write_manifest(
-        manifest,
-        [
+    manifest.write_text(
+        json.dumps(
             {
-                "repo": "StegVerse-Labs/example",
-                "source_sha": "a" * 40,
-                "path": str(repo),
-                "receipt_ref": "receipt://example/a",
-                "authority": "TV/TVC",
+                "schema": MODULE["MANIFEST_SCHEMA"],
+                "targets": [
+                    {
+                        "repo": "StegVerse-Labs/example",
+                        "source_sha": "a" * 40,
+                        "path": str(repo),
+                        "receipt_ref": "receipt://example/a",
+                        "authority": "TV/TVC",
+                    }
+                ],
             }
-        ],
+        ),
+        encoding="utf-8",
     )
     monkeypatch.setenv("GITHUB_TOKEN", "must-not-be-consumed")
     out_dir = tmp_path / "out"
@@ -78,18 +76,23 @@ def test_manifest_rejects_secret_bearing_fields(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
     manifest = tmp_path / "materialization.json"
-    write_manifest(
-        manifest,
-        [
+    manifest.write_text(
+        json.dumps(
             {
-                "repo": "StegVerse-Labs/example",
-                "source_sha": "b" * 40,
-                "path": str(repo),
-                "receipt_ref": "receipt://example/b",
-                "authority": "TV/TVC",
-                "github_token": "forbidden",
+                "schema": MODULE["MANIFEST_SCHEMA"],
+                "targets": [
+                    {
+                        "repo": "StegVerse-Labs/example",
+                        "source_sha": "b" * 40,
+                        "path": str(repo),
+                        "receipt_ref": "receipt://example/b",
+                        "authority": "TV/TVC",
+                        "github_token": "forbidden",
+                    }
+                ],
             }
-        ],
+        ),
+        encoding="utf-8",
     )
 
     with pytest.raises(ValueError, match="secret-bearing field prohibited"):
@@ -102,17 +105,22 @@ def test_manifest_requires_all_configured_targets(tmp_path):
     manifest = tmp_path / "materialization.json"
     other_repo = tmp_path / "other"
     other_repo.mkdir()
-    write_manifest(
-        manifest,
-        [
+    manifest.write_text(
+        json.dumps(
             {
-                "repo": "StegVerse-Labs/other",
-                "source_sha": "c" * 40,
-                "path": str(other_repo),
-                "receipt_ref": "receipt://other/c",
-                "authority": "TV/TVC",
+                "schema": MODULE["MANIFEST_SCHEMA"],
+                "targets": [
+                    {
+                        "repo": "StegVerse-Labs/other",
+                        "source_sha": "c" * 40,
+                        "path": str(other_repo),
+                        "receipt_ref": "receipt://other/c",
+                        "authority": "TV/TVC",
+                    }
+                ],
             }
-        ],
+        ),
+        encoding="utf-8",
     )
 
     with pytest.raises(ValueError, match="missing configured targets"):
