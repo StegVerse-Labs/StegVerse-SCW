@@ -1,9 +1,9 @@
-import json
 from pathlib import Path
-from runpy import run_path
 
 import pytest
 
+json = __import__("json")
+run_path = __import__("runpy").run_path
 
 SCRIPT = (
     Path(__file__).resolve().parents[1]
