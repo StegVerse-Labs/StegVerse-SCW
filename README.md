@@ -34,6 +34,12 @@ The checker evaluates only those local snapshots and writes `reports/guardians/r
 
 The TaskOps workflow has `contents: read`, does not persist checkout credentials, does not configure a bot identity, and must not commit or push generated documentation to `main`. The historical call to the absent `scripts/readme_ci_dashboard.py` is retired. Artifact generation does not authorize repository mutation or publication; applying proposed documentation requires a separately admitted bounded mutation/publication path.
 
+### Trigger backup validation
+
+`.github/workflows/backup_triggers.yml` is a scheduled/manual/push-triggered **validation and evidence-retention** surface only. It packages the checked-out `.github/trigger/` tree and a secret-free manifest into the `trigger-backup-evidence` workflow artifact.
+
+The workflow has `contents: read`, disables checkout credential persistence, does not resolve or consume `BACKUP_PAT`, does not authenticate to or checkout an external backup repository, and does not configure a bot identity, commit, push, or publish the bundle. Durable replication to another repository requires a separately admitted TV/TVC-backed transport/mutation capability with explicit target scope and provenance. Artifact retention is evidence only and does not constitute external backup publication, sovereign runtime activation, or repository mutation authority.
+
 ## Roadmap
 
 Phase 2 will add real template syncing and autopatch PR generation.
