@@ -1,18 +1,9 @@
 // ui/pages/index.js
 import { useState, useEffect } from "react";
 
-/* ---------------- Helpers ---------------- */
 function normalizeApiUrl(url) {
   if (!url) return "";
-  return url.replace(/\/+$/, ""); // strip trailing slashes
-}
-
-function heuristicFromRenderHost() {
-  if (typeof window === "undefined") return "";
-  const h = window.location.hostname;
-  // Your services use clean names (no hash)
-  if (h === "scw-ui.onrender.com") return "https://scw-api.onrender.com";
-  return "";
+  return url.replace(/\/+$/, "");
 }
 
 const ENV_API = process.env.NEXT_PUBLIC_API_URL
@@ -25,12 +16,9 @@ function pickInitialApiUrlAndSource() {
     const saved = localStorage.getItem("apiUrl");
     if (saved && saved.trim()) return { url: normalizeApiUrl(saved.trim()), source: "localStorage" };
   }
-  const guess = heuristicFromRenderHost();
-  if (guess) return { url: normalizeApiUrl(guess), source: "heuristic" };
   return { url: "", source: "none" };
 }
 
-/* ---------------- Page ---------------- */
 export default function Home() {
   const init = pickInitialApiUrlAndSource();
   const [apiUrl, setApiUrl] = useState(init.url);
@@ -40,23 +28,19 @@ export default function Home() {
   const [runId, setRunId] = useState("");
   const [result, setResult] = useState(null);
   const [statusMsg, setStatusMsg] = useState("");
-  const [health, setHealth] = useState("unknown"); // "ok" | "bad" | "unknown"
+  const [health, setHealth] = useState("unknown");
   const [discoveryNotes, setDiscoveryNotes] = useState([]);
 
-  // Discovery guide (what we tried, in order)
   useEffect(() => {
     const notes = [];
     notes.push("1) Build-time env NEXT_PUBLIC_API_URL");
     notes.push(ENV_API ? "→ Found; using it." : "→ Not set.");
     notes.push("2) Saved local value (localStorage)");
     notes.push((typeof window !== "undefined" && localStorage.getItem("apiUrl")) ? "→ Found; will use it." : "→ None saved.");
-    notes.push("3) Host heuristic for Render naming");
-    notes.push(heuristicFromRenderHost() ? "→ Produced a candidate." : "→ No candidate.");
-    notes.push("4) Same-origin /whoami probe (works if a proxy routes API+UI together)");
+    notes.push("3) Same-origin /whoami probe (works if canonical routing exposes API+UI together)");
     setDiscoveryNotes(notes);
   }, []);
 
-  // Try same-origin /whoami if still empty
   useEffect(() => {
     (async () => {
       if (apiUrl) return;
@@ -74,7 +58,6 @@ export default function Home() {
     })();
   }, [apiUrl]);
 
-  // Health indicator (pings /healthz whenever apiUrl changes)
   useEffect(() => {
     let canceled = false;
     (async () => {
@@ -89,12 +72,11 @@ export default function Home() {
     return () => { canceled = true; };
   }, [apiUrl]);
 
-  // Reset (Safari-safe): clear saved URL and reload page
   function resetApiUrl() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("apiUrl");
       setApiSource("none");
-      location.reload(); // fresh auto-detect on reload
+      location.reload();
     }
   }
 
@@ -105,10 +87,9 @@ export default function Home() {
       ? normalizeApiUrl(localStorage.getItem("apiUrl"))
       : "";
 
-  /* ---------------- Auto-smoke on load ---------------- */
   useEffect(() => {
     (async () => {
-      if (!apiUrl) { setStatusMsg("API URL not detected. Paste or use Auto-detect."); return; }
+      if (!apiUrl) { setStatusMsg("API URL not detected. Supply the admitted StegVerse API URL."); return; }
       try {
         setStatusMsg("Pinging API...");
         const h = await fetch(`${apiUrl}/healthz`);
@@ -164,16 +145,12 @@ export default function Home() {
         setStatusMsg(`Auto-run failed: ${String(e)}`);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiUrl]);
 
-  /* ---------------- Actions ---------------- */
   async function autoDetectNow() {
     setStatusMsg("Auto-detecting...");
     if (ENV_API) { setApiUrl(ENV_API); setApiSource("env var"); setStatusMsg("Using build-time env."); return; }
     if (savedLocal) { setApiUrl(savedLocal); setApiSource("localStorage"); setStatusMsg("Using saved value."); return; }
-    const guess = heuristicFromRenderHost();
-    if (guess) { setApiUrl(guess); setApiSource("heuristic"); setStatusMsg("Using host heuristic."); return; }
     try {
       const r = await fetch("/whoami");
       if (r.ok) {
@@ -181,7 +158,7 @@ export default function Home() {
         if (j && j.url) { setApiUrl(normalizeApiUrl(j.url)); setApiSource("same-origin whoami"); setStatusMsg("Using same-origin /whoami."); return; }
       }
     } catch {}
-    setStatusMsg("Could not detect automatically. Please paste API URL.");
+    setStatusMsg("Could not detect automatically. Supply the admitted StegVerse API URL.");
   }
 
   async function pingApi() {
@@ -206,7 +183,6 @@ export default function Home() {
     }
   }
 
-  /* ---------------- Render ---------------- */
   const dotStyle = {
     display: "inline-block",
     width: 10,
@@ -228,9 +204,9 @@ export default function Home() {
             const v = normalizeApiUrl(e.target.value);
             setApiUrl(v);
             localStorage.setItem("apiUrl", v);
-            setApiSource("manual input"); // mark manual only on typing
+            setApiSource("manual input");
           }}
-          placeholder="https://scw-api.onrender.com"
+          placeholder="https://stegverse.example/api"
           style={{ width: "60%" }}
         />
         <span style={dotStyle} title={health === "ok" ? "Healthy" : health === "bad" ? "Unhealthy" : "Unknown"} />
@@ -281,11 +257,11 @@ export default function Home() {
       )}
 
       <details style={{ margin: "12px 0" }}>
-        <summary><strong>Discovery Guide</strong> — where I look for the API and why</summary>
+        <summary><strong>Discovery Guide</strong></summary>
         <div style={{ paddingTop: 8, color: "#333" }}>
           {discoveryNotes.map((n, i) => <div key={i}>{n}</div>)}
           <div style={{ marginTop: 8 }}>
-            <em>Rationale:</em> explicit config (env) → saved memory → host heuristic → same-origin probe.
+            <em>Rationale:</em> explicit config → saved value → same-origin canonical discovery.
           </div>
         </div>
       </details>
