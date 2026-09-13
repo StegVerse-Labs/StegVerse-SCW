@@ -13,12 +13,23 @@ Behavior:
   2) If 403, call /v1/ops/config/bootstrap to obtain a fresh token, then retry once.
   3) Exits 0 on success; non-zero on failure with clear messages.
 """
-import os, sys, json, urllib.request, urllib.error, pathlib
+import json
+import os
+import pathlib
+import sys
+import urllib.error
+import urllib.request
 
 API_URL = os.environ.get("API_URL", "").rstrip("/")
 CONFIG_PATH = os.environ.get("CONFIG_PATH", ".github/config/steg.json")
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
-BOOTSTRAP_ALLOWED = os.environ.get("BOOTSTRAP_ALLOWED", "true").lower() in ("1","true","yes","y")
+BOOTSTRAP_ALLOWED = os.environ.get("BOOTSTRAP_ALLOWED", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+    "y",
+)
+
 
 def http(method, url, headers=None, data=None):
     req = urllib.request.Request(url, data=data, method=method)
@@ -27,7 +38,7 @@ def http(method, url, headers=None, data=None):
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             body = r.read()
-            ctype = r.headers.get("Content-Type","")
+            ctype = r.headers.get("Content-Type", "")
             if "application/json" in ctype:
                 try:
                     body = json.loads(body.decode("utf-8") or "{}")
@@ -43,6 +54,7 @@ def http(method, url, headers=None, data=None):
     except Exception as e:
         return 0, str(e)
 
+
 def load_config(path):
     p = pathlib.Path(path)
     if not p.exists():
@@ -54,8 +66,9 @@ def load_config(path):
         print(f"::error title=Read failed::{e}")
         sys.exit(2)
 
+
 def bootstrap_token():
-    for verb in ("GET","POST"):
+    for verb in ("GET", "POST"):
         code, body = http(verb, f"{API_URL}/v1/ops/config/bootstrap")
         if code == 200:
             if isinstance(body, dict) and "admin_token" in body:
@@ -64,22 +77,31 @@ def bootstrap_token():
                 return body.strip()
     return ""
 
+
 def post_config(token, payload):
-    headers = {"Content-Type":"application/json"}
+    headers = {"Content-Type": "application/json"}
     if token:
         headers["X-Admin-Token"] = token
-    return http("POST", f"{API_URL}/v1/ops/config/bootstrap", headers=headers, data=payload)
+    return http(
+        "POST",
+        f"{API_URL}/v1/ops/config/bootstrap",
+        headers=headers,
+        data=payload,
+    )
+
 
 def main():
     if not API_URL:
-        print("::error title=Missing API_URL::Set API_URL to the admitted service base URL")
+        print(
+            "::error title=Missing API_URL::Set API_URL to the admitted service base URL"
+        )
         return 2
 
     payload = load_config(CONFIG_PATH)
 
     print("Seeding config …")
     code, body = post_config(ADMIN_TOKEN, payload)
-    if code in (200,201):
+    if code in (200, 201):
         print("✔ Config applied.")
         return 0
 
@@ -91,17 +113,22 @@ def main():
             print("::error title=Bootstrap failed::Could not obtain a new admin token")
             return 3
         code2, body2 = post_config(new_token, payload)
-        if code2 in (200,201):
+        if code2 in (200, 201):
             print("✔ Config applied after bootstrap.")
-            print(f"::notice title=New admin token fetched::{new_token[:4]}… (masked in logs)")
+            print(
+                f"::notice title=New admin token fetched::{new_token[:4]}… "
+                "(masked in logs)"
+            )
             pathlib.Path("self_healing_out").mkdir(parents=True, exist_ok=True)
-            (pathlib.Path("self_healing_out")/"NEW_ADMIN_TOKEN.txt").write_text(new_token, encoding="utf-8")
+            token_path = pathlib.Path("self_healing_out") / "NEW_ADMIN_TOKEN.txt"
+            token_path.write_text(new_token, encoding="utf-8")
             return 0
         print(f"::error title=Retry failed::HTTP {code2} {body2}")
         return 4
 
     print(f"::error title=Seeding failed::HTTP {code} {body}")
     return 5
+
 
 if __name__ == "__main__":
     sys.exit(main())
