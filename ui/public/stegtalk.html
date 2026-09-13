@@ -25,10 +25,8 @@
 <pre id="log">Waiting…</pre>
 
 <script>
-  // Register service worker (PWA)
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js'); }
 
-  // Install prompt (Android/Chrome)
   let deferredPrompt=null;
   window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault(); deferredPrompt=e;
@@ -37,15 +35,21 @@
     btn.onclick=async()=>{ deferredPrompt.prompt(); deferredPrompt=null; btn.style.display='none'; };
   });
 
-  // API probe
-  const API=(window.STEG_API || 'https://scw-api.onrender.com');
+  // Runtime origin must be supplied by the admitted StegVerse composition.
+  const API=(window.STEG_API || '').replace(/\/+$/,'');
   const st=document.getElementById('st');
   const log=document.getElementById('log');
 
   function write(x){ log.textContent = (log.textContent? log.textContent+'\n':'') + x; }
 
-  fetch(API+'/whoami',{cache:'no-store'})
-    .then(r=>r.json())
-    .then(j=>{ st.textContent='API connected: '+(j.service||'?'); st.className='ok'; write('whoami -> '+JSON.stringify(j)); })
-    .catch(err=>{ st.textContent='API unreachable'; st.className='bad'; write('whoami error: '+err); });
+  if(!API){
+    st.textContent='API not configured';
+    st.className='bad';
+    write('Set window.STEG_API from the admitted StegVerse runtime composition.');
+  } else {
+    fetch(API+'/whoami',{cache:'no-store'})
+      .then(r=>r.json())
+      .then(j=>{ st.textContent='API connected: '+(j.service||'?'); st.className='ok'; write('whoami -> '+JSON.stringify(j)); })
+      .catch(err=>{ st.textContent='API unreachable'; st.className='bad'; write('whoami error: '+err); });
+  }
 </script>
