@@ -3,7 +3,7 @@
 Self-healing config seeder for Steg API.
 
 Env:
-  API_URL            (required) e.g. https://scw-api.onrender.com
+  API_URL            (required) explicit admitted service base URL
   CONFIG_PATH        (optional) default: .github/config/steg.json
   ADMIN_TOKEN        (optional) current admin token; if invalid we will bootstrap
   BOOTSTRAP_ALLOWED  (optional) "1"/"true" to allow auto-bootstrap (default true)
@@ -55,7 +55,6 @@ def load_config(path):
         sys.exit(2)
 
 def bootstrap_token():
-    # Try GET then POST, accept JSON or plaintext
     for verb in ("GET","POST"):
         code, body = http(verb, f"{API_URL}/v1/ops/config/bootstrap")
         if code == 200:
@@ -73,12 +72,11 @@ def post_config(token, payload):
 
 def main():
     if not API_URL:
-        print("::error title=Missing API_URL::Set API_URL to your service base URL")
+        print("::error title=Missing API_URL::Set API_URL to the admitted service base URL")
         return 2
 
     payload = load_config(CONFIG_PATH)
 
-    # First attempt (with existing token if any)
     print("Seeding config …")
     code, body = post_config(ADMIN_TOKEN, payload)
     if code in (200,201):
@@ -92,13 +90,10 @@ def main():
         if not new_token:
             print("::error title=Bootstrap failed::Could not obtain a new admin token")
             return 3
-        # Retry once with new token
         code2, body2 = post_config(new_token, payload)
         if code2 in (200,201):
             print("✔ Config applied after bootstrap.")
-            # Emit output for GitHub Actions to optionally store/rotate token
             print(f"::notice title=New admin token fetched::{new_token[:4]}… (masked in logs)")
-            # Also write to a file (masked unless you upload it—don’t)
             pathlib.Path("self_healing_out").mkdir(parents=True, exist_ok=True)
             (pathlib.Path("self_healing_out")/"NEW_ADMIN_TOKEN.txt").write_text(new_token, encoding="utf-8")
             return 0
