@@ -2,8 +2,6 @@ name: StegVerse Multi-Repo Autopatch [CONTAINED — TV/TVC AUTHORITY REQUIRED]
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "30 8 * * *"
 
 permissions:
   contents: read
