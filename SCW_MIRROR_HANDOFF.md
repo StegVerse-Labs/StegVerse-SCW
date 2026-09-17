@@ -139,6 +139,22 @@ Authority effect: none; no external repository write, release, tag, merge, deplo
 Verification: pending the next scheduled or explicitly authorized workflow execution
 ```
 
+## Scheduled contained-failure cost containment — 2026-09-17
+
+Two workflows had already been converted into explicit fail-closed containment jobs because their TV/TVC credential/mutation authority is unresolved, but both still retained daily schedules. Their only scheduled behavior was to start a paid runner, print the known containment error, and exit 1.
+
+Schedules removed:
+
+```text
+StegTV Connectivity Autopatch containment: e5036ae393b298d392a9740568cb4a1eac2a243c
+StegVerse Multi-Repo Autopatch containment: c1acdf9dae7d8a75b98133321885182162745ca8
+workflow_dispatch retained: true
+automatic paid failure loop retained: false
+credential/mutation authority widened: false
+```
+
+No verification run is required or authorized for this containment edit. The unresolved TV/TVC boundaries remain unresolved; the correction is specifically to stop paying GitHub Actions to rediscover the same known denial every day.
+
 ## Current Priority
 
 Verify the repaired ASL-1 workflow through execution. Separately resolve the StegTVC source-read credential boundary before any cross-repository synchronization attempt. Then continue the previously declared verification sequence for `taskops-nightly` and `export-hcb-nightly`.
