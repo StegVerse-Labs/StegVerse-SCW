@@ -2,8 +2,6 @@ name: StegTV Connectivity Autopatch [CONTAINED — TV/TVC AUTHORITY REQUIRED]
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "45 8 * * *"
 
 permissions:
   contents: read
