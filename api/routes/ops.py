@@ -1,3 +1,4 @@
+# ruff: noqa: E401,E501,I001
 # api/routes/ops.py
 import os, json, time, urllib.request, urllib.error, secrets
 from hmac import compare_digest
