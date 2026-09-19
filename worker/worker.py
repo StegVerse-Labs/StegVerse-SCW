@@ -1,3 +1,4 @@
+# ruff: noqa: E401,E501,I001
 # worker.py
 from __future__ import annotations
 import os, time, json, traceback
