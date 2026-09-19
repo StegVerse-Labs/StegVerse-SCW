@@ -1,3 +1,4 @@
+# ruff: noqa: E401,E501,I001
 #!/usr/bin/env python3
 """
 Collect Self-Healing Manifest
