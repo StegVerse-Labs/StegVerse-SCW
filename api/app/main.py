@@ -156,8 +156,7 @@ class RotateBody(BaseModel):
 
 
 class BrandWebhooks(BaseModel):
-    netlify: List[str] = Field(default_factory=list)
-    vercel: List[str] = Field(default_factory=list)
+    hooks: List[str] = Field(default_factory=list)
 
 
 class BrandManifest(BaseModel):
@@ -392,11 +391,8 @@ async def build_trigger(
 
     require_admin(x_admin_token)
 
-    netlify_hooks = [h for h in os.getenv("NETLIFY_HOOKS", "").split(",") if h.strip()]
-    vercel_hooks = [h for h in os.getenv("VERCEL_HOOKS", "").split(",") if h.strip()]
-
-    netlify_hooks += manifest.webhooks.netlify
-    vercel_hooks += manifest.webhooks.vercel
+    configured_hooks = [h for h in os.getenv("SCW_BUILD_HOOKS", "").split(",") if h.strip()]
+    configured_hooks += manifest.webhooks.hooks
 
     payload = {"brand": manifest.dict(), "meta": {"ts": now_ts(), "env": ENV_NAME}}
 
@@ -412,7 +408,7 @@ async def build_trigger(
         except Exception as e:
             return HookResult(url=url, status=0, error=str(e)[:400] or "error")
 
-    tasks = [fire(u) for u in (netlify_hooks + vercel_hooks)]
+    tasks = [fire(u) for u in configured_hooks]
     results = await asyncio.gather(*tasks) if tasks else []
 
     audit(
