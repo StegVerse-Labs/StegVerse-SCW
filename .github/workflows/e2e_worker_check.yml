@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       api_base:
-        description: "Your API base URL (e.g., https://your-api.onrender.com)"
+        description: "Your API base URL (e.g., https://your-api.example)"
         required: true
 
 jobs:
