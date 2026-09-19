@@ -40,7 +40,7 @@ def incr_processed(language: str | None = None) -> None:
             c_lang.labels(language).inc(1)
         # It's OK if this fails; we don't crash the worker
         try:
-            push_to_gateway(PUSHGATEWAY_URL, job="scw_worker", registry=reg, grouping_key={"instance": os.getenv("RENDER_INSTANCE_ID", "local")})
+            push_to_gateway(PUSHGATEWAY_URL, job="scw_worker", registry=reg, grouping_key={"instance": os.getenv("SCW_INSTANCE_ID", "local")})
         except Exception:
             pass
 
