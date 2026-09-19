@@ -43,7 +43,7 @@ No workflow was executed by this change. No repository content other than the wo
 1. Execute `One-Button Supercheck (Read-Only)` with API checks disabled.
 2. Retain and inspect the `one-button-supercheck-read-only` artifact.
 3. Confirm all workflow files are classified and any parse-invalid or nested files are listed.
-4. Execute again with API checks enabled and `api_base=https://scw-api.onrender.com` only after the inventory run is understood.
+4. Execute again with API checks enabled only after an explicit current StegVerse-owned/admitted SCW API origin is available; do not select a third-party hosted fallback.
 5. Record the workflow run URL, conclusion, artifact ID, inventory counts, and API results in the current handoff or a linked validation receipt.
 
 ## Remaining scope
