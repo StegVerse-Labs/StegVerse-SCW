@@ -384,3 +384,8 @@ authority_effect: NONE
 ```
 
 The next valid transition is a fresh Workflows Sanity Check on the merged retirement. Do not infer the expected denominator reduction before that run is observed.
+
+
+## Enterprise host-provider eradication — 2026-09-19
+
+Current diagnostics and emergency inventory no longer name or select a third-party host/provider. API-base validation requires an explicit current StegVerse-owned/admitted origin; no hosted fallback is supplied by SCW.
