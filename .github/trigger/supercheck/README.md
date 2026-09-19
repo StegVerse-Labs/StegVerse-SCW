@@ -20,7 +20,7 @@ Just commit a tiny file here — the workflow starts automatically.
 | `fast.txt`                     | presence   | Use shorter timeouts/polling (30s / 2s). |
 | `deep.txt`                     | presence   | Use extended timeouts/polling (180s / 4s). |
 | `attic-off.txt`                | presence   | Disable moving files to ATTIC (scaffold + remove only). |
-| `diag-url.txt`                 | content    | First line overrides API base URL (e.g. `https://scw-api.onrender.com`). |
+| `diag-url.txt`                 | content    | First line overrides API base URL (e.g. ``). |
 | `queue.txt`                    | content    | First line overrides worker queue key (default: `queue:runs`). |
 | `timeout.txt`                  | content    | First line sets timeout in seconds (overrides default). |
 | `poll.txt`                     | content    | First line sets poll interval in seconds (overrides default). |
