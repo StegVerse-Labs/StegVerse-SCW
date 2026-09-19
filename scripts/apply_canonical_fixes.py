@@ -1,3 +1,4 @@
+# ruff: noqa: E401,E501,I001,E701
 #!/usr/bin/env python3
 """
 Apply Canonical Fixes
