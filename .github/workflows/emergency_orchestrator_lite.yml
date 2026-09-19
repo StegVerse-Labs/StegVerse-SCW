@@ -63,7 +63,7 @@ manifest = {
   "measures": {
     "workflows": ls([".github/workflows/*.yml",".github/workflows/*.yaml"]),
     "scripts": ls(["scripts/*.sh","scripts/*.py"]),
-    "config": ls(["render.yaml","api/requirements.txt","package.json","pnpm-lock.yaml","yarn.lock","package-lock.json"]),
+    "config": ls(["api/requirements.txt","package.json","pnpm-lock.yaml","yarn.lock","package-lock.json"]),
     "ui": ls(["public/diag.html"]),
     "api": ls(["api/app/main.py"]),
   }
