@@ -98,7 +98,7 @@ PY
             fi
             echo
             echo "## Notable files present"
-            for F in render.yaml api/main.py api/requirements.txt worker.py public/diag.html AUTONOMY_POLICY.md REPO_SPEC.json config/env_spec.json; do
+            for F in api/main.py api/requirements.txt worker.py public/diag.html AUTONOMY_POLICY.md REPO_SPEC.json config/env_spec.json; do
               if [ -f "$F" ]; then echo "- \`$F\`"; fi
             done
             echo
