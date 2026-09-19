@@ -58,7 +58,7 @@ def detect_measures():
                    "has_env_presence":"/v1/ops/env/required" in t})
     diag = ROOT/"public/diag.html"
     if diag.exists(): ms.append({"type":"ui","path":str(diag),"sha256":sha(diag)})
-    for c in ["render.yaml","api/requirements.txt","package.json","pnpm-lock.yaml","yarn.lock","package-lock.json"]:
+    for c in ["api/requirements.txt","package.json","pnpm-lock.yaml","yarn.lock","package-lock.json"]:
         p=ROOT/c
         if p.exists(): ms.append({"type":"config","path":str(p),"sha256":sha(p)})
     return ms
@@ -154,7 +154,7 @@ mkdir -p "$OUTDIR/files"
 awk '{ if ($1=="A" || $1=="M" || $1=="R100" || $1=="R") print $NF }' "$OUTDIR/changed_files.txt" | while read -r f; do
   [ -f "$f" ] && mkdir -p "$OUTDIR/files/$(dirname "$f")" && cp -a "$f" "$OUTDIR/files/$f"
 done
-CRIT=( "api/app/main.py" "api/requirements.txt" "public/diag.html" "render.yaml" "package.json" "pnpm-lock.yaml" "yarn.lock" "package-lock.json" ".github/workflows" )
+CRIT=( "api/app/main.py" "api/requirements.txt" "public/diag.html" "package.json" "pnpm-lock.yaml" "yarn.lock" "package-lock.json" ".github/workflows" )
 for p in "${CRIT[@]}"; do [ -e "$p" ] && mkdir -p "$OUTDIR/crit/$(dirname "$p")" && cp -a "$p" "$OUTDIR/crit/$p" || true; done
 ( cd "$OUTDIR" && find files crit -type f 2>/dev/null | LC_ALL=C sort | xargs -r sha256sum > file_hashes.sha256 )
 ( tree -L 3 -a -I '.git|node_modules|__pycache__' > "$OUTDIR/tree.txt" ) || ( find . -maxdepth 3 -type f -printf "%TY-%Tm-%Td %p\n" | sort -r > "$OUTDIR/tree.txt" )
@@ -279,7 +279,7 @@ mkdir -p "$OUTDIR/files"
 awk '{ if ($1=="A" || $1=="M" || $1=="R100" || $1=="R") print $NF }' "$OUTDIR/changed_files.txt" | while read -r f; do
   [ -f "$f" ] && mkdir -p "$OUTDIR/files/$(dirname "$f")" && cp -a "$f" "$OUTDIR/files/$f"
 done
-CRIT=( "api/app/main.py" "api/requirements.txt" "public/diag.html" "render.yaml" "package.json" "pnpm-lock.yaml" "yarn.lock" "package-lock.json" ".github/workflows" )
+CRIT=( "api/app/main.py" "api/requirements.txt" "public/diag.html" "package.json" "pnpm-lock.yaml" "yarn.lock" "package-lock.json" ".github/workflows" )
 for p in "${CRIT[@]}"; do [ -e "$p" ] && mkdir -p "$OUTDIR/crit/$(dirname "$p")" && cp -a "$p" "$OUTDIR/crit/$p" || true; done
 ( cd "$OUTDIR" && find files crit -type f 2>/dev/null | LC_ALL=C sort | xargs -r sha256sum > file_hashes.sha256 )
 ( tree -L 3 -a -I '.git|node_modules|__pycache__' > "$OUTDIR/tree.txt" ) || ( find . -maxdepth 3 -type f -printf "%TY-%Tm-%Td %p\n" | sort -r > "$OUTDIR/tree.txt" )
