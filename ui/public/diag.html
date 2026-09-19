@@ -45,7 +45,7 @@ button.warn{ background:#b91c1c; border-color:#7f1d1d; }
     <div class="grid-2">
       <div>
         <label>API URL</label>
-        <input id="apiUrl" type="text" placeholder="https://scw-api.onrender.com"/>
+        <input id="apiUrl" type="text" placeholder=""/>
       </div>
       <div>
         <label>X-Admin-Token (local only)</label>
@@ -167,7 +167,7 @@ button.warn{ background:#b91c1c; border-color:#7f1d1d; }
       </div>
       <div>
         <label>Base URL</label>
-        <input id="svcUrl" type="url" placeholder="https://token-vault.onrender.com"/>
+        <input id="svcUrl" type="url" placeholder=""/>
       </div>
     </div>
     <div class="actions" style="margin-top:8px;"><button id="registerSvc">Register Service</button></div>
@@ -198,7 +198,7 @@ button.warn{ background:#b91c1c; border-color:#7f1d1d; }
   window.addEventListener("load", async () => {
     const saved = sessionStorage.getItem("apiUrl");
     if (saved) { $("apiUrl").value = saved; return; }
-    const cands = [location.origin.replace(/\/$/,"")+"/api", "https://scw-api.onrender.com"];
+    const cands = [location.origin.replace(/\/$/,"")+"/api", ""];
     for (const base of cands) {
       try {
         const r = await fetch(base + "/v1/ops/health");
