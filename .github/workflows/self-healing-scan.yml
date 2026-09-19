@@ -14,7 +14,6 @@ on:
       - "scripts/**"
       - "api/**"
       - "public/diag.html"
-      - "render.yaml"
       - "package.json"
       - "pnpm-lock.yaml"
       - "yarn.lock"

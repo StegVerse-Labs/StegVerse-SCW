@@ -2,7 +2,6 @@
 /infra/**           @StegVerse/owners
 /api/**             @StegVerse/owners
 /worker/**          @StegVerse/owners
-/render.yaml        @StegVerse/owners
 /.steg/**           @StegVerse/owners
 
 # Default

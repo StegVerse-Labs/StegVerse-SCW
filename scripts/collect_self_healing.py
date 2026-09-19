@@ -1,3 +1,4 @@
+# ruff: noqa: E401,E501,I001
 #!/usr/bin/env python3
 """
 Collect Self-Healing Manifest
@@ -25,7 +26,7 @@ def main():
         "measures": {
             "workflows": ls([".github/workflows/*.yml",".github/workflows/*.yaml"]),
             "scripts": ls(["scripts/*.py","scripts/*.sh"]),
-            "config": ls(["render.yaml","api/requirements.txt","package.json","pyproject.toml"]),
+            "config": ls(["api/requirements.txt","package.json","pyproject.toml"]),
             "api": ls(["api/main.py","api/app/main.py"]),
             "ui": ls(["public/diag.html","public/quicktriggers.html"]),
             "docs": ls(["README.md","docs/*.md"])

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       api_base:
-        description: "API base URL (https://your-api.onrender.com)"
+        description: "API base URL (https://your-api.example)"
         required: true
       timeout_sec:
         description: "Max seconds to wait for processed to increase"

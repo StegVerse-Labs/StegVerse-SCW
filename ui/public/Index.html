@@ -98,7 +98,7 @@
 
 <script>
   // Status chips (non-blocking)
-  const API='https://scw-api.onrender.com';
+  const API='';
   fetch(API+'/whoami',{cache:'no-store'}).then(r=>r.json()).then(_=>{document.getElementById('chipAPI').textContent='API: Connected'}).catch(_=>{document.getElementById('chipAPI').textContent='API: Unreachable'});
   // Worker: consider exposed run-queue ping later; for now mirror API status
   fetch(API+'/healthz',{cache:'no-store'}).then(r=>{document.getElementById('chipWorker').textContent=(r.ok?'Worker: OK':'Worker: Unknown')}).catch(_=>{document.getElementById('chipWorker').textContent='Worker: Unknown'});

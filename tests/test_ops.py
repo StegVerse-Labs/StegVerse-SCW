@@ -1,8 +1,10 @@
-import os, time, json
-import pytest
-import httpx
+import os
+import time
 
-API_BASE = os.environ.get("API_BASE")  # e.g. https://your-api.onrender.com
+import httpx
+import pytest
+
+API_BASE = os.environ.get("API_BASE")  # e.g. https://your-api.example
 TIMEOUT  = float(os.environ.get("E2E_TIMEOUT_SEC", "60"))
 POLL_EVERY = float(os.environ.get("E2E_POLL_SEC", "3"))
 

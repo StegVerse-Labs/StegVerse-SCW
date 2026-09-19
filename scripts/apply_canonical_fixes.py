@@ -1,3 +1,4 @@
+# ruff: noqa: E401,E501,I001,E701
 #!/usr/bin/env python3
 """
 Apply Canonical Fixes
@@ -29,7 +30,7 @@ mkdir -p "$OUTDIR/files"
 awk '{ if ($1==\"A\" || $1==\"M\" || $1==\"R100\" || $1==\"R\") print $NF }' "$OUTDIR/changed_files.txt" | while read -r f; do
   [ -f \"$f\" ] && mkdir -p \"$OUTDIR/files/$(dirname \"$f\")\" && cp -a \"$f\" \"$OUTDIR/files/$f\"
 done
-CRIT=( \"api/app/main.py\" \"api/requirements.txt\" \"public/diag.html\" \"render.yaml\" \"package.json\" \"pnpm-lock.yaml\" \"yarn.lock\" \"package-lock.json\" \".github/workflows\" )
+CRIT=( \"api/app/main.py\" \"api/requirements.txt\" \"public/diag.html\" \"package.json\" \"pnpm-lock.yaml\" \"yarn.lock\" \"package-lock.json\" \".github/workflows\" )
 for p in \"${CRIT[@]}\"; do [ -e \"$p\" ] && mkdir -p \"$OUTDIR/crit/$(dirname \"$p\")\" && cp -a \"$p\" \"$OUTDIR/crit/$p\" || true; done
 ( cd \"$OUTDIR\" && find files crit -type f 2>/dev/null | LC_ALL=C sort | xargs -r sha256sum > file_hashes.sha256 )
 ( tree -L 3 -a -I '.git|node_modules|__pycache__' > \"$OUTDIR/tree.txt\" ) || ( find . -maxdepth 3 -type f -printf \"%TY-%Tm-%Td %p\\n\" | sort -r > \"$OUTDIR/tree.txt\" )
@@ -87,7 +88,6 @@ on:
       - 'scripts/**'
       - 'api/**'
       - 'public/diag.html'
-      - 'render.yaml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'yarn.lock'
@@ -147,39 +147,6 @@ jobs:
           python -m pip install --upgrade pip && pip install ruff
           ruff check api
           python -m py_compile $(git ls-files 'api/**/*.py')
-      - name: Configure Render (build/start + env)
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
-          ENV_NAME:       ${{ secrets.ENV_NAME }}
-          ALLOW_ORIGINS:  ${{ secrets.ALLOW_ORIGINS }}
-          HMAC_SECRET:    ${{ secrets.HMAC_SECRET }}
-          REDIS_URL:      ${{ secrets.REDIS_URL }}
-          DEPLOY_REPORT_TOKEN: ${{ secrets.DEPLOY_REPORT_TOKEN }}
-        run: |
-          set -euo pipefail
-          auth="Authorization: Bearer ${RENDER_API_KEY}"; json="Content-Type: application/json"
-          curl -sS -X PATCH -H "$auth" -H "$json" "https://api.render.com/v1/services/${RENDER_SERVICE_ID}" \
-            -d '{"buildCommand":"pip install -r api/requirements.txt","startCommand":"uvicorn app.main:app --app-dir api --host 0.0.0.0 --port $PORT"}'
-          to_pair () { printf '{"key":"%s","value":"%s","type":"plain"}' "$1" "$2"; }
-          arr=()
-          [ -n "${ENV_NAME:-}" ]            && arr+=("$(to_pair ENV_NAME "$ENV_NAME")")
-          [ -n "${ALLOW_ORIGINS:-}" ]       && arr+=("$(to_pair ALLOW_ORIGINS "$ALLOW_ORIGINS")")
-          [ -n "${HMAC_SECRET:-}" ]         && arr+=("$(to_pair HMAC_SECRET "$HMAC_SECRET")")
-          [ -n "${REDIS_URL:-}" ]           && arr+=("$(to_pair REDIS_URL "$REDIS_URL")")
-          [ -n "${DEPLOY_REPORT_TOKEN:-}" ] && arr+=("$(to_pair DEPLOY_REPORT_TOKEN "$DEPLOY_REPORT_TOKEN")")
-          payload="{\"envVars\":[`IFS=,; echo "${arr[*]-}"`]}"
-          curl -sS -X PUT -H "$auth" -H "$json" "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/env-vars" -d "$payload"
-      - name: Try resume
-        env: { RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}, RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }} }
-        run: |
-          curl -sS -X POST -H "Authorization: Bearer ${RENDER_API_KEY}" \
-            "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/resume" || true
-      - name: Trigger deploy
-        env: { RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}, RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }} }
-        run: |
-          curl -sS -X POST -H "Authorization: Bearer ${RENDER_API_KEY}" -H "Content-Type: application/json" \
-            "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" -d '{"clearCache": false}'
       - name: Wait for health
         id: health
         env: { HEALTH_URL: ${{ secrets.HEALTH_URL }} }

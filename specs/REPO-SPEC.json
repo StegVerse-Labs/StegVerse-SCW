@@ -10,7 +10,6 @@
   ],
   "required_files": [
     "README.md",
-    "render.yaml",
     "api/main.py",
     "api/requirements.txt",
     "worker.py",
