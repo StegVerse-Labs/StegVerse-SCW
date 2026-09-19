@@ -35,9 +35,9 @@ CFG_KEYS = [
     "ADMIN_TOKEN",
     "SCW_UI_URL",
     "SCW_API_URL",
-    "RENDER_UI_DEPLOY_HOOK",
-    "RENDER_API_DEPLOY_HOOK",
-    "RENDER_WORKER_DEPLOY_HOOK",
+    "SCW_UI_REDEPLOY_HOOK",
+    "SCW_API_REDEPLOY_HOOK",
+    "SCW_WORKER_REDEPLOY_HOOK",
     "NETLIFY_BUILD_HOOK",
     "VERCEL_DEPLOY_HOOK",
     "CLOUDFLARE_ZONE_ID",
@@ -138,8 +138,8 @@ def config_bootstrap_status():
 # -----------------------------
 @router.get("/snapshot")
 def snapshot():
-    ui = (get_cfg("SCW_UI_URL", "https://scw-ui.onrender.com") or "").rstrip("/")
-    api = (get_cfg("SCW_API_URL", "https://scw-api.onrender.com") or "").rstrip("/")
+    ui = (get_cfg("SCW_UI_URL", "") or "").rstrip("/")
+    api = (get_cfg("SCW_API_URL", "") or "").rstrip("/")
 
     def jget(u):
         try:
@@ -226,13 +226,13 @@ def purge_cloudflare(x_admin_token: Optional[str] = Header(default=None, alias="
     code, text = _post_json(url, {"purge_everything": True}, headers)
     return {"ok": code == 200, "status": code, "body": text[:1200]}
 
-# Render redeploys
+# Generic SCW redeploy hooks
 @router.post("/redeploy/ui")
 def redeploy_ui(x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
     _auth(x_admin_token)
-    hook = get_cfg("RENDER_UI_DEPLOY_HOOK")
+    hook = get_cfg("SCW_UI_REDEPLOY_HOOK")
     if not hook:
-        raise HTTPException(status_code=501, detail="render ui deploy hook not set")
+        raise HTTPException(status_code=501, detail="SCW UI redeploy hook not set")
     _throttle("redeploy_ui")
     code, text = _post_json(hook, {"source": "ops"})
     return {"ok": code in (200, 201, 202), "status": code, "body": text[:1200]}
@@ -240,9 +240,9 @@ def redeploy_ui(x_admin_token: Optional[str] = Header(default=None, alias="X-Adm
 @router.post("/redeploy/api")
 def redeploy_api(x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
     _auth(x_admin_token)
-    hook = get_cfg("RENDER_API_DEPLOY_HOOK")
+    hook = get_cfg("SCW_API_REDEPLOY_HOOK")
     if not hook:
-        raise HTTPException(status_code=501, detail="render api deploy hook not set")
+        raise HTTPException(status_code=501, detail="SCW API redeploy hook not set")
     _throttle("redeploy_api")
     code, text = _post_json(hook, {"source": "ops"})
     return {"ok": code in (200, 201, 202), "status": code, "body": text[:1200]}
@@ -250,9 +250,9 @@ def redeploy_api(x_admin_token: Optional[str] = Header(default=None, alias="X-Ad
 @router.post("/redeploy/worker")
 def redeploy_worker(x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
     _auth(x_admin_token)
-    hook = get_cfg("RENDER_WORKER_DEPLOY_HOOK")
+    hook = get_cfg("SCW_WORKER_REDEPLOY_HOOK")
     if not hook:
-        raise HTTPException(status_code=501, detail="render worker deploy hook not set")
+        raise HTTPException(status_code=501, detail="SCW worker redeploy hook not set")
     _throttle("redeploy_worker")
     code, text = _post_json(hook, {"source": "ops"})
     return {"ok": code in (200, 201, 202), "status": code, "body": text[:1200]}
@@ -360,7 +360,7 @@ def admin_reset_all(payload: Dict[str, Any] | None = None, x_admin_token: Option
     """
     One-click:
       1) Rotate ADMIN_TOKEN
-      2) Redeploy API -> Worker -> UI (Render hooks if set)
+      2) Redeploy API -> Worker -> UI using explicitly configured SCW hooks
       3) Optional: Netlify/Vercel redeploy
       4) Optional: Cloudflare purge
       5) Post snapshot
@@ -391,9 +391,9 @@ def admin_reset_all(payload: Dict[str, Any] | None = None, x_admin_token: Option
         result["steps"]["rotate_admin_token"] = {"ok": True, "length": len(new_tok)}
 
         # Redeploys in dependency order
-        if do_api:     _maybe_redeploy("RENDER_API_DEPLOY_HOOK",    "redeploy_api",    "ops.reset_all", result["steps"])
-        if do_worker:  _maybe_redeploy("RENDER_WORKER_DEPLOY_HOOK", "redeploy_worker", "ops.reset_all", result["steps"])
-        if do_ui:      _maybe_redeploy("RENDER_UI_DEPLOY_HOOK",     "redeploy_ui",     "ops.reset_all", result["steps"])
+        if do_api:     _maybe_redeploy("SCW_API_REDEPLOY_HOOK",    "redeploy_api",    "ops.reset_all", result["steps"])
+        if do_worker:  _maybe_redeploy("SCW_WORKER_REDEPLOY_HOOK", "redeploy_worker", "ops.reset_all", result["steps"])
+        if do_ui:      _maybe_redeploy("SCW_UI_REDEPLOY_HOOK",     "redeploy_ui",     "ops.reset_all", result["steps"])
 
         if do_netlify: _maybe_redeploy("NETLIFY_BUILD_HOOK",        "redeploy_netlify","ops.reset_all", result["steps"])
         if do_vercel:  _maybe_redeploy("VERCEL_DEPLOY_HOOK",        "redeploy_vercel", "ops.reset_all", result["steps"])
