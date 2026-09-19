@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2026-09-06 03:43 UTC**_
+_Last updated: **2026-09-19 02:53 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **126**
+- ➖ No dispatch: **124**
 - ❌ Broken: **25**
-- Total: **151**
+- Total: **149**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -108,8 +108,6 @@ _Last updated: **2026-09-06 03:43 UTC**_
 | `retrofit-setup-common-python.yml` | ❌ broken · `ScannerError` | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/retrofit-setup-common-python.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/retrofit-setup-common-python.yml) · [File](.github/workflows/retrofit-setup-common-python.yml) |
 | `revenue_event_manual.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/revenue_event_manual.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/revenue_event_manual.yml) · [File](.github/workflows/revenue_event_manual.yml) |
 | `save_conversation.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/save_conversation.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/save_conversation.yml) · [File](.github/workflows/save_conversation.yml) |
-| `scw-api-autodeploy.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-autodeploy.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-autodeploy.yml) · [File](.github/workflows/scw-api-autodeploy.yml) |
-| `scw-api-config-and-deploy.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-config-and-deploy.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-config-and-deploy.yml) · [File](.github/workflows/scw-api-config-and-deploy.yml) |
 | `scw-api-health-and-report.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-health-and-report.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw-api-health-and-report.yml) · [File](.github/workflows/scw-api-health-and-report.yml) |
 | `scw_bridge.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_bridge.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_bridge.yml) · [File](.github/workflows/scw_bridge.yml) |
 | `scw_fix_no_dispatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_fix_no_dispatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/scw_fix_no_dispatch.yml) · [File](.github/workflows/scw_fix_no_dispatch.yml) |
