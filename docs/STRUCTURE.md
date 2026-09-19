@@ -106,7 +106,6 @@
 |-- install_self_healing.sh
 |-- install_self_healing_pack.sh
 |-- pyproject.toml
-|-- render.yaml
 |-- renovate.json
 |-- requirements-dev.txt
 |-- security.md
