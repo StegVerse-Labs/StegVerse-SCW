@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 # [SCW-API-APP v2026-05-01-demo-tier2-local]
 # Canonical SCW API app (lives at api/app/main.py)
 # Loaded via stub api/main.py -> from app.main import app
