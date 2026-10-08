@@ -101,7 +101,8 @@ artifact retention implies external backup: false
 artifact retention implies sovereign runtime activation: false
 Task Registry work-intent authority: unchanged
 WorkerCoordinator claim/fence authority: unchanged
-Master Records observed-reality authority: unchanged
+Organization observed-reality authority: unchanged
+Master Records organization records/reconstruction: unchanged
 Interlock/InTr transition authority: unchanged
 ```
 

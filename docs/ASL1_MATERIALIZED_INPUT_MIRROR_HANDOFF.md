@@ -139,7 +139,8 @@ Therefore `.github/workflows/alignment_check.yml` remains contained. A future ad
 
 ```text
 canonical work intent authority: StegVerse Canonical Work Coordination System
-Master Records authority: observed events / custody / reconstructable evidence only
+Organization authority: observed events / runtime reality / evidence custody
+Master Records scope: organization records/reconstruction only
 WorkerCoordinator authority: execution claim/fence ownership
 Interlock/InTr authority: task admission / governed state transitions
 SCW source repair owner: issue #22 + PR #41
@@ -158,7 +159,7 @@ No separate WorkerCoordinator or canonical Task Registry claim for this exact so
 3. When TVC actually activates private-source materialization and SCW becomes the admitted consumer, bind then-current exact target snapshots to this checker and execute credential-free ASL-1 validation.
 4. Retain the generated alignment reports as execution evidence.
 5. Reintroduce durable report publication only through a separately admitted bounded mutation/publication capability, if publication remains required.
-6. Reconcile operational evidence through canonical Task Registry / Master Records / WorkerCoordinator / InTr surfaces without inferring completion from source merge.
+6. Reconcile operational evidence through canonical Task Registry / WorkerCoordinator / InTr surfaces, with Master Records keeping the organization record, without inferring completion from source merge.
 ```
 
 ## User work
