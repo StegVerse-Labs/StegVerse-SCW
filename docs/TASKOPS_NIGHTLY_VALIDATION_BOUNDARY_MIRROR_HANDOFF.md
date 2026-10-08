@@ -139,7 +139,7 @@ A future genuine scheduled/manual TaskOps run may establish that the merged vali
 
 ## Coordination / evidence boundary
 
-Canonical Task Registry remains authoritative for work intent/coordination; WorkerCoordinator remains authoritative for execution claim/fence; Master Records remains authoritative for observed/reconstructable reality; Interlock/InTr remains authoritative for governed task ingress/egress. Source merge and hosted validation do not independently satisfy those runtime authorities.
+Canonical Task Registry remains authoritative for work intent/coordination; WorkerCoordinator remains authoritative for execution claim/fence; the Organization remains authoritative for observed/runtime reality; Master Records = organization records/reconstruction; Interlock/InTr remains authoritative for governed task ingress/egress. Source merge and hosted validation do not independently satisfy those runtime authorities.
 
 Master Records canonical-work projection is source-complete but authentic current-task reconciliation remains runtime-pending. No TaskOps completion claim is inferred from PR merge or GitHub Actions validation.
 
