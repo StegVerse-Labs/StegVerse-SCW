@@ -31,3 +31,7 @@ This document explains how to operate, recover, and redeploy the **SCW** (Sandbo
 ---
 
 ## Architecture Overview
+
+## Enterprise provider eradication (2026-10-22)
+
+Under parent `ENTERPRISE-HOST-PROVIDER-ERADICATION-001` / COSV `40000100100000` and StegHealth intake #82, the proposed owner branch removes a named third-party hosting example from the read-only supercheck workflow. The optional API check requires an explicitly supplied, authorized URL; no provider is selected by default. This limited source repair does not verify other SCW provider hooks, exact-head CI, native admission, sovereign readback or provider account shutdown. No replacement host or external machine is introduced.
