@@ -10,7 +10,6 @@
     {"path": ".github/workflows/workflow_preflight.yml", "role": "read-only preflight by default"},
     {"path": ".github/workflows/workflows-sanity-check.yml", "role": "workflow inventory gate"},
     {"path": ".github/workflows/repair-bad-yaml.yml", "role": "bounded one-target repair"},
-    {"path": ".github/workflows/neutralize_secrets_if.yml", "role": "quarantined legacy mutator"},
     {"path": ".github/workflows/setup-common-python.yml", "role": "composite-action smoke test"},
     {"path": ".github/workflows/telemetry-reusable.yml", "role": "reusable telemetry"},
     {"path": ".github/workflows/workflow-recovery-controller.yml", "role": "machine-owned recovery controller"},
@@ -21,14 +20,18 @@
     {"path": "docs/SCW_SESSION_CONSOLIDATION_2026-08-02.md", "role": "originating session transfer record"},
     {"path": "docs/SCW_MIRROR_HANDOFF.md", "role": "continuation authority"}
   ],
-  "quarantined_workflows": [
-    ".github/workflows/neutralize_secrets_if.yml"
-  ],
+  "quarantined_workflows": [],
   "superseded_or_removed": [
     {
       "path": ".github/workflows/_reusables/telemetry.yml",
       "reason": "concatenated malformed definitions; canonical replacement installed at .github/workflows/telemetry-reusable.yml",
       "removal_commit": "f3cee5e0d0333a8ec1707c22efe2c64be2e40766"
+    },
+    {
+      "path": ".github/workflows/neutralize_secrets_if.yml",
+      "reason": "quarantined legacy mutator; invalid YAML that GitHub cannot load; retired as a G17 dead surface (StegVerse-org/.github#166) with a byte-identical record",
+      "folded_record": "tools/tasks/folded/neutralize_secrets_if.yml",
+      "folded_record_sha256": "86c00a7e0da6393a83c7033b1ca5adca9150f8a192ce3cfab7943efb678a479e"
     }
   ],
   "status_vocabulary": [
