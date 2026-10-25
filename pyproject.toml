@@ -18,3 +18,6 @@ select = ["E","F","I","UP"]
 [tool.pytest.ini_options]
 # scripts/ holds runnable helpers (for example scripts/enqueue_test.py, a Redis job producer), not tests.
 testpaths = ["tests"]
+# Tests import repo packages (engine, scripts, tools) from the repository root; make it
+# importable for the plain `pytest` entry point used by ci.yml and ci_governance.yml.
+pythonpath = ["."]

@@ -6,13 +6,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools" / "patient_owned_monitoring"))
+ROOT = Path(__file__).resolve().parents[2]
+TOOLS = ROOT / "tools" / "patient_owned_monitoring"
+if str(TOOLS) not in sys.path:
+    sys.path.insert(0, str(TOOLS))
 
 from run_synthetic_pipeline import run
 from waveform_features import load
-
-ROOT = Path(__file__).resolve().parents[2]
-TOOLS = ROOT / "tools" / "patient_owned_monitoring"
 
 
 class EndToEndPipelineTests(unittest.TestCase):

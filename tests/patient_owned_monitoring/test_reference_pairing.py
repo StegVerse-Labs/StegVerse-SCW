@@ -2,17 +2,12 @@ from __future__ import annotations
 
 import importlib.util
 import math
-import sys
 from pathlib import Path
 
-MODULE_PATH = (
-    Path(__file__).parents[2] / "tools" / "patient_owned_monitoring" / "reference_pairing.py"
-)
+MODULE_PATH = Path(__file__).parents[2] / "tools" / "patient_owned_monitoring" / "reference_pairing.py"
 SPEC = importlib.util.spec_from_file_location("reference_pairing", MODULE_PATH)
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)
-# dataclasses resolves the defining module through sys.modules, so register it before executing.
-sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
 
 FIXTURES = Path(__file__).parent / "fixtures"
