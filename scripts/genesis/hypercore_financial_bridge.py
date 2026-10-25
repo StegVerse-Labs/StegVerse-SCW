@@ -20,21 +20,20 @@ StegVerse Genesis - HyperCore Financial Bridge v0.1
 import json
 import re
 from pathlib import Path
-from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER_DIR = ROOT / "ledger" / "telemetry" / "financial"
 HYPERCORE_DOC = ROOT / "docs" / "STEGVERSE_HYPERCORE.md"
 
 
-def find_latest_financial_json() -> Optional[Path]:
+def find_latest_financial_json() -> Path | None:
     if not LEDGER_DIR.exists():
         return None
     candidates = sorted(LEDGER_DIR.glob("daily_*.json"))
     return candidates[-1] if candidates else None
 
 
-def load_summary(p: Path) -> Optional[dict]:
+def load_summary(p: Path) -> dict | None:
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:

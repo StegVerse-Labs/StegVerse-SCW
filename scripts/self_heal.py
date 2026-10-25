@@ -6,8 +6,13 @@ Self-heal GitHub Actions workflows:
 Writes a small summary and an output flag so the workflow can decide to commit.
 """
 from __future__ import annotations
-import os, re, sys, pathlib, json
-from typing import List, Tuple
+
+import json
+import os
+import pathlib
+import re
+import sys
+
 import yaml  # PyYAML
 
 ROOT = pathlib.Path(".").resolve()
@@ -21,7 +26,7 @@ def safe_load(text: str):
     except Exception as e:
         return None, e
 
-def normalize_inline_env(lines: List[str]) -> List[str]:
+def normalize_inline_env(lines: list[str]) -> list[str]:
     """Fix lines like: `env: { FOO: bar, BAZ: ${{ secret }} }` -> multiline map.
        Only touches single-line env maps that include `${{` to avoid false positives.
     """
@@ -51,7 +56,7 @@ def has_only_workflow_call(on_val) -> bool:
         return keys == {"workflow_call"}
     return False
 
-def ensure_dispatch(data) -> Tuple[bool, bool]:
+def ensure_dispatch(data) -> tuple[bool, bool]:
     """Return (changed, dispatched_added) after ensuring workflow_dispatch exists if appropriate."""
     changed = False
     added = False
@@ -79,9 +84,9 @@ def ensure_dispatch(data) -> Tuple[bool, bool]:
     return changed, added
 
 def main() -> int:
-    fixed_files: List[str] = []
-    added_dispatch: List[str] = []
-    broken: List[str] = []
+    fixed_files: list[str] = []
+    added_dispatch: list[str] = []
+    broken: list[str] = []
 
     for p in sorted(WF_DIR.glob("*.y*ml")):
         txt = p.read_text(encoding="utf-8", errors="ignore")
