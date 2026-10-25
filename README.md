@@ -53,7 +53,6 @@ Phase 2 will add real template syncing and autopatch PR generation.
 
 | Workflow | State | Actions |
 |---|---|---|
-| `00_repo_scanner.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/00_repo_scanner.yml) · [File](.github/workflows/00_repo_scanner.yml) |
 | `AutoPatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/AutoPatch.yml) · [File](.github/workflows/AutoPatch.yml) |
 | `actions-permission-check.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/actions-permission-check.yml) · [File](.github/workflows/actions-permission-check.yml) |
 | `auto_patch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/auto_patch.yml) · [File](.github/workflows/auto_patch.yml) |
@@ -65,6 +64,7 @@ Phase 2 will add real template syncing and autopatch PR generation.
 | `backup_triggers.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/backup_triggers.yml) · [File](.github/workflows/backup_triggers.yml) |
 | `ci.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci.yml) · [File](.github/workflows/ci.yml) |
 | `ci_governance.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci_governance.yml) · [File](.github/workflows/ci_governance.yml) |
+| `codeql.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/codeql.yml) · [File](.github/workflows/codeql.yml) |
 
 _See the full table for all workflows → [.github/docs/WORKFLOWS_CONSOLE.md](.github/docs/WORKFLOWS_CONSOLE.md)._
 <!-- /ops:console -->
