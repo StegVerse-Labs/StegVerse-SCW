@@ -79,7 +79,7 @@
 |   |-- pages
 |   |   `-- index.js
 |   |-- public
-|   |   |-- Index.html
+|   |   |-- index.html
 |   |   |-- diag.html
 |   |   |-- manifest.json
 |   |   |-- se.js
