@@ -13,7 +13,7 @@
   "Stored autopatch inputs (.github/autopatch/*.patch.yml) and scripts/stegverse_autopatch_manifest.json name some retired paths as write targets of dispatch-only autopatch writers. They are not edited; repointing them would aim those writers at the sha-pinned records.",
   "Path filters and workflow_dispatch are not carried. Each folded group runs on its declared pull_request and push events, using the installs its original declared."
  ],
- "folded_from_commit": "7ae2b38f05967a67582c1c6f12ea7e0579a509e1",
+ "folded_from_commit": "205ddb62f8d541fed2b88352ff402bfefdab6d0a",
  "groups": [
   {
    "id": "workflow-surface-registry.validate",
