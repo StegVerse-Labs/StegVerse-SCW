@@ -1,0 +1,42 @@
+{
+ "schema": "stegverse.task-catalog/v1",
+ "repository": "StegVerse-Labs/StegVerse-SCW",
+ "goal_id": "G17-WORKFLOW-SURFACE-MINIMIZATION",
+ "authority": "Rigel 2026-10-24 retroactive G17 enforcement (StegVerse-org/.github#166); pattern StegVerse-Labs/StegDB#60 (eab2e773)",
+ "dispatcher": ".github/workflows/validation-dispatcher.yml",
+ "runner": "tools/tasks/run_catalog.py",
+ "runner_source": "StegVerse-Labs/StegDB tools/tasks/run_catalog.py @ eab2e773271f3e63466a710f1b4555f677882848 (sha256 f741f30557888fd8e4852a52adfc65736a08898d49ade7519f6bcc2672921e9b), copied unmodified",
+ "rule": "Every check a folded workflow job ran is one group here; its step bodies are the original run blocks byte for byte, pinned by sha256, except the repairs listed. A new check is a new group (or a step in one), never a new workflow file.",
+ "path_filters": "Dropped: every group runs on every pull_request and push to main (a superset of the original path-filtered runs). workflow_dispatch/schedule triggers are not carried (no manual dispatch, no cron).",
+ "repairs": [
+  "config/workflow-recovery-required.json: `.github/workflows/neutralize_secrets_if.yml` (the quarantined legacy mutator, invalid YAML) is retired as a dead surface. Its entry moves from required_components and quarantined_workflows to superseded_or_removed, the existing shape the config uses for the retired `_reusables/telemetry.yml`, with its folded record and sha256. scripts/workflow_recovery_controller.py otherwise reports it as BLOCKED (missing required component).",
+  "Stored autopatch inputs (.github/autopatch/*.patch.yml) and scripts/stegverse_autopatch_manifest.json name some retired paths as write targets of dispatch-only autopatch writers. They are not edited; repointing them would aim those writers at the sha-pinned records.",
+  "Path filters and workflow_dispatch are not carried. Each folded group runs on its declared pull_request and push events, using the installs its original declared."
+ ],
+ "folded_from_commit": "7ae2b38f05967a67582c1c6f12ea7e0579a509e1",
+ "groups": [
+  {
+   "id": "workflow-surface-registry.validate",
+   "catalog_addition": "G17 registry gate (no folded source workflow)",
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Workflow files equal the registered surfaces; catalog verifies ALLOW",
+     "run_file": "tools/tasks/steps/workflow-surface-registry.validate/01-registry.sh",
+     "run_sha256": "811824e88664923006be2eeb35632d710f5504145967f61632ad9e8fbdcb35ca"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "false",
+    "timeout_minutes": 10,
+    "python_version": "3.11"
+   }
+  }
+ ]
+}
