@@ -1,4 +1,5 @@
 import importlib.util
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2] / "tools" / "patient_owned_monitoring"
@@ -7,6 +8,8 @@ ROOT = Path(__file__).resolve().parents[2] / "tools" / "patient_owned_monitoring
 def load(name):
     spec = importlib.util.spec_from_file_location(name, ROOT / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
+    # dataclasses resolves the defining module through sys.modules, so register it before executing.
+    sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -44,8 +47,20 @@ def test_hematocrit_coordinate_calculation():
 def test_hemodynamic_baseline_and_relative_change():
     module = load("hemodynamic_features")
     rows = [
-        {"time_utc": "2026-07-21T10:00:00Z", "pat_ms": "200", "ppg_amplitude": "1", "pulse_width_ms": "300", "heart_rate_bpm": "70"},
-        {"time_utc": "2026-07-21T10:00:01Z", "pat_ms": "180", "ppg_amplitude": "0.8", "pulse_width_ms": "270", "heart_rate_bpm": "77"},
+        {
+            "time_utc": "2026-07-21T10:00:00Z",
+            "pat_ms": "200",
+            "ppg_amplitude": "1",
+            "pulse_width_ms": "300",
+            "heart_rate_bpm": "70",
+        },
+        {
+            "time_utc": "2026-07-21T10:00:01Z",
+            "pat_ms": "180",
+            "ppg_amplitude": "0.8",
+            "pulse_width_ms": "270",
+            "heart_rate_bpm": "77",
+        },
     ]
     base = module.baseline(rows[:1])
     derived = module.derive(rows, base)
