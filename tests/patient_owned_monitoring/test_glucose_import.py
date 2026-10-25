@@ -43,7 +43,9 @@ class GlucoseImportTests(unittest.TestCase):
         self.assertEqual(records[0]["dataset_partition"], "validation")
         self.assertEqual(records[0]["output_label"], "reference-measured")
         self.assertEqual(len(records[0]["record_sha256"]), 64)
-        self.assertEqual(records[0]["provenance"]["source_sha256"], records[1]["provenance"]["source_sha256"])
+        self.assertEqual(
+            records[0]["provenance"]["source_sha256"], records[1]["provenance"]["source_sha256"]
+        )
 
     def test_zero_is_preserved_as_measured_zero(self):
         source = self.make_source("timestamp,value,unit\n2026-08-02T12:00:00Z,0,mg/dL\n")
