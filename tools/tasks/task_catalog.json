@@ -13,8 +13,447 @@
   "Stored autopatch inputs (.github/autopatch/*.patch.yml) and scripts/stegverse_autopatch_manifest.json name some retired paths as write targets of dispatch-only autopatch writers. They are not edited; repointing them would aim those writers at the sha-pinned records.",
   "Path filters and workflow_dispatch are not carried. Each folded group runs on its declared pull_request and push events, using the installs its original declared."
  ],
- "folded_from_commit": "205ddb62f8d541fed2b88352ff402bfefdab6d0a",
+ "folded_from_commit": "14f344cbd6135d7a01f777768f53865c6757507f",
  "groups": [
+  {
+   "id": "00_repo_scanner.scan",
+   "source": {
+    "workflow": ".github/workflows/00_repo_scanner.yml",
+    "workflow_name": "00 - Repo Scanner",
+    "job": "scan",
+    "job_name": null,
+    "commit": "14f344c",
+    "triggers_before": [
+     "workflow_dispatch",
+     "push"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Repo identity",
+     "run_file": "tools/tasks/steps/00_repo_scanner.scan/01-repo-identity.sh",
+     "run_sha256": "82581b74a1ac35fda67cb9b00af57d675b8881afc05ebf10d9ed8402a7feb5d3"
+    },
+    {
+     "name": "Tree (depth 4, skip heavy dirs)",
+     "run_file": "tools/tasks/steps/00_repo_scanner.scan/02-tree-depth-4-skip-heavy-dirs.sh",
+     "run_sha256": "4b368505b4f11cf817f9a2f91074aa314cc5a66260b6bb3ee26d4fe936b46c4f"
+    },
+    {
+     "name": "Workflows summary",
+     "run_file": "tools/tasks/steps/00_repo_scanner.scan/03-workflows-summary.sh",
+     "run_sha256": "cd8bd0c263ee7dddf6a073b3ff3a8300e7504f997bdb357a18c86f62b1431e14"
+    },
+    {
+     "name": "Look for canonical folders (schemas, prompts, events, ledger)",
+     "run_file": "tools/tasks/steps/00_repo_scanner.scan/04-look-for-canonical-folders-schemas-prompts-events-ledger.sh",
+     "run_sha256": "44ddec67fd1505d4557341fe0b11f94242ed148a6a1f36faa45d9ee30f2e2d1f"
+    },
+    {
+     "name": "Keyword scan (fast, high-signal)",
+     "run_file": "tools/tasks/steps/00_repo_scanner.scan/05-keyword-scan-fast-high-signal.sh",
+     "run_sha256": "b801c65b89d6b8f36456e5624462f559f70ce9b7f21190d474bf20f3731d8a4d"
+    },
+    {
+     "name": "Files likely relevant (names)",
+     "run_file": "tools/tasks/steps/00_repo_scanner.scan/06-files-likely-relevant-names.sh",
+     "run_sha256": "8cccc19d7d3986bc6cf60443f18dcce4a8959c2a6563ee2cf8121494afccda66"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 30
+   }
+  },
+  {
+   "id": "forward-to-bridge.validate-boundary",
+   "source": {
+    "workflow": ".github/workflows/forward-to-bridge.yml",
+    "workflow_name": "StegVerse AI Bridge Forwarding - Validation Only",
+    "job": "validate-boundary",
+    "job_name": null,
+    "commit": "14f344c",
+    "triggers_before": [
+     "pull_request"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Validate TVC bridge transport boundary",
+     "run_file": "tools/tasks/steps/forward-to-bridge.validate-boundary/01-validate-tvc-bridge-transport-boundary.sh",
+     "run_sha256": "c8da37e9f3d7dc5e5ba18106ae36535d8795fef72803213e18e6c080c7c7d4bb"
+    },
+    {
+     "name": "Report canonical continuation",
+     "run_file": "tools/tasks/steps/forward-to-bridge.validate-boundary/02-report-canonical-continuation.sh",
+     "run_sha256": "cd54195e8b762ef74bb9528ed544c07379eeca340e1018c1d6f0babae606c8b9"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "false",
+    "timeout_minutes": 5
+   },
+   "repairs": [
+    "step 1 reads the folded original at tools/tasks/folded/forward-to-bridge.yml"
+   ]
+  },
+  {
+   "id": "hcb-pipeline.smoke",
+   "source": {
+    "workflow": ".github/workflows/hcb-pipeline.yml",
+    "workflow_name": "hcb-pipeline",
+    "job": "smoke",
+    "job_name": null,
+    "commit": "14f344c",
+    "triggers_before": [
+     "workflow_dispatch",
+     "push"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {
+    "PYTHON_VERSION": "3.11",
+    "ADMIN_TOKEN": "test_token",
+    "HCB_PROVIDERS_PATH": "${{ github.workspace }}/hybrid-collab-bridge/providers.ci.yaml"
+   },
+   "steps": [
+    {
+     "name": "Install deps",
+     "run_file": "tools/tasks/steps/hcb-pipeline.smoke/01-install-deps.sh",
+     "run_sha256": "867b2dcf248dd89cec3b314a8fe1cb921e8492a898191613bc7bf652a6d4bd43",
+     "working_directory": "hybrid-collab-bridge/api"
+    },
+    {
+     "name": "Compile sources",
+     "run_file": "tools/tasks/steps/hcb-pipeline.smoke/02-compile-sources.sh",
+     "run_sha256": "5b7156c219164b3817eaa27d2f4bcc6c67ad97916a3f8f5ef3fa3497f85b36c1",
+     "working_directory": "hybrid-collab-bridge/api"
+    },
+    {
+     "name": "Boot API and hit /health",
+     "run_file": "tools/tasks/steps/hcb-pipeline.smoke/03-boot-api-and-hit-health.sh",
+     "run_sha256": "8e28ca01e51a8ad86b5685818508e186efd9438637bccc0ca6b1d5b1a0510123",
+     "working_directory": "hybrid-collab-bridge/api"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "hcb_smoke_outputs",
+     "path": "/tmp/health.json",
+     "if_no_files_found": "warn",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 30,
+    "python_version": "3.11",
+    "artifact_name": "hcb_smoke_outputs",
+    "artifact_if_no_files_found": "warn"
+   }
+  },
+  {
+   "id": "hcb-pipeline.functional",
+   "source": {
+    "workflow": ".github/workflows/hcb-pipeline.yml",
+    "workflow_name": "hcb-pipeline",
+    "job": "functional",
+    "job_name": null,
+    "commit": "14f344c",
+    "triggers_before": [
+     "workflow_dispatch",
+     "push"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    },
+    "job_needs_if_before": {
+     "needs": "smoke",
+     "if": null
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {
+    "PYTHON_VERSION": "3.11",
+    "ADMIN_TOKEN": "test_token",
+    "HCB_PROVIDERS_PATH": "${{ github.workspace }}/hybrid-collab-bridge/providers.ci.yaml"
+   },
+   "steps": [
+    {
+     "name": "Install deps",
+     "run_file": "tools/tasks/steps/hcb-pipeline.functional/01-install-deps.sh",
+     "run_sha256": "867b2dcf248dd89cec3b314a8fe1cb921e8492a898191613bc7bf652a6d4bd43",
+     "working_directory": "hybrid-collab-bridge/api"
+    },
+    {
+     "name": "Compile sources",
+     "run_file": "tools/tasks/steps/hcb-pipeline.functional/02-compile-sources.sh",
+     "run_sha256": "5b7156c219164b3817eaa27d2f4bcc6c67ad97916a3f8f5ef3fa3497f85b36c1",
+     "working_directory": "hybrid-collab-bridge/api"
+    },
+    {
+     "name": "Boot API and run /v1/run",
+     "run_file": "tools/tasks/steps/hcb-pipeline.functional/03-boot-api-and-run-v1-run.sh",
+     "run_sha256": "3263ea7a88e09a6a64d5f273327403c5ae81113ea7f7e93f4aa46b08195f15e2",
+     "working_directory": "hybrid-collab-bridge/api"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "hcb_functional_outputs",
+     "path": "/tmp/health.json\n/tmp/run.json\n",
+     "if_no_files_found": "warn",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 30,
+    "python_version": "3.11",
+    "artifact_name": "hcb_functional_outputs",
+    "artifact_if_no_files_found": "warn"
+   }
+  },
+  {
+   "id": "hybrid_bridge_ci.smoke",
+   "source": {
+    "workflow": ".github/workflows/hybrid_bridge_ci.yml",
+    "workflow_name": "hybrid-bridge-ci",
+    "job": "smoke",
+    "job_name": null,
+    "commit": "14f344c",
+    "triggers_before": [
+     "workflow_dispatch",
+     "push"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {
+    "ANTHROPIC_API_KEY": "dummy_key_for_import_only",
+    "ADMIN_TOKEN": "test_token"
+   },
+   "steps": [
+    {
+     "name": "Install deps",
+     "run_file": "tools/tasks/steps/hybrid_bridge_ci.smoke/01-install-deps.sh",
+     "run_sha256": "867b2dcf248dd89cec3b314a8fe1cb921e8492a898191613bc7bf652a6d4bd43",
+     "working_directory": "hybrid-collab-bridge/api"
+    },
+    {
+     "name": "Compile sources",
+     "run_file": "tools/tasks/steps/hybrid_bridge_ci.smoke/02-compile-sources.sh",
+     "run_sha256": "5b7156c219164b3817eaa27d2f4bcc6c67ad97916a3f8f5ef3fa3497f85b36c1",
+     "working_directory": "hybrid-collab-bridge/api"
+    },
+    {
+     "name": "Boot API and hit /health",
+     "run_file": "tools/tasks/steps/hybrid_bridge_ci.smoke/03-boot-api-and-hit-health.sh",
+     "run_sha256": "f31abc223a9714192a1040d3652c0032a1f42f0d80fbe065b0e13df9a5d23880",
+     "working_directory": "hybrid-collab-bridge/api"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 30,
+    "python_version": "3.11"
+   }
+  },
+  {
+   "id": "test-readiness.repo-smoke",
+   "source": {
+    "workflow": ".github/workflows/test-readiness.yml",
+    "workflow_name": "Test Readiness",
+    "job": "repo-smoke",
+    "job_name": null,
+    "commit": "14f344c",
+    "triggers_before": [
+     "push",
+     "pull_request",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Baseline repository smoke test",
+     "run_file": "tools/tasks/steps/test-readiness.repo-smoke/01-baseline-repository-smoke-test.sh",
+     "run_sha256": "b9ca9ed2406c9532b40bd3c46ae13c4eb0924562a3232a0b9308a04329377ec1"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 5,
+    "python_version": "3.11"
+   }
+  },
+  {
+   "id": "workflows-badges.badge",
+   "source": {
+    "workflow": ".github/workflows/workflows-badges.yml",
+    "workflow_name": "Workflows Status Badges",
+    "job": "badge",
+    "job_name": null,
+    "commit": "14f344c",
+    "triggers_before": [
+     "workflow_dispatch",
+     "push"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Install parser",
+     "run_file": "tools/tasks/steps/workflows-badges.badge/01-install-parser.sh",
+     "run_sha256": "5a2a854b2a0d49a62be6ac38bf1897f5d01982a226ce84624d12f614048f9175"
+    },
+    {
+     "name": "Generate non-authorizing workflow status evidence",
+     "run_file": "tools/tasks/steps/workflows-badges.badge/02-generate-non-authorizing-workflow-status-evidence.sh",
+     "run_sha256": "221e58e002e90495fc96b45e80c7d5d76a36e7cf8789a3e6022e61b5e8b7e34b"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "workflows-status-${{ github.run_id }}",
+     "path": "workflow-status-evidence/workflows-status.json",
+     "if_no_files_found": "error",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "false",
+    "timeout_minutes": 30,
+    "python_version": "3.11",
+    "artifact_name": "workflows-status",
+    "artifact_if_no_files_found": "error"
+   }
+  },
+  {
+   "id": "workflows-first-aid-sweep.sweep",
+   "source": {
+    "workflow": ".github/workflows/workflows-first-aid-sweep.yml",
+    "workflow_name": "Workflows First-Aid Sweep",
+    "job": "sweep",
+    "job_name": null,
+    "commit": "14f344c",
+    "triggers_before": [
+     "workflow_dispatch",
+     "push"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Install deps",
+     "run_file": "tools/tasks/steps/workflows-first-aid-sweep.sweep/01-install-deps.sh",
+     "run_sha256": "e3178baa28b420751bb7bb15ba2f1e24aaccfcf261d43e12cf049275379a0602"
+    },
+    {
+     "name": "Heal workflows (inject dispatch + fix common YAML nits)",
+     "run_file": "tools/tasks/steps/workflows-first-aid-sweep.sweep/02-heal-workflows-inject-dispatch-fix-common-yaml-nits.sh",
+     "run_sha256": "d0f7b293c77741fd882c0b5c4f728d9bcd940ce88fc1c8d745d1fb6eef60fd75",
+     "id": "heal",
+     "shell": "bash"
+    },
+    {
+     "name": "Preserve proposed workflow repairs as evidence",
+     "run_file": "tools/tasks/steps/workflows-first-aid-sweep.sweep/03-preserve-proposed-workflow-repairs-as-evidence.sh",
+     "run_sha256": "587c7f8431fbf7df8e6203b1a41f87b59d2475bf0089c20663d2102febf2c9e2",
+     "shell": "bash"
+    },
+    {
+     "name": "Regenerate Ops Console (inline)",
+     "run_file": "tools/tasks/steps/workflows-first-aid-sweep.sweep/04-regenerate-ops-console-inline.sh",
+     "run_sha256": "e9eff78dd436828d815c341dc64606bb510159584926f68510dc247f41231e6f",
+     "shell": "bash"
+    },
+    {
+     "name": "Summary",
+     "run_file": "tools/tasks/steps/workflows-first-aid-sweep.sweep/05-summary.sh",
+     "run_sha256": "1a63d4336f3289c27c32c05bece247301042019986af3e891b87c86a274cf8e0",
+     "if": "always()"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "workflow-first-aid-${{ github.run_id }}",
+     "path": ".github/autopatch_out/FIRST_AID_SUMMARY.json\n.github/autopatch_out/FIRST_AID_PROPOSED.patch\n.github/docs/WORKFLOWS_CONSOLE.md\n",
+     "if_no_files_found": "warn",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "fetch_depth": "0",
+    "persist_credentials": "true",
+    "timeout_minutes": 30,
+    "python_version": "3.11",
+    "artifact_name": "workflow-first-aid",
+    "artifact_if_no_files_found": "warn"
+   }
+  },
   {
    "id": "workflow-surface-registry.validate",
    "catalog_addition": "G17 registry gate (no folded source workflow)",
