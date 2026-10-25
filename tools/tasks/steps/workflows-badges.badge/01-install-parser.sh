@@ -1,0 +1,1 @@
+python -m pip install --disable-pip-version-check "PyYAML==6.0.2"

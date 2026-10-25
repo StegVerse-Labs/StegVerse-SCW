@@ -34,24 +34,6 @@
       }
     },
     {
-      "path": ".github/workflows/00_repo_scanner.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "workflow_dispatch",
-        "push"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "00646f08b2c02c4c6c26dd84bd45df87b0e79f9f88a3c1881c8cbe862539a525",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
       "path": ".github/workflows/AutoPatch.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -532,23 +514,6 @@
       }
     },
     {
-      "path": ".github/workflows/forward-to-bridge.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "pull_request"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "111594a9b841619eae3758c6ca86a360eca3a2e121455ef338ef6e95322c00ed",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
       "path": ".github/workflows/genesis_boot.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -628,42 +593,6 @@
       },
       "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
       "verbatim_sha256": "9687c1c7ef001ac3a898cfa536f0e1ca91fe3d431876c0add8f3787417a1fb5d",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
-      "path": ".github/workflows/hcb-pipeline.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "workflow_dispatch",
-        "push"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "814bed5bf5d1f1cef77ee53873e37587ba9af03816d054609058db41b87dcf9e",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
-      "path": ".github/workflows/hybrid_bridge_ci.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "workflow_dispatch",
-        "push"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "b798dd9483af8ce3075382aaf11e1fe474171285215cc1f05af9f6c7dcbdd0fa",
       "exception": {
         "lifecycle": "pending later G17 batch",
         "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
@@ -1388,25 +1317,6 @@
       }
     },
     {
-      "path": ".github/workflows/test-readiness.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "push",
-        "pull_request",
-        "workflow_dispatch"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "8508ba02eab5538440c83e9d43a26fd5a9a4c66185cdc0d4b73f8fcb49225f17",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
       "path": ".github/workflows/validate-autopatch-manifest.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -1567,24 +1477,6 @@
       }
     },
     {
-      "path": ".github/workflows/workflows-badges.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "workflow_dispatch",
-        "push"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "74a445eba550e856c3f27ba9e223e9bb3d843bf0bf33b26c70cc7590609089b0",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
       "path": ".github/workflows/workflows-console-table.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -1596,24 +1488,6 @@
       },
       "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
       "verbatim_sha256": "024113d525e15c8dfb206b193222fa9eff939826547b3b8a9546ece213126b60",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
-      "path": ".github/workflows/workflows-first-aid-sweep.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "workflow_dispatch",
-        "push"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "e20464fa4206ec2f85043b1261e09f0a574d31df737937f50e7409d1f02158d0",
       "exception": {
         "lifecycle": "pending later G17 batch",
         "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
@@ -2296,14 +2170,120 @@
       "reason": "ELIMINATE_DEAD_SURFACE: invalid YAML (expected '<document start>', but found '<scalar>' at line 2, column 3). GitHub cannot load this file, so it does not run as a workflow at this head; main's last recorded run is a workflow-file failure (2026-10-22). It is retired under the StegBrain dead-surface pattern: the bytes are recorded at tools/tasks/folded/yaml_corrector_v2.yml with their sha256, and no data file is touched.",
       "verbatim_record": "tools/tasks/folded/yaml_corrector_v2.yml",
       "verbatim_sha256": "4bd014f55e526702e222b09ccb9bbd5a02e92c985686bb4794e4dc865c3ef9be"
+    },
+    {
+      "workflow": ".github/workflows/00_repo_scanner.yml",
+      "name": "00 - Repo Scanner",
+      "triggers_before": [
+        "workflow_dispatch",
+        "push"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "00_repo_scanner.scan"
+      ],
+      "verbatim_record": "tools/tasks/folded/00_repo_scanner.yml",
+      "verbatim_sha256": "00646f08b2c02c4c6c26dd84bd45df87b0e79f9f88a3c1881c8cbe862539a525"
+    },
+    {
+      "workflow": ".github/workflows/forward-to-bridge.yml",
+      "name": "StegVerse AI Bridge Forwarding - Validation Only",
+      "triggers_before": [
+        "pull_request"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "forward-to-bridge.validate-boundary"
+      ],
+      "verbatim_record": "tools/tasks/folded/forward-to-bridge.yml",
+      "verbatim_sha256": "111594a9b841619eae3758c6ca86a360eca3a2e121455ef338ef6e95322c00ed"
+    },
+    {
+      "workflow": ".github/workflows/hcb-pipeline.yml",
+      "name": "hcb-pipeline",
+      "triggers_before": [
+        "workflow_dispatch",
+        "push"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "hcb-pipeline.smoke",
+        "hcb-pipeline.functional"
+      ],
+      "verbatim_record": "tools/tasks/folded/hcb-pipeline.yml",
+      "verbatim_sha256": "814bed5bf5d1f1cef77ee53873e37587ba9af03816d054609058db41b87dcf9e"
+    },
+    {
+      "workflow": ".github/workflows/hybrid_bridge_ci.yml",
+      "name": "hybrid-bridge-ci",
+      "triggers_before": [
+        "workflow_dispatch",
+        "push"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "hybrid_bridge_ci.smoke"
+      ],
+      "verbatim_record": "tools/tasks/folded/hybrid_bridge_ci.yml",
+      "verbatim_sha256": "b798dd9483af8ce3075382aaf11e1fe474171285215cc1f05af9f6c7dcbdd0fa"
+    },
+    {
+      "workflow": ".github/workflows/test-readiness.yml",
+      "name": "Test Readiness",
+      "triggers_before": [
+        "push",
+        "pull_request",
+        "workflow_dispatch"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "test-readiness.repo-smoke"
+      ],
+      "verbatim_record": "tools/tasks/folded/test-readiness.yml",
+      "verbatim_sha256": "8508ba02eab5538440c83e9d43a26fd5a9a4c66185cdc0d4b73f8fcb49225f17"
+    },
+    {
+      "workflow": ".github/workflows/workflows-badges.yml",
+      "name": "Workflows Status Badges",
+      "triggers_before": [
+        "workflow_dispatch",
+        "push"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "workflows-badges.badge"
+      ],
+      "verbatim_record": "tools/tasks/folded/workflows-badges.yml",
+      "verbatim_sha256": "74a445eba550e856c3f27ba9e223e9bb3d843bf0bf33b26c70cc7590609089b0"
+    },
+    {
+      "workflow": ".github/workflows/workflows-first-aid-sweep.yml",
+      "name": "Workflows First-Aid Sweep",
+      "triggers_before": [
+        "workflow_dispatch",
+        "push"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "workflows-first-aid-sweep.sweep"
+      ],
+      "verbatim_record": "tools/tasks/folded/workflows-first-aid-sweep.yml",
+      "verbatim_sha256": "e20464fa4206ec2f85043b1261e09f0a574d31df737937f50e7409d1f02158d0"
     }
   ],
   "ceiling_fail_closed": {
     "disposition": "FAIL_CLOSED",
-    "workflow_count": 94,
+    "workflow_count": 87,
     "failure_code": "G17_CONTRACT_FLOOR_ABOVE_EXCEPTION_CEILING",
     "failed_predicate": "workflow_count <= exception_repository_workflow_count_max (3)",
-    "required_evidence_or_repair": "this is batch 2 of the G17 surface reduction for this repository. Batch 1 retired 26 files that never load as dead surfaces. Batch 2 eliminates 30 workflow_dispatch-only files that are contained (exit 1) or no-ops, carry no credential, no write and no reader, and never ran on main. 93 surfaces remain byte-unchanged. Each carries an exception record naming its disposition: KEEP_PENDING_LATER_BATCH for validator folds and dispatch-only files that do work or have readers (handled in later batch PRs), and writers, credential-bound surfaces and reusables that stay kept. Each later batch lowers workflow_count and replaces this record with its exact new count. The kept writers and credential-bound surfaces need their own admitted repair to retire, and their credentials belong only in the SKAP Vault inside KV.",
+    "required_evidence_or_repair": "this is batch 3 of the G17 surface reduction for this repository. Batches 1 and 2 retired 26 dead surfaces and eliminated 30 contained or no-op workflow_dispatch-only files. Batch 3 folds 7 read-only validators (00_repo_scanner, forward-to-bridge, hcb-pipeline, hybrid_bridge_ci, test-readiness, workflows-badges, workflows-first-aid-sweep) into the validation dispatcher run_catalog; each returns ALLOW at this tree. 86 surfaces remain byte-unchanged. Each carries an exception record naming its disposition: KEEP_PENDING_LATER_BATCH for validators that fail on main's tree (ci lint debt, ci_governance collection errors, verify_ui missing ui/public/index.html) or have readers, and writers, credential-bound surfaces and reusables that stay kept. Each later batch lowers workflow_count and replaces this record with its exact new count. The kept writers and credential-bound surfaces need their own admitted repair to retire, and their credentials belong only in the SKAP Vault inside KV.",
     "retry_entrypoint": "tests/test_workflow_surface_registry.py",
     "owning_existing_goal": "G17-WORKFLOW-SURFACE-MINIMIZATION (StegVerse-Labs/.github#167/#168); StegVerse-org/.github#166",
     "next_attempt": "the next pull request touching .github/workflows/ or those contracts"

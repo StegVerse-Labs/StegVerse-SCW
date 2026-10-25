@@ -1,0 +1,5 @@
+echo "state=TVC_ADMITTED_TRANSPORT_REQUIRED"
+echo "github_actions_role=VALIDATION_TRANSPORT_ONLY"
+echo "cross_repo_bridge_forward_performed=false"
+echo "credential_authority=TV/TVC"
+echo "authority_effect=NONE"
