@@ -1,3 +1,12 @@
 [tool.ruff]
 line-length = 100
 select = ["E","F","I","UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# G17 run_catalog surface: run_catalog.py and run_plain_tests.py are ported
+# byte-identical from StegVerse-Labs/StegDB @eab2e773 and pinned by sha256,
+# and the registry test is the generated G17 contract test, so their line
+# length is not reflowed here. Every other rule still applies to them.
+"tools/tasks/run_catalog.py" = ["E501"]
+"tools/tasks/run_plain_tests.py" = ["E501"]
+"tests/test_workflow_surface_registry.py" = ["E501"]
