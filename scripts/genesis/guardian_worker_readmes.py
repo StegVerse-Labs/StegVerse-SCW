@@ -27,9 +27,8 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import requests
 
@@ -47,7 +46,7 @@ ASL_CONFIG = ROOT / "docs" / "governance" / "automation_safety_levels.yaml"
 
 # ---------------- ASL helpers ----------------
 
-def load_asl_config() -> Dict[str, Any]:
+def load_asl_config() -> dict[str, Any]:
     if not ASL_CONFIG.exists():
         print(f"[ASL] Config not found at {ASL_CONFIG}; defaulting to safe mode (no writes).")
         return {}
@@ -58,7 +57,7 @@ def load_asl_config() -> Dict[str, Any]:
         return yaml.safe_load(f) or {}
 
 
-def get_task_asl(cfg: Dict[str, Any], task_id: str) -> str:
+def get_task_asl(cfg: dict[str, Any], task_id: str) -> str:
     tasks = (cfg.get("tasks") or {})
     t = tasks.get(task_id) or {}
     return t.get("level") or ""
@@ -73,7 +72,7 @@ def is_asl_at_most(asl: str, limit: str) -> bool:
 
 # ---------------- Core helpers ----------------
 
-def load_latest_run() -> Dict[str, Any]:
+def load_latest_run() -> dict[str, Any]:
     if not LATEST_JSON.exists():
         raise SystemExit(f"Latest guardian JSON not found: {LATEST_JSON}")
     with LATEST_JSON.open("r", encoding="utf-8") as f:
@@ -117,10 +116,10 @@ def call_github_model(system_prompt: str, user_prompt: str, token: str) -> str:
         return json.dumps(data, indent=2)
 
 
-def list_folder_contents(folder: Path) -> List[str]:
+def list_folder_contents(folder: Path) -> list[str]:
     if not folder.exists():
         return []
-    names: List[str] = []
+    names: list[str] = []
     for p in sorted(folder.iterdir()):
         if p.name.startswith("."):
             continue
@@ -131,8 +130,8 @@ def list_folder_contents(folder: Path) -> List[str]:
     return names
 
 
-def build_user_prompt(rel_path: str, files: List[str]) -> str:
-    lines: List[str] = []
+def build_user_prompt(rel_path: str, files: list[str]) -> str:
+    lines: list[str] = []
     lines.append(
         "You are StegVerse Docs AI. Generate a short, practical README.md "
         "for this folder inside the StegVerse-SCW repository."
@@ -150,7 +149,7 @@ def build_user_prompt(rel_path: str, files: List[str]) -> str:
         lines.append("")
     lines.append("README requirements:")
     lines.append("- Start with an H1 header matching the folder purpose.")
-    lines.append("- Include sections: Overview, Key files/responsibilities, How this fits into StegVerse, Notes/TODO.")
+    lines.append("- Include sections: Overview, Key files/responsibilities, How this fits into StegVerse, Notes/TODO.")  # noqa: E501
     lines.append("- Do NOT invent specific APIs or behavior that you cannot infer.")
     lines.append("- It's OK to add TODO bullets where details are unknown.")
     lines.append("")

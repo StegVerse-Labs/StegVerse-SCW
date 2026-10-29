@@ -12,9 +12,9 @@ Does NOT move, rename, or delete any files (read-only).
 """
 
 import os
-from pathlib import Path
 from datetime import datetime
-from typing import List, Dict
+from pathlib import Path
+from typing import Dict, List
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS_DIR = ROOT / "reports" / "genesis"
