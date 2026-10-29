@@ -24,7 +24,8 @@ patches:
 
 def _run(tmp: Path, *extra: str):
     return subprocess.run(
-        [sys.executable, "scripts/autopatch_runner.py", "--manifest", ".github/autopatch/patches.yml", *extra],
+        [sys.executable, "scripts/autopatch_runner.py",
+         "--manifest", ".github/autopatch/patches.yml", *extra],
         cwd=tmp, capture_output=True, text=True,
     )
 
@@ -48,7 +49,8 @@ def test_prune_and_defer_never_remove_entries(tmp_path):
     assert rep["manifest_rewritten"] is False
     assert len(rep["items"]) == 4
     assert all(i["retained"] for i in rep["items"])
-    assert rep["summary"]["noop"] == 1 and rep["summary"]["blocked"] == 1 and rep["summary"]["error"] == 2
+    summary = rep["summary"]
+    assert (summary["noop"], summary["blocked"], summary["error"]) == (1, 1, 2)
     deferred = (tmp_path / ".github/autopatch/patches_deferred.yml").read_text()
     assert "blocked-one" in deferred and "errored-one" in deferred
     # a second run adds no duplicates

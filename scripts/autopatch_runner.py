@@ -30,7 +30,6 @@ Notes:
 
 import argparse
 import json
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -125,7 +124,8 @@ def apply_patch_item(item: Dict[str, Any], dry_run: bool) -> Tuple[str, str]:
 
         elif mode == "patch":
             current = read_text(abs_path) if exists else ""
-            begin = None; end = None
+            begin = None
+            end = None
             for line in patch_block.splitlines():
                 ls = line.strip()
                 if "BEGIN AUTOPATCH" in ls and begin is None:
@@ -136,7 +136,8 @@ def apply_patch_item(item: Dict[str, Any], dry_run: bool) -> Tuple[str, str]:
                 if patch_block and patch_block not in current:
                     new_txt = (current.rstrip() + "\n\n" + patch_block.strip() + "\n")
                     write_text(abs_path, new_txt, dry_run)
-                    return ("applied", f"{pid}: appended block (no markers)" + (" (dry-run)" if dry_run else ""))
+                    suffix = " (dry-run)" if dry_run else ""
+                    return ("applied", f"{pid}: appended block (no markers)" + suffix)
                 return ("noop", f"{pid}: block already present (no markers)")
             if file_has_block(current, begin, end):
                 return ("noop", f"{pid}: markers already present")
@@ -230,10 +231,12 @@ def main():
         "## Items",
     ]
     for it in results["items"]:
-        lines.append(f"- **{it['status'].upper():7}** — {it['id']} → `{it['path']}` — {it['message']}")
+        lines.append(
+            f"- **{it['status'].upper():7}** — {it['id']} → `{it['path']}` — {it['message']}"
+        )
     OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    # Defer copies only; the source manifest is never rewritten (only if not dry-run)
+    # Defer copies only; the source manifest is never rewritten (not in dry-run)
     changed = False
     if not args.dry_run and args.defer_file and deferred:
         defer_path = ROOT / args.defer_file
