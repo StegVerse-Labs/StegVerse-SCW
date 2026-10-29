@@ -1,4 +1,6 @@
 """AutoPatch runner must never remove or rewrite manifest entries (StegVerse-org/.github#166)."""
+import ast
+import importlib.util
 import json
 import shutil
 import subprocess
@@ -22,6 +24,22 @@ patches:
 """
 
 
+HAVE_YAML = importlib.util.find_spec("yaml") is not None
+
+
+def test_source_never_rewrites_the_source_manifest():
+    """Static guard that runs everywhere (the CI image has no PyYAML): the only
+    dump_yaml call is the defer-file copy, and nothing is ever filtered out."""
+    tree = ast.parse(RUNNER.read_text(encoding="utf-8"))
+    calls = [
+        n for n in ast.walk(tree)
+        if isinstance(n, ast.Call) and getattr(n.func, "id", None) == "dump_yaml"
+    ]
+    assert len(calls) == 1
+    assert ast.unparse(calls[0].args[0]) == "defer_path"
+    assert "manifest_pruned" not in RUNNER.read_text(encoding="utf-8")
+
+
 def _run(tmp: Path, *extra: str):
     return subprocess.run(
         [sys.executable, "scripts/autopatch_runner.py",
@@ -40,6 +58,8 @@ def _tree(tmp: Path, manifest: str) -> None:
 
 
 def test_prune_and_defer_never_remove_entries(tmp_path):
+    if not HAVE_YAML:  # covered by the static guard above on images without PyYAML
+        return
     _tree(tmp_path, MANIFEST)
     before = (tmp_path / ".github/autopatch/patches.yml").read_bytes()
     r = _run(tmp_path, "--prune-success", "--defer-file", ".github/autopatch/patches_deferred.yml")
@@ -59,6 +79,8 @@ def test_prune_and_defer_never_remove_entries(tmp_path):
 
 
 def test_invalid_manifest_is_reported_and_left_unchanged(tmp_path):
+    if not HAVE_YAML:
+        return
     bad = "patches:\n  - bare\n    - id: x\n  path: y\n"
     _tree(tmp_path, bad)
     r = _run(tmp_path, "--prune-success")
