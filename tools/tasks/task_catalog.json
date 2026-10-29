@@ -73,6 +73,13 @@
     "fetch_depth": "1",
     "persist_credentials": "true",
     "timeout_minutes": 30
+   },
+   "path_filters": {
+    "push": {
+     "paths": [
+      ".github/workflows/**"
+     ]
+    }
    }
   },
   {
@@ -177,6 +184,15 @@
     "python_version": "3.11",
     "artifact_name": "hcb_smoke_outputs",
     "artifact_if_no_files_found": "warn"
+   },
+   "path_filters": {
+    "push": {
+     "paths": [
+      "hybrid-collab-bridge/**",
+      "tools/tasks/folded/hcb-pipeline.yml",
+      "tools/tasks/steps/hcb-pipeline.smoke/**"
+     ]
+    }
    }
   },
   {
@@ -243,6 +259,15 @@
     "python_version": "3.11",
     "artifact_name": "hcb_functional_outputs",
     "artifact_if_no_files_found": "warn"
+   },
+   "path_filters": {
+    "push": {
+     "paths": [
+      "hybrid-collab-bridge/**",
+      "tools/tasks/folded/hcb-pipeline.yml",
+      "tools/tasks/steps/hcb-pipeline.functional/**"
+     ]
+    }
    }
   },
   {
@@ -295,6 +320,15 @@
     "persist_credentials": "true",
     "timeout_minutes": 30,
     "python_version": "3.11"
+   },
+   "path_filters": {
+    "push": {
+     "paths": [
+      "hybrid-collab-bridge/**",
+      "tools/tasks/folded/hybrid_bridge_ci.yml",
+      "tools/tasks/steps/hybrid_bridge_ci.smoke/**"
+     ]
+    }
    }
   },
   {
@@ -382,6 +416,15 @@
     "python_version": "3.11",
     "artifact_name": "workflows-status",
     "artifact_if_no_files_found": "error"
+   },
+   "path_filters": {
+    "push": {
+     "paths": [
+      ".github/workflows/**",
+      ".github/docs/**",
+      "README.md"
+     ]
+    }
    }
   },
   {
@@ -452,6 +495,13 @@
     "python_version": "3.11",
     "artifact_name": "workflow-first-aid",
     "artifact_if_no_files_found": "warn"
+   },
+   "path_filters": {
+    "push": {
+     "paths": [
+      ".github/workflows/**"
+     ]
+    }
    }
   },
   {
@@ -536,6 +586,13 @@
     "timeout_minutes": 30,
     "artifact_name": "trigger-backup-evidence",
     "artifact_if_no_files_found": "error"
+   },
+   "path_filters": {
+    "push": {
+     "paths": [
+      ".github/trigger/**"
+     ]
+    }
    }
   },
   {
@@ -695,6 +752,11 @@
      "name": "Workflow files equal the registered surfaces; catalog verifies ALLOW",
      "run_file": "tools/tasks/steps/workflow-surface-registry.validate/01-registry.sh",
      "run_sha256": "811824e88664923006be2eeb35632d710f5504145967f61632ad9e8fbdcb35ca"
+    },
+    {
+     "name": "Folded groups keep their original path filters (NOT_SELECTED, never skipped)",
+     "run_file": "tools/tasks/steps/workflow-surface-registry.validate/02-original-path-filters.sh",
+     "run_sha256": "9db82fbdf49b831995929ec2919b6ead95a650d1b9929cfb760742654aa3dbc7"
     }
    ],
    "artifacts": [],
