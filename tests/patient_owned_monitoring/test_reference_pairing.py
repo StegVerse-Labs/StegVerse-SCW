@@ -4,7 +4,7 @@ import importlib.util
 import math
 from pathlib import Path
 
-MODULE_PATH = Path(__file__).parents[2] / "tools" / "patient_owned_monitoring" / "reference_pairing.py"
+MODULE_PATH = Path(__file__).parents[2] / "tools" / "patient_owned_monitoring" / "reference_pairing.py"  # noqa: E501
 SPEC = importlib.util.spec_from_file_location("reference_pairing", MODULE_PATH)
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)

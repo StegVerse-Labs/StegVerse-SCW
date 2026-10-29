@@ -1,6 +1,6 @@
+from tools.patient_owned_monitoring.collapse_detector import detect
 from tools.patient_owned_monitoring.simulated_acquisition import generate
 from tools.patient_owned_monitoring.waveform_features import extract
-from tools.patient_owned_monitoring.collapse_detector import detect
 
 
 def test_simulated_acquisition_count():
@@ -22,7 +22,7 @@ def test_waveform_extraction_from_generated_rows():
 
 def test_sustained_collapse_candidate():
     rows = [
-        {"time_utc": f"2026-07-21T12:00:{i:02d}+00:00", "relative_change_index": str(3.0 if 2 <= i <= 8 else 0.5)}
+        {"time_utc": f"2026-07-21T12:00:{i:02d}+00:00", "relative_change_index": str(3.0 if 2 <= i <= 8 else 0.5)}  # noqa: E501
         for i in range(12)
     ]
     events = detect(rows, threshold=2.5, min_seconds=5)

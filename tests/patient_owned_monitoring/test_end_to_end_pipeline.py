@@ -11,8 +11,8 @@ TOOLS = ROOT / "tools" / "patient_owned_monitoring"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
-from run_synthetic_pipeline import run
-from waveform_features import load
+from run_synthetic_pipeline import run  # noqa: E402
+from waveform_features import load  # noqa: E402
 
 
 class EndToEndPipelineTests(unittest.TestCase):

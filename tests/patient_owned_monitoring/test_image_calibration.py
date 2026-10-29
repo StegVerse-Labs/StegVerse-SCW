@@ -4,7 +4,7 @@ import importlib.util
 import pathlib
 import unittest
 
-MODULE_PATH = pathlib.Path(__file__).parents[2] / "tools" / "patient_owned_monitoring" / "image_calibration.py"
+MODULE_PATH = pathlib.Path(__file__).parents[2] / "tools" / "patient_owned_monitoring" / "image_calibration.py"  # noqa: E501
 SPEC = importlib.util.spec_from_file_location("image_calibration", MODULE_PATH)
 MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

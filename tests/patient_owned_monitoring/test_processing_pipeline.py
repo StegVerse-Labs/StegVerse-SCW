@@ -44,8 +44,8 @@ def test_hematocrit_coordinate_calculation():
 def test_hemodynamic_baseline_and_relative_change():
     module = load("hemodynamic_features")
     rows = [
-        {"time_utc": "2026-07-21T10:00:00Z", "pat_ms": "200", "ppg_amplitude": "1", "pulse_width_ms": "300", "heart_rate_bpm": "70"},
-        {"time_utc": "2026-07-21T10:00:01Z", "pat_ms": "180", "ppg_amplitude": "0.8", "pulse_width_ms": "270", "heart_rate_bpm": "77"},
+        {"time_utc": "2026-07-21T10:00:00Z", "pat_ms": "200", "ppg_amplitude": "1", "pulse_width_ms": "300", "heart_rate_bpm": "70"},  # noqa: E501
+        {"time_utc": "2026-07-21T10:00:01Z", "pat_ms": "180", "ppg_amplitude": "0.8", "pulse_width_ms": "270", "heart_rate_bpm": "77"},  # noqa: E501
     ]
     base = module.baseline(rows[:1])
     derived = module.derive(rows, base)

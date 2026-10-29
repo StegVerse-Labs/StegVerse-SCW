@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "patient_owned_monitoring"))
 
-from validate_security_profile import validate
+from validate_security_profile import validate  # noqa: E402
 
 
 class SecurityProfileTests(unittest.TestCase):

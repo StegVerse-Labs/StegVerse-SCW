@@ -1,34 +1,40 @@
 # api/observability.py
 from __future__ import annotations
-import uuid, os
-from typing import Callable, Awaitable
+
+import os
+import uuid
+from typing import Awaitable, Callable
+
 from fastapi import FastAPI, Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
 from prometheus_client import (
-    Counter, Gauge, Histogram, CollectorRegistry,
-    generate_latest, CONTENT_TYPE_LATEST
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
 )
+from starlette.middleware.base import BaseHTTPMiddleware
 
 # ---- Core HTTP metrics ----
 HTTP_REQUESTS = Counter("http_requests_total", "HTTP requests", ["path", "method", "code"])
 HTTP_INFLIGHT = Gauge("http_inflight_requests", "In-flight requests")
-HTTP_LATENCY = Histogram("http_request_duration_seconds", "Request latency (seconds)", ["path", "method"])
+HTTP_LATENCY = Histogram("http_request_duration_seconds", "Request latency (seconds)", ["path", "method"])  # noqa: E501
 
 # ---- App/queue metrics (exported at scrape time) ----
 RUNS_QUEUE_DEPTH = Gauge("scw_runs_queue_depth", "Depth of the runs queue")
 RUNS_DLQ_DEPTH   = Gauge("scw_runs_dead_queue_depth", "Depth of the dead-letter queue")
-RUNS_PROCESSED_TOTAL = Gauge("scw_runs_processed_total", "Total runs processed (from Redis counter)")
-RUNS_PROCESSED_BY_LANG = Gauge("scw_runs_processed_by_language", "Runs processed by language", ["language"])
+RUNS_PROCESSED_TOTAL = Gauge("scw_runs_processed_total", "Total runs processed (from Redis counter)")  # noqa: E501
+RUNS_PROCESSED_BY_LANG = Gauge("scw_runs_processed_by_language", "Runs processed by language", ["language"])  # noqa: E501
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:  # noqa: E501
         rid = request.headers.get("x-request-id") or str(uuid.uuid4())
         response: Response = await call_next(request)
         response.headers["x-request-id"] = rid
         return response
 
 class MetricsMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:  # noqa: E501
         HTTP_INFLIGHT.inc()
         path, method = request.url.path, request.method
         with HTTP_LATENCY.labels(path, method).time():
@@ -43,7 +49,7 @@ def _refresh_runtime_gauges_from_redis():
     """Called at scrape time: pull counters/gauges from Redis if available."""
     try:
         import redis
-        r = redis.Redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)
+        r = redis.Redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True)  # noqa: E501
         RUNS_QUEUE_DEPTH.set(r.llen(os.getenv("RUNS_QUEUE", "runs")))
         RUNS_DLQ_DEPTH.set(r.llen(os.getenv("RUNS_DLQ", "runs:dead")))
         total = int(r.get("metrics:runs_processed_total") or 0)
