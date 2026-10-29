@@ -5,11 +5,14 @@ Enforce human intent from .steg/INTENT.yml.
 - Emits a machine and human report to self_healing_out/INTENT_GUARD.*
 - Computes a risk level for the current diff and prints a recommendation.
 """
-import sys, os, json, fnmatch, subprocess
+import fnmatch
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 try:
-    import yaml
+    import yaml  # noqa: F401
 except ImportError:
     print("intent_guard: installing PyYAML...", file=sys.stderr)
 
@@ -30,9 +33,10 @@ def glob_any(path:str, patterns:list[str]) -> bool:
 def git_files_changed():
     # Changed vs. HEAD^ if present, else full tree
     try:
-        base = subprocess.check_output(["git", "rev-parse", "HEAD^"], cwd=ROOT).decode().strip()
-        lines = subprocess.check_output(["git", "diff", "--name-only", "HEAD^..HEAD"], cwd=ROOT).decode().splitlines()
-        if lines: return sorted(lines)
+        base = subprocess.check_output(["git", "rev-parse", "HEAD^"], cwd=ROOT).decode().strip()  # noqa: F841
+        lines = subprocess.check_output(["git", "diff", "--name-only", "HEAD^..HEAD"], cwd=ROOT).decode().splitlines()  # noqa: E501
+        if lines:
+            return sorted(lines)
     except Exception:
         pass
     lines = subprocess.check_output(["git", "ls-files"], cwd=ROOT).decode().splitlines()

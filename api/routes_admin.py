@@ -1,6 +1,7 @@
 # api/routes_admin.py
-import os
 import json
+import os
+
 import requests
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
@@ -25,7 +26,7 @@ def run_supercheck(
     auto_apply: bool = True,
     auto_commit: bool = False,
     queue_key: str = "queue:runs",
-    x_admin_token: str | None = Header(default=None, convert_underscores=False, alias="X-Admin-Token"),
+    x_admin_token: str | None = Header(default=None, convert_underscores=False, alias="X-Admin-Token"),  # noqa: E501
 ):
     _require_admin(x_admin_token)
 
@@ -51,6 +52,6 @@ def run_supercheck(
     }
     r = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
     if r.status_code not in (201, 204):
-        raise HTTPException(status_code=502, detail=f"GitHub dispatch failed: {r.status_code} {r.text}")
+        raise HTTPException(status_code=502, detail=f"GitHub dispatch failed: {r.status_code} {r.text}")  # noqa: E501
 
-    return JSONResponse({"status": "queued", "workflow": GH_WORKFLOW, "repo": f"{GH_OWNER}/{GH_REPO}"})
+    return JSONResponse({"status": "queued", "workflow": GH_WORKFLOW, "repo": f"{GH_OWNER}/{GH_REPO}"})  # noqa: E501

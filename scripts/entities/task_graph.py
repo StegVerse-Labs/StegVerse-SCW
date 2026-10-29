@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List
 
 
 @dataclass
 class TaskNode:
     id: str
-    after: List[str] = field(default_factory=list)
+    after: list[str] = field(default_factory=list)
 
 
 class TaskGraph:
@@ -16,16 +15,16 @@ class TaskGraph:
     "after" dependencies if present.
     """
 
-    def __init__(self, nodes: Dict[str, TaskNode]):
+    def __init__(self, nodes: dict[str, TaskNode]):
         self.nodes = nodes
 
-    def linear_order(self, selected: List[str]) -> List[str]:
+    def linear_order(self, selected: list[str]) -> list[str]:
         """
         Return tasks in a sane execution order. For now, we do a simple
         depth-first topological sort over the selected tasks.
         """
-        result: List[str] = []
-        visited: Dict[str, bool] = {}
+        result: list[str] = []
+        visited: dict[str, bool] = {}
 
         def visit(tid: str):
             if tid in visited:
@@ -44,7 +43,7 @@ class TaskGraph:
 
         # Keep order stable while removing duplicates
         seen = set()
-        ordered: List[str] = []
+        ordered: list[str] = []
         for t in result:
             if t not in seen:
                 seen.add(t)

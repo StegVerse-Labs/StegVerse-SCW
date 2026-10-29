@@ -15,7 +15,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
-
 ROOT = Path(__file__).resolve().parents[3]  # tasks -> entities -> scripts -> ROOT
 
 

@@ -12,14 +12,18 @@ Auto-Fix Known Issues (conservative)
 - Dry-run by default. Use --apply or APPLY=1 to write changes.
 Outputs: AUTO_FIX_REPORT.{json,md}
 """
-import os, sys, json, re
-from pathlib import Path
+import json
+import os
+import re
+import sys
 from copy import deepcopy
+from pathlib import Path
 
 APPLY = ("--apply" in sys.argv) or (os.getenv("APPLY","0") == "1")
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "self_healing_out"; OUT.mkdir(parents=True, exist_ok=True)
+OUT = ROOT / "self_healing_out"
+OUT.mkdir(parents=True, exist_ok=True)
 WF = ROOT / ".github" / "workflows"
 
 try:
@@ -29,14 +33,15 @@ except Exception:
 
 def load_catalog():
     p = ROOT / "scripts" / "autopatch_catalog.json"
-    if not p.exists(): return {"line_edits": []}
+    if not p.exists():
+        return {"line_edits": []}
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:
         return {"line_edits": []}
 
 def ensure_mapping_on(on):
-    """GitHub requires 'on' to be a mapping or a string; convert list->mapping with workflow_dispatch"""
+    """GitHub requires 'on' to be a mapping or a string; convert list->mapping with workflow_dispatch"""  # noqa: E501
     if isinstance(on, dict):
         return on
     if isinstance(on, str):
@@ -58,9 +63,10 @@ def add_codeql_permission(yaml_obj):
     jobs = yaml_obj.get("jobs", {}) or {}
     changed = False
     for jn, job in jobs.items():
-        if not isinstance(job, dict): continue
+        if not isinstance(job, dict):
+            continue
         steps = (job.get("steps") or [])
-        uses_codeql = any(isinstance(s, dict) and str(s.get("uses","")).startswith("github/codeql-action/analyze@") for s in steps)
+        uses_codeql = any(isinstance(s, dict) and str(s.get("uses","")).startswith("github/codeql-action/analyze@") for s in steps)  # noqa: E501
         if uses_codeql:
             # ensure job perms include security-events: write
             perms = job.get("permissions")
@@ -76,7 +82,8 @@ def add_codeql_permission(yaml_obj):
 
 def normalize_whitespace(text):
     text = re.sub(r"[ \t]+$", "", text, flags=re.MULTILINE)
-    if not text.endswith("\n"): text += "\n"
+    if not text.endswith("\n"):
+        text += "\n"
     return text
 
 def apply_line_catalog(text, line_edits):
@@ -101,9 +108,11 @@ def process_yaml_file(p: Path, catalog):
         yaml.preserve_quotes = True
         try:
             obj = yaml.load(before)
-            if obj is None: obj = {}
-            if not isinstance(obj, dict): obj = {"on": obj}
-        except Exception as e:
+            if obj is None:
+                obj = {}
+            if not isinstance(obj, dict):
+                obj = {"on": obj}
+        except Exception:
             # fall back to line mode only
             txt = apply_line_catalog(before, catalog.get("line_edits",[]))
             txt = normalize_whitespace(txt)
@@ -151,7 +160,7 @@ def main():
     if not WF.exists():
         report = {"ok": True, "files_seen": 0, "changed": 0, "note": "no workflows dir"}
         (OUT/"AUTO_FIX_REPORT.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
-        (OUT/"AUTO_FIX_REPORT.md").write_text("# Auto-Fix Report\n\n(no workflows)\n", encoding="utf-8")
+        (OUT/"AUTO_FIX_REPORT.md").write_text("# Auto-Fix Report\n\n(no workflows)\n", encoding="utf-8")  # noqa: E501
         print("OK auto_fix (no workflows)")
         return
 
@@ -160,9 +169,10 @@ def main():
         wrote, before, after, changes = process_yaml_file(p, catalog)
         if wrote and APPLY:
             p.write_text(after, encoding="utf-8")
-        results.append({"path": p.as_posix(), "changed": bool(wrote and APPLY), "would_change": wrote and not APPLY, "changes": changes})
+        results.append({"path": p.as_posix(), "changed": bool(wrote and APPLY), "would_change": wrote and not APPLY, "changes": changes})  # noqa: E501
 
-        if wrote: changed_count += 1
+        if wrote:
+            changed_count += 1
 
     rep = {
         "ok": True,

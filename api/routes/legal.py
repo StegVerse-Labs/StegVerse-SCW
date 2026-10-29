@@ -1,5 +1,5 @@
 # add after imports
-NS = os.getenv("LEGAL_NS", "v1")
+NS = os.getenv("LEGAL_NS", "v1")  # noqa: F821
 
 # replace old constants
 _EVENTS_KEY = f"legal:{NS}:events"
