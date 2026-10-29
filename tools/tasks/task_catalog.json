@@ -455,6 +455,44 @@
    }
   },
   {
+   "id": "verify_ui.verify",
+   "source": {
+    "workflow": ".github/workflows/verify_ui.yml",
+    "workflow_name": "Verify UI Layout",
+    "job": "verify",
+    "job_name": null,
+    "commit": "7722581",
+    "triggers_before": [
+     "push",
+     "workflow_dispatch"
+    ],
+    "permissions_before": null
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Check required files",
+     "run_file": "tools/tasks/steps/verify_ui.verify/01-check-required-files.sh",
+     "run_sha256": "69fb22d66792730fedfcc1ddccf9708545fb9b2e198a79493d528ee6d27255aa"
+    },
+    {
+     "name": "Print Render intent (for humans)",
+     "run_file": "tools/tasks/steps/verify_ui.verify/02-print-render-intent-for-humans.sh",
+     "run_sha256": "ecc19f335ad3b2b2cfb82a92955e2e3c719847a269a0eb4d6111d1b960ccbf5f"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 30
+   }
+  },
+  {
    "id": "workflow-surface-registry.validate",
    "catalog_addition": "G17 registry gate (no folded source workflow)",
    "events": [
