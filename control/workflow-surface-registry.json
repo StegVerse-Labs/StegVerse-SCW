@@ -79,11 +79,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: real DENY. Its inspect step exits 1 because the manifest it inspects, .github/autopatch/patches.yml, is not valid YAML (`mapping values are not allowed here`, line 4, column 9: the first `patches:` entry is a bare path and the entries after it are indented as a mapping list). The same manifest feeds scripts/validate_manifest.py and scripts/autopatch_runner.py, which are writers. The repair is to the autopatch manifest and belongs to the autopatch recovery goal; it is not suppressed or folded around here, and no stored file is deleted. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "dd7921561a4f16675f13a118654564a078db757a2f824e8ffa402de8658b29d9",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "manifest .github/autopatch/patches.yml does not parse",
+        "justification": "FAIL_CLOSED_KEEP: real DENY. Its inspect step exits 1 because the manifest it inspects, .github/autopatch/patches.yml, is not valid YAML (`mapping values are not allowed here`, line 4, column 9: the first `patches:` entry is a bare path and the entries after it are indented as a mapping list). The same manifest feeds scripts/validate_manifest.py and scripts/autopatch_runner.py, which are writers. The repair is to the autopatch manifest and belongs to the autopatch recovery goal; it is not suppressed or folded around here, and no stored file is deleted. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -144,25 +144,6 @@
       }
     },
     {
-      "path": ".github/workflows/backup_triggers.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "push",
-        "schedule",
-        "workflow_dispatch"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "8c695f432608824edb8b990dde8889a4ad431b7d31e7fcb18c924d8788c0d4c5",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
       "path": ".github/workflows/ci.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -173,11 +154,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: its lint step fails on main's tree (lint debt), so a fold would make the dispatcher fail; the code repair is StegVerse-Labs/StegVerse-SCW#58. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "ed5a7326bb9415534526a75b050f15420141f0cc5f07732312a3c0788356da74",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "blocked by StegVerse-Labs/StegVerse-SCW#58",
+        "justification": "FAIL_CLOSED_KEEP: its lint step fails on main's tree (lint debt), so a fold would make the dispatcher fail; the code repair is StegVerse-Labs/StegVerse-SCW#58. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -189,11 +170,11 @@
         "pull_request"
       ],
       "permissions": null,
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: its test collection fails on main's tree; the code repair is StegVerse-Labs/StegVerse-SCW#58. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "153b7d2e872772097b791bc68c28b9a0ea7a35744a471b7afa49fad8c7b46cd6",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "blocked by StegVerse-Labs/StegVerse-SCW#58",
+        "justification": "FAIL_CLOSED_KEEP: its test collection fails on main's tree; the code repair is StegVerse-Labs/StegVerse-SCW#58. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -226,11 +207,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: it fetches a requirements catalog from raw.githubusercontent.com (StegVerse-Labs/StegDB main) and uploads matrix artifacts; a fold would run an external network fetch on every pull request, which this consolidation does not introduce. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "cb5897ab3eeb65314ae959264b092a6472cd7f842674a8354808f22d9f8ed98a",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "external fetch and artifact upload",
+        "justification": "FAIL_CLOSED_KEEP: it fetches a requirements catalog from raw.githubusercontent.com (StegVerse-Labs/StegDB main) and uploads matrix artifacts; a fold would run an external network fetch on every pull request, which this consolidation does not introduce. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -367,11 +348,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: export-hcb-weekly.yml calls it with `uses: ./.github/workflows/export-hcb.yml`, and it is a contained no-op that exits 1 by design; removing it would break the caller, which is a credential-bound writer. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "e57bf6f69165e84dc47dccddbc61971335d866ce25fbd16f38aa92281042e503",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "called by export-hcb-weekly",
+        "justification": "FAIL_CLOSED_KEEP: export-hcb-weekly.yml calls it with `uses: ./.github/workflows/export-hcb.yml`, and it is a contained no-op that exits 1 by design; removing it would break the caller, which is a credential-bound writer. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -619,23 +600,6 @@
       }
     },
     {
-      "path": ".github/workflows/kick-autopatch.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "workflow_dispatch"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "a64c3edaaa55fcbfba62030abcdb106bde32275d2133e292543b40b1f537eeba",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
       "path": ".github/workflows/kick-seed-steg-config.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -699,22 +663,6 @@
       },
       "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
       "verbatim_sha256": "929311b4ee46ecc7cb733c539e3a80057da51e6c49ea08677022ce9e58b94d27",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
-      "path": ".github/workflows/nightly_snapshot.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "schedule",
-        "workflow_dispatch"
-      ],
-      "permissions": "read-all",
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "26eeba22a8c8b082acc5d88ad82c2b521a5f26aacd62544ef0daca6cfa0a5de9",
       "exception": {
         "lifecycle": "pending later G17 batch",
         "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
@@ -1071,11 +1019,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: config/stability-gate-tasks.json names `.github/workflows/scw_orchestrator.yml` as a task destination and scripts/stability_gate_task_controller.py reads that registry; repointing it is a decision for the stability-gate goal. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "9e84bf2d4886546dcf6dc221fc37a92bb3ca3f70884383ee138d2d040e155d2a",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "named by the stability-gate task registry",
+        "justification": "FAIL_CLOSED_KEEP: config/stability-gate-tasks.json names `.github/workflows/scw_orchestrator.yml` as a task destination and scripts/stability_gate_task_controller.py reads that registry; repointing it is a decision for the stability-gate goal. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1105,11 +1053,11 @@
         "push"
       ],
       "permissions": null,
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: it carries an `auto_fix` step that writes files and logs, and six readers (install_self_healing_pack.sh, scripts/apply_canonical_fixes.py, specs/REPO-SPEC.json and others) name it. A manifest writer path is not defined for it. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "c3a616a64c7529b1c4714073ba675ff118362eb339abaed135a74b1d7ded893f",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "optional write path and readers",
+        "justification": "FAIL_CLOSED_KEEP: it carries an `auto_fix` step that writes files and logs, and six readers (install_self_healing_pack.sh, scripts/apply_canonical_fixes.py, specs/REPO-SPEC.json and others) name it. A manifest writer path is not defined for it. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1138,11 +1086,11 @@
         "workflow_dispatch"
       ],
       "permissions": null,
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: it is a manual live-API smoke test that needs the `api_base` dispatch input; it has no meaning on pull_request or push. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "e692717b043951212901f496c09a93d6aec3cac5d9d50302b48b15052c77cbd6",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "requires live API input",
+        "justification": "FAIL_CLOSED_KEEP: it is a manual live-API smoke test that needs the `api_base` dispatch input; it has no meaning on pull_request or push. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1203,24 +1151,6 @@
       }
     },
     {
-      "path": ".github/workflows/taskops-nightly.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "schedule",
-        "workflow_dispatch"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "78e1074393c5f92dfc6dd51ebb36714c255d12aff8564a5ea2233813c022f5d1",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
       "path": ".github/workflows/telemetry-reusable.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -1229,11 +1159,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: it declares `workflow_call` and has six readers that call it; folding it would remove the path they resolve. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "7399771bd433f8efe2b2d249a7a9fad8e141f0c88aa46a3efd5027562e1a51b5",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "reusable workflow_call interface",
+        "justification": "FAIL_CLOSED_KEEP: it declares `workflow_call` and has six readers that call it; folding it would remove the path they resolve. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1267,11 +1197,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: it declares `workflow_call` with inputs; callers pin it by ref, so folding it would remove the path they resolve. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "aa0bef6714da9eec67b6136db8068849d0bffebf430ed85d604bea89f4b49bf6",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "reusable workflow_call interface",
+        "justification": "FAIL_CLOSED_KEEP: it declares `workflow_call` with inputs; callers pin it by ref, so folding it would remove the path they resolve. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1284,22 +1214,6 @@
       "permissions": null,
       "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
       "verbatim_sha256": "b8f32f494bd4c0d90a198ab77bfb2093e668eab901ed48a2b406b29bdc2efd22",
-      "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
-      "path": ".github/workflows/weekly_drift_report.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "workflow_dispatch",
-        "schedule"
-      ],
-      "permissions": null,
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-      "verbatim_sha256": "2902e1e4f6cfe8bd9826dda7ece5e4a378997d713001bd9f18d5978bfe11c8ee",
       "exception": {
         "lifecycle": "pending later G17 batch",
         "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
@@ -1335,11 +1249,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: config/workflow-recovery-required.json and config/workflow-recovery-tasks.json name it and the controller reads the workflow surface; folding it would change what the controller observes. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "7ad9744c444fe5ff1e7c70516dca84dd3432d83bfe3d6faf0e0de00c05af8e15",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "named by recovery configuration",
+        "justification": "FAIL_CLOSED_KEEP: config/workflow-recovery-required.json and config/workflow-recovery-tasks.json name it and the controller reads the workflow surface; folding it would change what the controller observes. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1426,11 +1340,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: the inventory step exits 1 because six files under .github/workflows/_reusables/ (log-trigger, runtime-diagnostics, secret-scan, setup-tools, upload-bundle, yaml-corrector) do not parse as YAML (`mapping values are not allowed here`, line 1). It fails on main (run 40941741787). Repairing or retiring those reusable fragments is a decision for the workflow-recovery goal and no stored file is deleted here; suppressing the check would hide the defect. It is also read by scripts/workflow_recovery_controller.py and config/workflow-recovery-*.json. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "4e5b2009d74a31210a8362c9776f9acc3548c9f9c949a63fce30d49160c68b44",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "six invalid YAML files under _reusables",
+        "justification": "FAIL_CLOSED_KEEP: the inventory step exits 1 because six files under .github/workflows/_reusables/ (log-trigger, runtime-diagnostics, secret-scan, setup-tools, upload-bundle, yaml-corrector) do not parse as YAML (`mapping values are not allowed here`, line 1). It fails on main (run 40941741787). Repairing or retiring those reusable fragments is a decision for the workflow-recovery goal and no stored file is deleted here; suppressing the check would hide the defect. It is also read by scripts/workflow_recovery_controller.py and config/workflow-recovery-*.json. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -2137,6 +2051,18 @@
       "verbatim_sha256": "05f8d7782dc7e806e0528d89ce72d139403fc80d24d49b454a3fdb466cd7ebdb"
     },
     {
+      "workflow": ".github/workflows/kick-autopatch.yml",
+      "name": "Kick StegVerse Autopatch [CONTAINED]",
+      "triggers_before": [
+        "workflow_dispatch"
+      ],
+      "classification": "ELIMINATE",
+      "status": "DONE",
+      "reason": "ELIMINATE_CONTAINED_DISPATCH_ONLY: workflow_dispatch is its only trigger. Its job is contained: it prints a retirement notice naming the copied generic PAT and exits 1, so it can only fail. `permissions: {contents: read}`, no secret or token and no write permission. Its readers are the autopatch patch files under .github/autopatch/, the README and the generated workflow-status docs, which name it as text and do not run it. It is dispatch-only, so it has no automatic run. Its bytes are recorded at tools/tasks/folded/kick-autopatch.yml with their sha256, and no data file is touched.",
+      "verbatim_record": "tools/tasks/folded/kick-autopatch.yml",
+      "verbatim_sha256": "a64c3edaaa55fcbfba62030abcdb106bde32275d2133e292543b40b1f537eeba"
+    },
+    {
       "workflow": ".github/workflows/00_repo_scanner.yml",
       "name": "00 - Repo Scanner",
       "triggers_before": [
@@ -2256,14 +2182,75 @@
       ],
       "verbatim_record": "tools/tasks/folded/verify_ui.yml",
       "verbatim_sha256": "ff4fc0c7479aef3e1166ea6d9d5cf2ff81c7df9b0d529f211725fcf1e16a5734"
+    },
+    {
+      "workflow": ".github/workflows/backup_triggers.yml",
+      "name": "Backup Trigger Folders [VALIDATION ONLY]",
+      "triggers_before": [
+        "push",
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "backup_triggers.bundle"
+      ],
+      "verbatim_record": "tools/tasks/folded/backup_triggers.yml",
+      "verbatim_sha256": "8c695f432608824edb8b990dde8889a4ad431b7d31e7fcb18c924d8788c0d4c5"
+    },
+    {
+      "workflow": ".github/workflows/nightly_snapshot.yml",
+      "name": "Nightly Snapshot",
+      "triggers_before": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "nightly_snapshot.snapshot"
+      ],
+      "verbatim_record": "tools/tasks/folded/nightly_snapshot.yml",
+      "verbatim_sha256": "26eeba22a8c8b082acc5d88ad82c2b521a5f26aacd62544ef0daca6cfa0a5de9"
+    },
+    {
+      "workflow": ".github/workflows/taskops-nightly.yml",
+      "name": "taskops-nightly",
+      "triggers_before": [
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "taskops-nightly.refresh"
+      ],
+      "verbatim_record": "tools/tasks/folded/taskops-nightly.yml",
+      "verbatim_sha256": "78e1074393c5f92dfc6dd51ebb36714c255d12aff8564a5ea2233813c022f5d1"
+    },
+    {
+      "workflow": ".github/workflows/weekly_drift_report.yml",
+      "name": "Weekly Drift Report",
+      "triggers_before": [
+        "workflow_dispatch",
+        "schedule"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "weekly_drift_report.drift"
+      ],
+      "verbatim_record": "tools/tasks/folded/weekly_drift_report.yml",
+      "verbatim_sha256": "2902e1e4f6cfe8bd9826dda7ece5e4a378997d713001bd9f18d5978bfe11c8ee"
     }
   ],
   "ceiling_fail_closed": {
     "disposition": "FAIL_CLOSED",
-    "workflow_count": 81,
+    "workflow_count": 76,
     "failure_code": "G17_CONTRACT_FLOOR_ABOVE_EXCEPTION_CEILING",
     "failed_predicate": "workflow_count <= exception_repository_workflow_count_max (3)",
-    "required_evidence_or_repair": "this is batch 4 of the G17 surface reduction for this repository. Batches 1 and 2 retired 26 dead surfaces and eliminated 30 contained or no-op workflow_dispatch-only files. Batch 3 folded 7 read-only validators into the validation dispatcher run_catalog. Batch 4 folds verify_ui (its ui/public/index.html requirement was repaired by StegVerse-Labs/StegVerse-SCW#57) and eliminates 5 workflow_dispatch-only files (auto_patch and autopatch, both contained on 2026-08-19; e2e_worker_check; repo-timeline; ingestion-orchestrator), each recorded under tools/tasks/folded with its sha256. 80 surfaces remain byte-unchanged beside the dispatcher. Each carries an exception record naming its disposition: KEEP_PENDING_LATER_BATCH for validators that fail on main's tree (ci lint debt, ci_governance collection errors, the POM validation chain, all blocked by StegVerse-Labs/StegVerse-SCW#58) or have readers, and writers, credential-bound surfaces and reusables that stay kept. Each later batch lowers workflow_count and replaces this record with its exact new count. The kept writers and credential-bound surfaces need their own admitted repair to retire, and their credentials belong only in the SKAP Vault inside KV.",
+    "required_evidence_or_repair": "this is batch 5 of the G17 surface reduction for this repository (workflow_count 76, down from 81). Batches 1 and 2 retired 26 dead surfaces and eliminated 30 contained or no-op workflow_dispatch-only files. Batch 3 folded 7 read-only validators into the validation dispatcher run_catalog. Batch 4 folded verify_ui and eliminated 5 workflow_dispatch-only files. Batch 5 drops the non-manifest schedule, push-path and workflow_dispatch triggers of four read-only evidence workflows (backup_triggers, nightly_snapshot, taskops-nightly, weekly_drift_report) and folds them into the run_catalog as pull_request and push groups, and eliminates the contained dispatch-only kick-autopatch (it prints a retirement notice and exits 1), each recorded under tools/tasks/folded with its sha256. Kept with a specific FAIL_CLOSED reason instead of a fold: ci and ci_governance (blocked by StegVerse-Labs/StegVerse-SCW#58); workflows-sanity-check (real DENY on main: six files under .github/workflows/_reusables do not parse as YAML, so its inventory exits 1); autopatch-inspect (real DENY: .github/autopatch/patches.yml is not valid YAML); workflow-recovery-controller and scw_orchestrator (named by recovery and stability-gate configuration); export-hcb (called by export-hcb-weekly); self-healing-scan (optional write path, 6 readers); validate-hcb and telemetry-reusable (reusable workflow_call interfaces); constitutional-audit-public (external fetch plus artifact upload); smoke-tests (needs a live API input). The remaining 70 surfaces beside the dispatcher stay byte-unchanged: writers, credential-bound surfaces, workflow_run chains and reusables, whose credentials belong only in the SKAP Vault inside KV and which need their own admitted repair to retire. Each later batch lowers workflow_count and replaces this record with its exact new count.",
     "retry_entrypoint": "tests/test_workflow_surface_registry.py",
     "owning_existing_goal": "G17-WORKFLOW-SURFACE-MINIMIZATION (StegVerse-Labs/.github#167/#168); StegVerse-org/.github#166",
     "next_attempt": "the next pull request touching .github/workflows/ or those contracts"
