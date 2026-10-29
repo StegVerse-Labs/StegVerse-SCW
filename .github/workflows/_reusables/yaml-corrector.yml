@@ -1,4 +1,4 @@
-name: _reusable: YAML Corrector + Linters
+name: "_reusable: YAML Corrector + Linters"
 on:
   workflow_call:
     inputs:
