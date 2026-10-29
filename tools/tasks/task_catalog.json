@@ -455,6 +455,234 @@
    }
   },
   {
+   "id": "verify_ui.verify",
+   "source": {
+    "workflow": ".github/workflows/verify_ui.yml",
+    "workflow_name": "Verify UI Layout",
+    "job": "verify",
+    "job_name": null,
+    "commit": "7722581",
+    "triggers_before": [
+     "push",
+     "workflow_dispatch"
+    ],
+    "permissions_before": null
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Check required files",
+     "run_file": "tools/tasks/steps/verify_ui.verify/01-check-required-files.sh",
+     "run_sha256": "69fb22d66792730fedfcc1ddccf9708545fb9b2e198a79493d528ee6d27255aa"
+    },
+    {
+     "name": "Print Render intent (for humans)",
+     "run_file": "tools/tasks/steps/verify_ui.verify/02-print-render-intent-for-humans.sh",
+     "run_sha256": "ecc19f335ad3b2b2cfb82a92955e2e3c719847a269a0eb4d6111d1b960ccbf5f"
+    }
+   ],
+   "artifacts": [],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 30
+   }
+  },
+  {
+   "id": "backup_triggers.bundle",
+   "source": {
+    "workflow": ".github/workflows/backup_triggers.yml",
+    "workflow_name": "Backup Trigger Folders [VALIDATION ONLY]",
+    "job": "bundle",
+    "job_name": null,
+    "commit": "5500d3c50e60faec4c4fe18e4b18ce442a9172a6",
+    "triggers_before": [
+     "push",
+     "schedule",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Prepare trigger backup evidence",
+     "run_file": "tools/tasks/steps/backup_triggers.bundle/01-prepare-trigger-backup-evidence.sh",
+     "run_sha256": "f73bc0f9a3b71aea8a5f2a8e65eda2db02733ad91c97731a1c60beef92578a14",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "trigger-backup-evidence",
+     "path": "out/trigger.tgz\nout/manifest.json\n",
+     "if_no_files_found": "error",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "fetch_depth": "0",
+    "persist_credentials": "false",
+    "timeout_minutes": 30,
+    "artifact_name": "trigger-backup-evidence",
+    "artifact_if_no_files_found": "error"
+   }
+  },
+  {
+   "id": "nightly_snapshot.snapshot",
+   "source": {
+    "workflow": ".github/workflows/nightly_snapshot.yml",
+    "workflow_name": "Nightly Snapshot",
+    "job": "snapshot",
+    "job_name": null,
+    "commit": "5500d3c50e60faec4c4fe18e4b18ce442a9172a6",
+    "triggers_before": [
+     "schedule",
+     "workflow_dispatch"
+    ],
+    "permissions_before": "read-all"
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Make SBOM (python only demo)",
+     "run_file": "tools/tasks/steps/nightly_snapshot.snapshot/01-make-sbom-python-only-demo.sh",
+     "run_sha256": "07c69b814bb110d616542fe96e9a7baea904236369ab4c3e50e3462785d899d9"
+    },
+    {
+     "name": "Zip repo tree",
+     "run_file": "tools/tasks/steps/nightly_snapshot.snapshot/02-zip-repo-tree.sh",
+     "run_sha256": "36543a02bd2246dc416c9b3e687ab0ef65d6912ea961f0fae65dc7b7a2e6c0ca"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "nightly_snapshot",
+     "path": "repo_snapshot.zip\nsbom.json\n",
+     "if_no_files_found": "warn",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 30,
+    "artifact_name": "nightly_snapshot",
+    "artifact_if_no_files_found": "warn"
+   }
+  },
+  {
+   "id": "taskops-nightly.refresh",
+   "source": {
+    "workflow": ".github/workflows/taskops-nightly.yml",
+    "workflow_name": "taskops-nightly",
+    "job": "refresh",
+    "job_name": null,
+    "commit": "5500d3c50e60faec4c4fe18e4b18ce442a9172a6",
+    "triggers_before": [
+     "schedule",
+     "workflow_dispatch"
+    ],
+    "permissions_before": {
+     "contents": "read"
+    }
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Install validation dependency",
+     "run_file": "tools/tasks/steps/taskops-nightly.refresh/01-install-validation-dependency.sh",
+     "run_sha256": "d21eaa7e76480386db988e949d1269af5108032cd4b95b70bcea8f77aa41ff62"
+    },
+    {
+     "name": "Generate proposed AutoDocs outputs",
+     "run_file": "tools/tasks/steps/taskops-nightly.refresh/02-generate-proposed-autodocs-outputs.sh",
+     "run_sha256": "b1697123d71e080326eafe56efc9dcee2727193629e5525211226fb533792cf2"
+    },
+    {
+     "name": "Capture proposed changes",
+     "run_file": "tools/tasks/steps/taskops-nightly.refresh/03-capture-proposed-changes.sh",
+     "run_sha256": "0151450ff1b7176b03d14412733c90eacaf962598115ac338ebeb7a56664363a",
+     "shell": "bash"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "taskops-nightly-validation-${{ github.run_id }}",
+     "path": "taskops-proposed.patch\n.github/docs/PR_SAFE_STATUS.md\nREADME.md\n",
+     "if_no_files_found": "error",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "false",
+    "timeout_minutes": 30,
+    "artifact_name": "taskops-nightly-validation",
+    "artifact_if_no_files_found": "error"
+   }
+  },
+  {
+   "id": "weekly_drift_report.drift",
+   "source": {
+    "workflow": ".github/workflows/weekly_drift_report.yml",
+    "workflow_name": "Weekly Drift Report",
+    "job": "drift",
+    "job_name": null,
+    "commit": "5500d3c50e60faec4c4fe18e4b18ce442a9172a6",
+    "triggers_before": [
+     "workflow_dispatch",
+     "schedule"
+    ],
+    "permissions_before": null
+   },
+   "events": [
+    "pull_request",
+    "push"
+   ],
+   "env": {},
+   "steps": [
+    {
+     "name": "Run Topic Drift Auditor",
+     "run_file": "tools/tasks/steps/weekly_drift_report.drift/01-run-topic-drift-auditor.sh",
+     "run_sha256": "9ab5c6652ec25ef4e63884b320b1098fd2d18a30cc1aae1dcb1ad80c955d7048"
+    }
+   ],
+   "artifacts": [
+    {
+     "name": "drift_report",
+     "path": "self_healing_out/DRIFT_REPORT.json\nself_healing_out/DRIFT_REPORT.md\n",
+     "if_no_files_found": "error",
+     "if": "success()"
+    }
+   ],
+   "runner": {
+    "fetch_depth": "1",
+    "persist_credentials": "true",
+    "timeout_minutes": 30,
+    "artifact_name": "drift_report",
+    "artifact_if_no_files_found": "error"
+   }
+  },
+  {
    "id": "workflow-surface-registry.validate",
    "catalog_addition": "G17 registry gate (no folded source workflow)",
    "events": [
