@@ -79,11 +79,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "FAIL_CLOSED_KEEP: real DENY. Its inspect step exits 1 because the manifest it inspects, .github/autopatch/patches.yml, is not valid YAML (`mapping values are not allowed here`, line 4, column 9: the first `patches:` entry is a bare path and the entries after it are indented as a mapping list). The same manifest feeds scripts/validate_manifest.py and scripts/autopatch_runner.py, which are writers. The repair is to the autopatch manifest and belongs to the autopatch recovery goal; it is not suppressed or folded around here, and no stored file is deleted. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
+      "reason": "FAIL_CLOSED_KEEP: real DENY. Its inspect step exits 1 because .github/autopatch/patches.yml is not valid YAML (line 3-5: the first `patches:` entry is a bare path and the others are indented as a mapping list; the last entry has no id). The repair is open as StegVerse-Labs/StegVerse-SCW#63 (8 entries kept, dry run applied 0 noop 8) and is held at FAIL_CLOSED because merging it triggers the AutoPatch (primary) push writer, which runs autopatch_runner.py --prune-success and rewrites the manifest to `patches: []`. Not suppressed, no stored file deleted. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "dd7921561a4f16675f13a118654564a078db757a2f824e8ffa402de8658b29d9",
       "exception": {
-        "lifecycle": "manifest .github/autopatch/patches.yml does not parse",
-        "justification": "FAIL_CLOSED_KEEP: real DENY. Its inspect step exits 1 because the manifest it inspects, .github/autopatch/patches.yml, is not valid YAML (`mapping values are not allowed here`, line 4, column 9: the first `patches:` entry is a bare path and the entries after it are indented as a mapping list). The same manifest feeds scripts/validate_manifest.py and scripts/autopatch_runner.py, which are writers. The repair is to the autopatch manifest and belongs to the autopatch recovery goal; it is not suppressed or folded around here, and no stored file is deleted. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
+        "lifecycle": "FAIL_CLOSED keep",
+        "justification": "FAIL_CLOSED_KEEP: real DENY. Its inspect step exits 1 because .github/autopatch/patches.yml is not valid YAML (line 3-5: the first `patches:` entry is a bare path and the others are indented as a mapping list; the last entry has no id). The repair is open as StegVerse-Labs/StegVerse-SCW#63 (8 entries kept, dry run applied 0 noop 8) and is held at FAIL_CLOSED because merging it triggers the AutoPatch (primary) push writer, which runs autopatch_runner.py --prune-success and rewrites the manifest to `patches: []`. Not suppressed, no stored file deleted. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1071,11 +1071,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: it validates the local composite action .github/actions/setup-common-python through `uses: ./.github/actions/setup-common-python`, which the catalog runner cannot carry, and ops-console.yml names it in its dispatch list. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "13f613b81abca1b94248136aa5b2432ef82efa11ceab68382905fec7c06c6b3f",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "FAIL_CLOSED keep",
+        "justification": "FAIL_CLOSED_KEEP: it validates the local composite action .github/actions/setup-common-python through `uses: ./.github/actions/setup-common-python`, which the catalog runner cannot carry, and ops-console.yml names it in its dispatch list. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1212,11 +1212,11 @@
         "workflow_dispatch"
       ],
       "permissions": null,
-      "reason": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+      "reason": "FAIL_CLOSED_KEEP: it validates the local composite action through `uses: ./.github/actions/setup-common-python`, which the catalog runner cannot carry, and quickkick-sweep.yml dispatches it by file name. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "b8f32f494bd4c0d90a198ab77bfb2093e668eab901ed48a2b406b29bdc2efd22",
       "exception": {
-        "lifecycle": "pending later G17 batch",
-        "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
+        "lifecycle": "FAIL_CLOSED keep",
+        "justification": "FAIL_CLOSED_KEEP: it validates the local composite action through `uses: ./.github/actions/setup-common-python`, which the catalog runner cannot carry, and quickkick-sweep.yml dispatches it by file name. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -1340,11 +1340,11 @@
       "permissions": {
         "contents": "read"
       },
-      "reason": "FAIL_CLOSED_KEEP: the inventory step exits 1 because six files under .github/workflows/_reusables/ (log-trigger, runtime-diagnostics, secret-scan, setup-tools, upload-bundle, yaml-corrector) do not parse as YAML (`mapping values are not allowed here`, line 1). It fails on main (run 40941741787). Repairing or retiring those reusable fragments is a decision for the workflow-recovery goal and no stored file is deleted here; suppressing the check would hide the defect. It is also read by scripts/workflow_recovery_controller.py and config/workflow-recovery-*.json. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
+      "reason": "FAIL_CLOSED_KEEP: named by config/workflow-recovery-required.json and config/workflow-recovery-tasks.json and read by scripts/workflow_recovery_controller.py, which observe the workflow surface; folding it would change what the controller observes, which is a decision for the workflow-recovery goal. Its earlier DENY (six files under .github/workflows/_reusables that did not parse as YAML) is repaired by StegVerse-Labs/StegVerse-SCW#62, and its main run 40953773037 at 19114412 succeeded. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
       "verbatim_sha256": "4e5b2009d74a31210a8362c9776f9acc3548c9f9c949a63fce30d49160c68b44",
       "exception": {
-        "lifecycle": "six invalid YAML files under _reusables",
-        "justification": "FAIL_CLOSED_KEEP: the inventory step exits 1 because six files under .github/workflows/_reusables/ (log-trigger, runtime-diagnostics, secret-scan, setup-tools, upload-bundle, yaml-corrector) do not parse as YAML (`mapping values are not allowed here`, line 1). It fails on main (run 40941741787). Repairing or retiring those reusable fragments is a decision for the workflow-recovery goal and no stored file is deleted here; suppressing the check would hide the defect. It is also read by scripts/workflow_recovery_controller.py and config/workflow-recovery-*.json. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
+        "lifecycle": "FAIL_CLOSED keep",
+        "justification": "FAIL_CLOSED_KEEP: named by config/workflow-recovery-required.json and config/workflow-recovery-tasks.json and read by scripts/workflow_recovery_controller.py, which observe the workflow surface; folding it would change what the controller observes, which is a decision for the workflow-recovery goal. Its earlier DENY (six files under .github/workflows/_reusables that did not parse as YAML) is repaired by StegVerse-Labs/StegVerse-SCW#62, and its main run 40953773037 at 19114412 succeeded. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -2250,7 +2250,7 @@
     "workflow_count": 76,
     "failure_code": "G17_CONTRACT_FLOOR_ABOVE_EXCEPTION_CEILING",
     "failed_predicate": "workflow_count <= exception_repository_workflow_count_max (3)",
-    "required_evidence_or_repair": "this is batch 5 of the G17 surface reduction for this repository (workflow_count 76, down from 81). Batches 1 and 2 retired 26 dead surfaces and eliminated 30 contained or no-op workflow_dispatch-only files. Batch 3 folded 7 read-only validators into the validation dispatcher run_catalog. Batch 4 folded verify_ui and eliminated 5 workflow_dispatch-only files. Batch 5 drops the non-manifest schedule, push-path and workflow_dispatch triggers of four read-only evidence workflows (backup_triggers, nightly_snapshot, taskops-nightly, weekly_drift_report) and folds them into the run_catalog as pull_request and push groups, and eliminates the contained dispatch-only kick-autopatch (it prints a retirement notice and exits 1), each recorded under tools/tasks/folded with its sha256. Kept with a specific FAIL_CLOSED reason instead of a fold: ci and ci_governance (blocked by StegVerse-Labs/StegVerse-SCW#58); workflows-sanity-check (real DENY on main: six files under .github/workflows/_reusables do not parse as YAML, so its inventory exits 1); autopatch-inspect (real DENY: .github/autopatch/patches.yml is not valid YAML); workflow-recovery-controller and scw_orchestrator (named by recovery and stability-gate configuration); export-hcb (called by export-hcb-weekly); self-healing-scan (optional write path, 6 readers); validate-hcb and telemetry-reusable (reusable workflow_call interfaces); constitutional-audit-public (external fetch plus artifact upload); smoke-tests (needs a live API input). The remaining 70 surfaces beside the dispatcher stay byte-unchanged: writers, credential-bound surfaces, workflow_run chains and reusables, whose credentials belong only in the SKAP Vault inside KV and which need their own admitted repair to retire. Each later batch lowers workflow_count and replaces this record with its exact new count.",
+    "required_evidence_or_repair": "this is batch 5 of the G17 surface reduction for this repository (workflow_count 76, down from 81). Batches 1 and 2 retired 26 dead surfaces and eliminated 30 contained or no-op workflow_dispatch-only files. Batch 3 folded 7 read-only validators into the validation dispatcher run_catalog. Batch 4 folded verify_ui and eliminated 5 workflow_dispatch-only files. Batch 5 drops the non-manifest schedule, push-path and workflow_dispatch triggers of four read-only evidence workflows (backup_triggers, nightly_snapshot, taskops-nightly, weekly_drift_report) and folds them into the run_catalog as pull_request and push groups, and eliminates the contained dispatch-only kick-autopatch (it prints a retirement notice and exits 1), each recorded under tools/tasks/folded with its sha256. Kept with a specific FAIL_CLOSED reason instead of a fold: ci and ci_governance (blocked by StegVerse-Labs/StegVerse-SCW#58); workflows-sanity-check (its DENY is repaired by StegVerse-Labs/StegVerse-SCW#62; it stays kept because config/workflow-recovery-required.json and the recovery controller name it); autopatch-inspect (real DENY: .github/autopatch/patches.yml is not valid YAML; the repair StegVerse-Labs/StegVerse-SCW#63 is held at FAIL_CLOSED because merging it triggers the AutoPatch prune-on-push writer); setup-common-python and validate-setup-common-python (local composite action `uses`, and named by ops-console and quickkick-sweep); workflow-recovery-controller and scw_orchestrator (named by recovery and stability-gate configuration); export-hcb (called by export-hcb-weekly); self-healing-scan (optional write path, 6 readers); validate-hcb and telemetry-reusable (reusable workflow_call interfaces); constitutional-audit-public (external fetch plus artifact upload); smoke-tests (needs a live API input). The remaining 70 surfaces beside the dispatcher stay byte-unchanged: writers, credential-bound surfaces, workflow_run chains and reusables, whose credentials belong only in the SKAP Vault inside KV and which need their own admitted repair to retire. Each later batch lowers workflow_count and replaces this record with its exact new count.",
     "retry_entrypoint": "tests/test_workflow_surface_registry.py",
     "owning_existing_goal": "G17-WORKFLOW-SURFACE-MINIMIZATION (StegVerse-Labs/.github#167/#168); StegVerse-org/.github#166",
     "next_attempt": "the next pull request touching .github/workflows/ or those contracts"
