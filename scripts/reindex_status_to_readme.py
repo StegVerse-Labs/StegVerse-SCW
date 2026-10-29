@@ -8,7 +8,9 @@ Reads .github/taskops/ledger.jsonl and updates README.md between:
 If the markers are missing, the workflow will add them (see workflow step).
 """
 
-import json, pathlib, datetime, sys
+import json
+import pathlib
+import sys
 
 LEDGER = pathlib.Path(".github/taskops/ledger.jsonl")
 README = pathlib.Path("README.md")

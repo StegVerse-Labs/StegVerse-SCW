@@ -13,7 +13,6 @@ Designed to be called from a GitHub Actions job using PAT_WORKFLOW/GH_STEGVERSE_
 
 import json
 import os
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List

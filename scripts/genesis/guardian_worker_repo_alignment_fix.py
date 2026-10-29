@@ -24,10 +24,11 @@ Env:
 
 from __future__ import annotations
 
-import json, os, subprocess, sys, re
-from datetime import datetime, timezone
+import json
+import os
+import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any
 
 try:
     import yaml
@@ -49,16 +50,16 @@ TOKEN = (
 TMP = ROOT / ".tmp_alignment_fix"
 TMP.mkdir(parents=True, exist_ok=True)
 
-def run(cmd: List[str], cwd: Optional[Path]=None, check: bool=True) -> subprocess.CompletedProcess:
+def run(cmd: list[str], cwd: Path | None=None, check: bool=True) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=check)
 
-def load_asl() -> Dict[str, Any]:
+def load_asl() -> dict[str, Any]:
     if not ASL_CONFIG.exists() or yaml is None:
         return {}
     return yaml.safe_load(ASL_CONFIG.read_text("utf-8")) or {}
 
-def get_task_asl(cfg: Dict[str, Any], task_id: str) -> str:
+def get_task_asl(cfg: dict[str, Any], task_id: str) -> str:
     tasks = cfg.get("tasks") or {}
     return (tasks.get(task_id) or {}).get("level") or ""
 
@@ -80,7 +81,7 @@ def workflows_permission_available() -> bool:
     pat_type = os.getenv("STEGVERSE_PAT_TYPE","fine-grained").lower()
     return pat_type == "classic"
 
-def clone_repo(full_name: str) -> Tuple[bool, Path, str]:
+def clone_repo(full_name: str) -> tuple[bool, Path, str]:
     org, repo = full_name.split("/", 1)
     url = f"https://x-access-token:{TOKEN}@github.com/{org}/{repo}.git" if TOKEN else f"https://github.com/{org}/{repo}.git"
     dest = TMP / repo
@@ -176,7 +177,7 @@ def changed_files(repo_root: Path) -> str:
     cp = run(["git","status","--porcelain"], cwd=repo_root, check=False)
     return cp.stdout.strip()
 
-def commit_and_push(repo_root: Path, msg: str) -> Tuple[bool,str]:
+def commit_and_push(repo_root: Path, msg: str) -> tuple[bool,str]:
     run(["git","config","user.name","StegVerse Guardian Worker"], cwd=repo_root, check=False)
     run(["git","config","user.email","guardian-worker@stegverse.local"], cwd=repo_root, check=False)
     run(["git","add","-A"], cwd=repo_root, check=False)
@@ -214,7 +215,7 @@ def main() -> int:
 
     wf_write_ok = workflows_permission_available()
     if not wf_write_ok:
-        print("[Fixer] Workflows write NOT enabled for this token. Will not touch .github/workflows anywhere.")
+        print("[Fixer] Workflows write NOT enabled for this token. Will not touch .github/workflows anywhere.")  # noqa: E501
 
     fixed_count = 0
     for r in failing:
@@ -233,10 +234,10 @@ def main() -> int:
         changes += int(write_if_missing(repo_root / "README.md", default_root_readme(full_name)))
 
         # steglink
-        changes += int(write_if_missing(repo_root / "docs/stegverse/.steglink.json", default_steglink_json(full_name)))
+        changes += int(write_if_missing(repo_root / "docs/stegverse/.steglink.json", default_steglink_json(full_name)))  # noqa: E501
 
         # ASL yaml
-        changes += int(write_if_missing(repo_root / "docs/governance/automation_safety_levels.yaml", minimal_asl_yaml()))
+        changes += int(write_if_missing(repo_root / "docs/governance/automation_safety_levels.yaml", minimal_asl_yaml()))  # noqa: E501
 
         # Placeholder dirs
         changes += int(add_gitkeep(repo_root / "docs"))

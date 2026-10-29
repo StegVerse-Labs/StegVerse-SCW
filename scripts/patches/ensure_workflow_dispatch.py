@@ -3,7 +3,10 @@
 Ensure every non-reusable workflow has an `on.workflow_dispatch` trigger.
 Writes list of changed files to self_healing_out/DISPATCH_INJECTED.txt
 """
-import pathlib, sys, yaml
+import pathlib
+import sys
+
+import yaml
 
 ROOT = pathlib.Path(".")
 WF_DIR = ROOT / ".github" / "workflows"
@@ -22,8 +25,10 @@ def save_yaml(p, data):
     p.write_text(txt, encoding="utf-8")
 
 def to_mapping_on(on_val):
-    if on_val is None: return {}
-    if isinstance(on_val, dict): return on_val
+    if on_val is None:
+        return {}
+    if isinstance(on_val, dict):
+        return on_val
     if isinstance(on_val, list):
         m = {}
         for ev in on_val:

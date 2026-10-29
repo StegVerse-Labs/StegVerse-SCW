@@ -32,14 +32,13 @@ Outputs:
   self_healing_out/WORKFLOW_FIX_REPORT.md
 """
 
-import os
-import re
-import sys
-import json
 import codecs
+import json
+import re
 import subprocess
+import sys
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
+from typing import Any, Dict, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 WF_DIR = ROOT / ".github" / "workflows"
@@ -72,13 +71,13 @@ def dump_yaml_docs(docs: List[Any]) -> str:
     # Default Dumper may reorder keys; acceptable for CI normalization.
     # Keep multi-doc support:
     return "\n---\n".join(
-        [yaml.safe_dump(doc, sort_keys=True, default_flow_style=False).rstrip() for doc in docs if doc is not None]
+        [yaml.safe_dump(doc, sort_keys=True, default_flow_style=False).rstrip() for doc in docs if doc is not None]  # noqa: E501
     ) + "\n"
 
 # ---------- Text-phase regexes ----------
 
 SHEBANG_RE      = re.compile(r'^(?P<lead>\s*)(#!\/usr\/bin\/env\s+python3)\s*$', re.MULTILINE)
-BOOL_INPUT_RE   = re.compile(r'^(?P<lead>\s*default:\s*)(true|false)\s*$', re.IGNORECASE | re.MULTILINE)
+BOOL_INPUT_RE   = re.compile(r'^(?P<lead>\s*default:\s*)(true|false)\s*$', re.IGNORECASE | re.MULTILINE)  # noqa: E501
 IF_SECRETS_RE   = re.compile(r'^(?P<lead>\s*if:\s*)(?P<expr>.*)$', re.MULTILINE)
 BARE_SECRET     = re.compile(r'(?<!\{\{\s*)\bsecrets\.([A-Z0-9_]+)\b(?!\s*\}\})', re.IGNORECASE)
 HEREDOC_ENDS    = re.compile(r'^(?P<lead>\s*)(PY|EOF)\s+$', re.MULTILINE)
@@ -168,9 +167,11 @@ def coerce_inputs_defaults_to_strings(doc: Dict) -> int:
     """
     For on.workflow_dispatch.inputs.*.default ensure strings
     """
-    if not isinstance(doc, dict): return 0
+    if not isinstance(doc, dict):
+        return 0
     on = doc.get("on") or doc.get("On") or doc.get("ON")
-    if not on: return 0
+    if not on:
+        return 0
     changed = 0
 
     # 'on' can be a dict, list or string
@@ -191,9 +192,11 @@ def ensure_runs_on_for_jobs(doc: Dict) -> int:
     """
     Ensure each job has 'runs-on'. If missing, set 'ubuntu-latest'.
     """
-    if not isinstance(doc, dict): return 0
+    if not isinstance(doc, dict):
+        return 0
     jobs = doc.get("jobs")
-    if not isinstance(jobs, dict): return 0
+    if not isinstance(jobs, dict):
+        return 0
     changed = 0
     for name, job in jobs.items():
         if isinstance(job, dict):
@@ -290,13 +293,13 @@ def main():
         "invalid_after": sum(1 for r in results if not r["after_valid"]),
         "applied": apply,
         "job_runs_on_added": sum(r["yaml_stats"].get("job_runs_on_added", 0) for r in results),
-        "inputs_defaults_quoted": sum(r["yaml_stats"].get("inputs_defaults_quoted", 0) for r in results),
+        "inputs_defaults_quoted": sum(r["yaml_stats"].get("inputs_defaults_quoted", 0) for r in results),  # noqa: E501
     }
 
     OUT_JSON = OUT / "WORKFLOW_FIX_REPORT.json"
     OUT_MD   = OUT / "WORKFLOW_FIX_REPORT.md"
 
-    OUT_JSON.write_text(json.dumps({"summary": summary, "results": results}, indent=2), encoding="utf-8")
+    OUT_JSON.write_text(json.dumps({"summary": summary, "results": results}, indent=2), encoding="utf-8")  # noqa: E501
 
     lines = []
     lines.append("# Workflow Fix Report\n")
@@ -312,11 +315,13 @@ def main():
 
     for r in results:
         lines.append(f"## {r['path']}")
-        lines.append(f"- changed: **{r['changed']}** (text={r['text_phase_changed']}, struct={r['struct_phase_changed']})")
+        lines.append(f"- changed: **{r['changed']}** (text={r['text_phase_changed']}, struct={r['struct_phase_changed']})")  # noqa: E501
         lines.append(f"- YAML valid before: **{r['before_valid']}**")
-        if not r['before_valid']: lines.append(f"  - error: `{r['before_error']}`")
+        if not r['before_valid']:
+            lines.append(f"  - error: `{r['before_error']}`")
         lines.append(f"- YAML valid after: **{r['after_valid']}**")
-        if not r['after_valid']: lines.append(f"  - error: `{r['after_error']}`")
+        if not r['after_valid']:
+            lines.append(f"  - error: `{r['after_error']}`")
         lines.append(f"- text fixes: {fmt_stats(r['text_stats'])}")
         lines.append(f"- yaml fixes:  {fmt_stats(r['yaml_stats'])}\n")
 
