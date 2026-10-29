@@ -59,12 +59,12 @@ Phase 2 will add real template syncing and autopatch PR generation.
 | `autopatch-wire-ops-table-links.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-ops-table-links.yml) · [File](.github/workflows/autopatch-wire-ops-table-links.yml) |
 | `autopatch_apply.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_apply.yml) · [File](.github/workflows/autopatch_apply.yml) |
 | `autopatch_deferred.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_deferred.yml) · [File](.github/workflows/autopatch_deferred.yml) |
-| `backup_triggers.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/backup_triggers.yml) · [File](.github/workflows/backup_triggers.yml) |
 | `ci.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci.yml) · [File](.github/workflows/ci.yml) |
 | `ci_governance.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci_governance.yml) · [File](.github/workflows/ci_governance.yml) |
 | `codeql.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/codeql.yml) · [File](.github/workflows/codeql.yml) |
 | `constitutional-audit-public.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/constitutional-audit-public.yml) · [File](.github/workflows/constitutional-audit-public.yml) |
 | `direct_apply_fixes.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/direct_apply_fixes.yml) · [File](.github/workflows/direct_apply_fixes.yml) |
+| `dispatch-proxy.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/dispatch-proxy.yml) · [File](.github/workflows/dispatch-proxy.yml) |
 
 _See the full table for all workflows → [.github/docs/WORKFLOWS_CONSOLE.md](.github/docs/WORKFLOWS_CONSOLE.md)._
 <!-- /ops:console -->

@@ -1,11 +1,11 @@
 # Ops Console
 
-_Last updated: **2026-10-29 19:37 UTC**_
+_Last updated: **2026-10-29 20:42 UTC**_
 
 - ✅ OK: **0**
-- ➖ No dispatch: **81**
+- ➖ No dispatch: **76**
 - ❌ Broken: **0**
-- Total: **81**
+- Total: **76**
 
 | Workflow | State | Actions |
 |---|---|---|
@@ -15,7 +15,6 @@ _Last updated: **2026-10-29 19:37 UTC**_
 | `autopatch-wire-ops-table-links.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-ops-table-links.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch-wire-ops-table-links.yml) · [File](.github/workflows/autopatch-wire-ops-table-links.yml) |
 | `autopatch_apply.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_apply.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_apply.yml) · [File](.github/workflows/autopatch_apply.yml) |
 | `autopatch_deferred.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_deferred.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/autopatch_deferred.yml) · [File](.github/workflows/autopatch_deferred.yml) |
-| `backup_triggers.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/backup_triggers.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/backup_triggers.yml) · [File](.github/workflows/backup_triggers.yml) |
 | `ci.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci.yml) · [File](.github/workflows/ci.yml) |
 | `ci_governance.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci_governance.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ci_governance.yml) · [File](.github/workflows/ci_governance.yml) |
 | `codeql.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/codeql.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/codeql.yml) · [File](.github/workflows/codeql.yml) |
@@ -42,12 +41,10 @@ _Last updated: **2026-10-29 19:37 UTC**_
 | `install_self_healing_pack.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/install_self_healing_pack.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/install_self_healing_pack.yml) · [File](.github/workflows/install_self_healing_pack.yml) |
 | `intent_guard.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/intent_guard.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/intent_guard.yml) · [File](.github/workflows/intent_guard.yml) |
 | `kick-autopatch-apply.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-autopatch-apply.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-autopatch-apply.yml) · [File](.github/workflows/kick-autopatch-apply.yml) |
-| `kick-autopatch.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-autopatch.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-autopatch.yml) · [File](.github/workflows/kick-autopatch.yml) |
 | `kick-seed-steg-config.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-seed-steg-config.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-seed-steg-config.yml) · [File](.github/workflows/kick-seed-steg-config.yml) |
 | `kick-yaml-bulk-autofix.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-yaml-bulk-autofix.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/kick-yaml-bulk-autofix.yml) · [File](.github/workflows/kick-yaml-bulk-autofix.yml) |
 | `ledger_integrity.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ledger_integrity.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/ledger_integrity.yml) · [File](.github/workflows/ledger_integrity.yml) |
 | `log_revenue.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/log_revenue.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/log_revenue.yml) · [File](.github/workflows/log_revenue.yml) |
-| `nightly_snapshot.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/nightly_snapshot.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/nightly_snapshot.yml) · [File](.github/workflows/nightly_snapshot.yml) |
 | `one-shot-workflow-normalizer.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/one-shot-workflow-normalizer.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/one-shot-workflow-normalizer.yml) · [File](.github/workflows/one-shot-workflow-normalizer.yml) |
 | `one_button_supercheck.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/one_button_supercheck.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/one_button_supercheck.yml) · [File](.github/workflows/one_button_supercheck.yml) |
 | `one_shot_patch_apply.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/one_shot_patch_apply.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/one_shot_patch_apply.yml) · [File](.github/workflows/one_shot_patch_apply.yml) |
@@ -75,13 +72,11 @@ _Last updated: **2026-10-29 19:37 UTC**_
 | `supercheck_remote.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/supercheck_remote.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/supercheck_remote.yml) · [File](.github/workflows/supercheck_remote.yml) |
 | `sweep_all.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/sweep_all.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/sweep_all.yml) · [File](.github/workflows/sweep_all.yml) |
 | `taskops-first-run-update.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-update.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-first-run-update.yml) · [File](.github/workflows/taskops-first-run-update.yml) |
-| `taskops-nightly.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-nightly.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/taskops-nightly.yml) · [File](.github/workflows/taskops-nightly.yml) |
 | `telemetry-reusable.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/telemetry-reusable.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/telemetry-reusable.yml) · [File](.github/workflows/telemetry-reusable.yml) |
 | `validate-autopatch-manifest.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-autopatch-manifest.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-autopatch-manifest.yml) · [File](.github/workflows/validate-autopatch-manifest.yml) |
 | `validate-hcb.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-hcb.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-hcb.yml) · [File](.github/workflows/validate-hcb.yml) |
 | `validate-setup-common-python.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-setup-common-python.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validate-setup-common-python.yml) · [File](.github/workflows/validate-setup-common-python.yml) |
 | `validation-dispatcher.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validation-dispatcher.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/validation-dispatcher.yml) · [File](.github/workflows/validation-dispatcher.yml) |
-| `weekly_drift_report.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/weekly_drift_report.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/weekly_drift_report.yml) · [File](.github/workflows/weekly_drift_report.yml) |
 | `workflow-dispatch-guardian.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflow-dispatch-guardian.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflow-dispatch-guardian.yml) · [File](.github/workflows/workflow-dispatch-guardian.yml) |
 | `workflow-recovery-controller.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflow-recovery-controller.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflow-recovery-controller.yml) · [File](.github/workflows/workflow-recovery-controller.yml) |
 | `workflow_preflight.yml` | ➖ no-dispatch | [Run](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflow_preflight.yml) · [View](https://github.com/StegVerse-Labs/StegVerse-SCW/actions/workflows/workflow_preflight.yml) · [File](.github/workflows/workflow_preflight.yml) |
