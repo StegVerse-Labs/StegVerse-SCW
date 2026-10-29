@@ -2,7 +2,9 @@
 """
 Compatibility shim: delegate to yaml_corrector.py so either name works.
 """
-import runpy, sys, pathlib
+import pathlib
+import runpy
+import sys
 
 me = pathlib.Path(__file__).resolve()
 legacy = me.with_name("yaml_corrector.py")
