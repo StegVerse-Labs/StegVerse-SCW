@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """
-AutoPatch Runner (split + prune, with preconditions + dry-run)
+AutoPatch Runner (non-destructive: preconditions + dry-run, nothing is ever removed)
 - Applies a patches manifest (YAML)
 - Modes: ensure, replace, patch
 - Preconditions: requires_files[], requires_dirs[]  (if unmet -> 'blocked')
 - Dry-run: --dry-run (shows what WOULD change, still writes a report)
 - Writes a detailed report to self_healing_out/
-- On success, can prune completed items from the source manifest
-- On blocked/error, can defer items into another manifest
+- NON-DESTRUCTIVE: the source manifest is never rewritten and no entry is ever removed.
+  Applied, noop, skipped, blocked, error and invalid entries are all kept in the source
+  manifest and reported (status + "retained": true) in self_healing_out/.
+- --prune-success is accepted for workflow compatibility and has no effect on the manifest.
+- On blocked/error, --defer-file appends a COPY of the item to another manifest (deduplicated
+  by id and path); the original stays in the source manifest.
+- An unreadable manifest or a malformed entry is reported (INVALID) and left as it is.
 
 Usage:
   python3 scripts/autopatch_runner.py \
@@ -38,11 +43,20 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "self_healing_out"
 OUT.mkdir(parents=True, exist_ok=True)
 
+class InvalidManifest(Exception):
+    pass
+
 def load_yaml(p: Path) -> Dict[str, Any]:
     if not p.exists():
         return {}
-    with p.open("r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+    try:
+        with p.open("r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+    except yaml.YAMLError as e:
+        raise InvalidManifest(f"{p}: not valid YAML: {str(e).splitlines()[0] if str(e) else e}")
+    if not isinstance(data, dict):
+        raise InvalidManifest(f"{p}: top level is not a mapping")
+    return data
 
 def dump_yaml(p: Path, data: Dict[str, Any]) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -145,10 +159,20 @@ def main():
     args = ap.parse_args()
 
     manifest_path = ROOT / args.manifest
-    manifest = load_yaml(manifest_path)
-    patches: List[Dict[str, Any]] = manifest.get("patches", []) or []
+    invalid_manifest = None
+    try:
+        manifest = load_yaml(manifest_path)
+    except InvalidManifest as e:
+        manifest = {}
+        invalid_manifest = str(e)
+    patches: List[Any] = manifest.get("patches", []) or []
+    if not isinstance(patches, list):
+        invalid_manifest = f"{manifest_path}: 'patches' is not a list"
+        patches = []
 
     results = {
+        "invalid_manifest": invalid_manifest,
+        "manifest_rewritten": False,
         "manifest": str(manifest_path),
         "prune_success": bool(args.prune_success),
         "defer_file": args.defer_file or None,
@@ -158,9 +182,14 @@ def main():
     }
 
     deferred: List[Dict[str, Any]] = []
-    remaining: List[Dict[str, Any]] = []
 
     for item in patches:
+        if not isinstance(item, dict):
+            status, msg = ("error", f"INVALID entry (not a mapping), kept: {item!r}")
+            results["summary"][status] = results["summary"].get(status, 0) + 1
+            results["items"].append({"id": None, "path": None, "mode": None,
+                                     "status": status, "message": msg, "retained": True})
+            continue
         status, msg = apply_patch_item(item, dry_run=args.dry_run)
         results["summary"][status] = results["summary"].get(status, 0) + 1
         results["items"].append({
@@ -168,16 +197,19 @@ def main():
             "path": item.get("path"),
             "mode": item.get("mode"),
             "status": status,
-            "message": msg
+            "message": msg,
+            "retained": True
         })
 
-        if status in ("applied", "noop"):
-            if not args.prune_success:
-                remaining.append(item)
-        elif status in ("blocked", "error"):
+        if status in ("blocked", "error"):
             deferred.append(item)
-        else:
-            remaining.append(item)
+
+    if invalid_manifest:
+        results["summary"]["error"] = results["summary"].get("error", 0) + 1
+        results["items"].append({"id": None, "path": str(manifest_path), "mode": None,
+                                 "status": "error",
+                                 "message": f"INVALID manifest, left unchanged: {invalid_manifest}",
+                                 "retained": True})
 
     # Write reports
     OUT_JSON = OUT / "AUTOPATCH_REPORT.json"
@@ -187,7 +219,8 @@ def main():
     lines = [
         "# AutoPatch Report",
         f"- Manifest: `{results['manifest']}`",
-        f"- Prune success: `{results['prune_success']}`",
+        f"- Prune success requested (no effect, nothing is removed): `{results['prune_success']}`",
+        f"- Manifest rewritten: `{results['manifest_rewritten']}`",
         f"- Defer file: `{results['defer_file'] or '—'}`",
         f"- Dry run: `{results['dry_run']}`",
         "",
@@ -200,26 +233,30 @@ def main():
         lines.append(f"- **{it['status'].upper():7}** — {it['id']} → `{it['path']}` — {it['message']}")
     OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    # Handle prune + defer (only if not dry-run)
+    # Defer copies only; the source manifest is never rewritten (only if not dry-run)
     changed = False
-    if not args.dry_run:
-        if args.prune_success:
-            manifest_pruned = dict(manifest)
-            manifest_pruned["patches"] = remaining
-            if remaining != patches:
-                dump_yaml(manifest_path, manifest_pruned)
-                changed = True
-
-        if args.defer_file and deferred:
-            defer_path = ROOT / args.defer_file
+    if not args.dry_run and args.defer_file and deferred:
+        defer_path = ROOT / args.defer_file
+        try:
             existing = load_yaml(defer_path)
+        except InvalidManifest as e:
+            existing = None
+            results["items"].append({"id": None, "path": args.defer_file, "mode": None,
+                                     "status": "error",
+                                     "message": f"INVALID defer manifest, left unchanged: {e}",
+                                     "retained": True})
+        if existing is not None:
             if not existing:
                 existing = {"version": 1, "patches": []}
             existing_patches = existing.get("patches", []) or []
-            existing_patches.extend(deferred)
-            existing["patches"] = existing_patches
-            dump_yaml(defer_path, existing)
-            changed = True
+            seen = {(x.get("id"), x.get("path")) for x in existing_patches if isinstance(x, dict)}
+            added = [d for d in deferred if (d.get("id"), d.get("path")) not in seen]
+            if added:
+                existing_patches.extend(added)
+                existing["patches"] = existing_patches
+                dump_yaml(defer_path, existing)
+                changed = True
+        OUT_JSON.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
     print(json.dumps({"changed_manifests": changed, "deferred_count": len(deferred)}, indent=2))
 
