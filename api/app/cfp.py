@@ -1,7 +1,10 @@
-import os, json, time
-from typing import Dict, Any, Optional
-from fastapi import APIRouter, HTTPException
+import json
+import os
+import time
+from typing import Any
+
 import httpx
+from fastapi import APIRouter, HTTPException
 
 # -----------------------------------------------------
 # CFP MODULE (SCW-API)
@@ -28,7 +31,7 @@ CFP_SOURCE_TICKETS = "https://api.stubhub.com/catalog/events/v3/football-college
 
 # Same storage helpers as main app ---------------------
 USE_MEMORY_ONLY = False
-_mem_kv: Dict[str, str] = {}
+_mem_kv: dict[str, str] = {}
 
 def _mem_get(k): return _mem_kv.get(k)
 def _mem_set(k, v): _mem_kv[k] = v
@@ -44,12 +47,12 @@ if REDIS_URL:
 else:
     USE_MEMORY_ONLY = True
 
-def _get(k: str) -> Optional[str]:
+def _get(k: str) -> str | None:
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_get(k)
     try:
         return redis_client.get(k)
-    except:
+    except Exception:
         return _mem_get(k)
 
 def _set(k: str, v: str):
@@ -58,7 +61,7 @@ def _set(k: str, v: str):
         return
     try:
         redis_client.set(k, v)
-    except:
+    except Exception:
         _mem_set(k, v)
 
 # -----------------------------------------------------
@@ -76,7 +79,7 @@ async def fetch_json(url: str):
 # -----------------------------------------------------
 # Normalize Functions
 # -----------------------------------------------------
-def normalize_cfp(teams: Dict[str, Any], ncaa: Dict[str, Any]):
+def normalize_cfp(teams: dict[str, Any], ncaa: dict[str, Any]):
     out = {
         "ts": int(time.time()),
         "teams": [],
@@ -96,7 +99,7 @@ def normalize_cfp(teams: Dict[str, Any], ncaa: Dict[str, Any]):
                 "record": t.get("record"),
                 "logo": t.get("logo"),
             })
-    except:
+    except Exception:
         pass
 
     # Games
@@ -115,7 +118,7 @@ def normalize_cfp(teams: Dict[str, Any], ncaa: Dict[str, Any]):
                 "home_score": g.get("home", {}).get("score"),
                 "away_score": g.get("away", {}).get("score"),
             })
-    except:
+    except Exception:
         pass
 
     return out
@@ -173,7 +176,7 @@ async def tickets():
             r = await client.get(CFP_SOURCE_TICKETS)
             try:
                 return r.json()
-            except:
+            except Exception:
                 return {"text": r.text[:2000]}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Ticket fetch error: {e}")

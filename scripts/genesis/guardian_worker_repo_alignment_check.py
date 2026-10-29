@@ -25,11 +25,13 @@ Env:
 
 from __future__ import annotations
 
-import json, os, re, sys, textwrap, subprocess
+import json
+import os
+import re
+import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT_DIR = ROOT / "reports" / "guardians"
@@ -39,23 +41,29 @@ DEFAULT_ORG = os.getenv("STEGVERSE_ORG", "StegVerse-Labs")
 REPO_OVERRIDE = os.getenv("STEGVERSE_REPOS", "").strip()
 
 TOKEN = (
-    os.getenv("STEG_TOKEN")
-    or os.getenv("GH_TOKEN")
-    or os.getenv("GITHUB_TOKEN")
-    or ""
+    os.getenv("STEG_TOKEN") or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN") or ""
 ).strip()
+
 
 @dataclass
 class RepoResult:
     name: str
     url: str
     pass_ok: bool
-    checks: Dict[str, bool]
-    notes: List[str]
+    checks: dict[str, bool]
+    notes: list[str]
 
-def run(cmd: List[str], cwd: Optional[Path]=None, check: bool=True) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True,
-                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=check)
+
+def run(cmd: list[str], cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        cmd,
+        cwd=str(cwd) if cwd else None,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=check,
+    )
+
 
 def gh_api(path: str) -> dict:
     """
@@ -65,18 +73,27 @@ def gh_api(path: str) -> dict:
         raise RuntimeError("No GH token in env (STEG_TOKEN/GH_TOKEN/GITHUB_TOKEN).")
 
     url = f"https://api.github.com{path}"
-    cmd = ["curl", "-sS", "-H", f"Authorization: token {TOKEN}", "-H", "Accept: application/vnd.github+json", url]
+    cmd = [
+        "curl",
+        "-sS",
+        "-H",
+        f"Authorization: token {TOKEN}",
+        "-H",
+        "Accept: application/vnd.github+json",
+        url,
+    ]
     cp = run(cmd, check=True)
     try:
         return json.loads(cp.stdout)
     except Exception as e:
         raise RuntimeError(f"GitHub API parse failed on {url}: {e}\n{cp.stdout}")
 
-def discover_repos(org: str) -> List[str]:
+
+def discover_repos(org: str) -> list[str]:
     """
     Discover up to 100 repos in org (paging if needed).
     """
-    repos: List[str] = []
+    repos: list[str] = []
     page = 1
     while True:
         data = gh_api(f"/orgs/{org}/repos?per_page=100&page={page}")
@@ -91,12 +108,17 @@ def discover_repos(org: str) -> List[str]:
             break
     return sorted(set(repos))
 
-def clone_repo(full_name: str, workdir: Path) -> Tuple[bool, str]:
+
+def clone_repo(full_name: str, workdir: Path) -> tuple[bool, str]:
     """
     Shallow clone. Returns (ok, log).
     """
     org, repo = full_name.split("/", 1)
-    url = f"https://x-access-token:{TOKEN}@github.com/{org}/{repo}.git" if TOKEN else f"https://github.com/{org}/{repo}.git"
+    url = (
+        f"https://x-access-token:{TOKEN}@github.com/{org}/{repo}.git"
+        if TOKEN
+        else f"https://github.com/{org}/{repo}.git"
+    )
     dest = workdir / repo
 
     if dest.exists():
@@ -108,8 +130,10 @@ def clone_repo(full_name: str, workdir: Path) -> Tuple[bool, str]:
     except subprocess.CalledProcessError as e:
         return False, e.stdout
 
+
 def file_exists(repo_root: Path, rel: str) -> bool:
     return (repo_root / rel).exists()
+
 
 def has_workflow_dispatch_in_any(repo_root: Path) -> bool:
     wf_dir = repo_root / ".github" / "workflows"
@@ -125,14 +149,17 @@ def has_workflow_dispatch_in_any(repo_root: Path) -> bool:
             return True
     return False
 
+
 def check_repo(full_name: str, repo_root: Path) -> RepoResult:
-    checks: Dict[str, bool] = {}
-    notes: List[str] = []
+    checks: dict[str, bool] = {}
+    notes: list[str] = []
     org, repo = full_name.split("/", 1)
 
     # Core alignment signals
     checks["has_root_readme"] = file_exists(repo_root, "README.md")
-    checks["has_asl_config"] = file_exists(repo_root, "docs/governance/automation_safety_levels.yaml")
+    checks["has_asl_config"] = file_exists(
+        repo_root, "docs/governance/automation_safety_levels.yaml"
+    )
     checks["has_steglink"] = (
         file_exists(repo_root, "docs/stegverse/.steglink.json")
         or file_exists(repo_root, "docs/stegverse/.steglink.yaml")
@@ -162,8 +189,9 @@ def check_repo(full_name: str, repo_root: Path) -> RepoResult:
         notes=notes,
     )
 
+
 def main() -> int:
-    ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    ts = datetime.now(UTC).isoformat(timespec="seconds")
     rid = str(int(datetime.now().timestamp()))
 
     # Decide repo list
@@ -175,19 +203,21 @@ def main() -> int:
     workdir = ROOT / ".tmp_alignment"
     workdir.mkdir(parents=True, exist_ok=True)
 
-    results: List[RepoResult] = []
+    results: list[RepoResult] = []
     scanned = 0
     for full in repos:
         scanned += 1
         ok, log = clone_repo(full, workdir)
         if not ok:
-            results.append(RepoResult(
-                name=full,
-                url=f"https://github.com/{full}",
-                pass_ok=False,
-                checks={"clone_ok": False},
-                notes=[f"Clone failed. Log:\n{log.strip()}"]
-            ))
+            results.append(
+                RepoResult(
+                    name=full,
+                    url=f"https://github.com/{full}",
+                    pass_ok=False,
+                    checks={"clone_ok": False},
+                    notes=[f"Clone failed. Log:\n{log.strip()}"],
+                )
+            )
             continue
         repo_root = workdir / full.split("/", 1)[1]
         res = check_repo(full, repo_root)
@@ -225,7 +255,7 @@ def main() -> int:
 
     # Markdown
     lines = []
-    lines.append(f"# StegVerse Repo Alignment Report")
+    lines.append("# StegVerse Repo Alignment Report")
     lines.append("")
     lines.append(f"- Generated: `{ts}`")
     lines.append(f"- Org: `{DEFAULT_ORG}`")
@@ -246,16 +276,22 @@ def main() -> int:
         lines.append("")
     md_path.write_text("\n".join(lines), encoding="utf-8")
 
-    print(json.dumps({
-        "repos_total": repos_total,
-        "repos_pass": repos_pass,
-        "repos_fail": repos_fail,
-        "repos_error": 0,
-        "ts_utc": ts,
-        "rid": rid
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "repos_total": repos_total,
+                "repos_pass": repos_pass,
+                "repos_fail": repos_fail,
+                "repos_error": 0,
+                "ts_utc": ts,
+                "rid": rid,
+            },
+            indent=2,
+        )
+    )
     print(f"\nReport written:\n- {md_path}\n- {json_path}")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

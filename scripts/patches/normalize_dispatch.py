@@ -3,7 +3,8 @@
 Normalize all workflow files so GitHub shows the 'Run workflow' button:
 
 - Ensure top-level `on:` is a mapping (dict), converting from list/string if needed.
-- Inject `workflow_dispatch: {}` at the root (unless the file is reusable-only with only `workflow_call`).
+- Inject `workflow_dispatch: {}` at the root
+  (unless the file is reusable-only with only `workflow_call`).
 - Skip files that fail YAML parse (report them).
 - Preserve key order (sort_keys=False).
 - Write a markdown report to self_healing_out/NORMALIZE_REPORT.md.
@@ -12,9 +13,8 @@ Normalize all workflow files so GitHub shows the 'Run workflow' button:
 
 import argparse
 import io
-import os
 import pathlib
-from typing import Any, Dict, Tuple, List
+from typing import Any
 
 import yaml
 
@@ -42,7 +42,7 @@ def dump_yaml(data: Any) -> str:
     )
 
 
-def to_mapping(on_val) -> Dict[str, Any]:
+def to_mapping(on_val) -> dict[str, Any]:
     """Normalize `on` into a dict: supports string or list of strings."""
     if on_val is None:
         return {}
@@ -59,12 +59,12 @@ def to_mapping(on_val) -> Dict[str, Any]:
     return {}
 
 
-def reusable_only(on_map: Dict[str, Any]) -> bool:
+def reusable_only(on_map: dict[str, Any]) -> bool:
     keys = list(on_map.keys())
     return len(keys) == 1 and keys[0] == "workflow_call"
 
 
-def ensure_dispatch(d: dict) -> Tuple[bool, str]:
+def ensure_dispatch(d: dict) -> tuple[bool, str]:
     """
     Ensure root d['on'] is mapping and includes workflow_dispatch, unless reusable-only.
     Returns (changed?, reason)
@@ -78,7 +78,7 @@ def ensure_dispatch(d: dict) -> Tuple[bool, str]:
         return False, "reusable-only (workflow_call)"
 
     changed = False
-    reasons: List[str] = []
+    reasons: list[str] = []
 
     if "workflow_dispatch" not in on_map:
         on_map["workflow_dispatch"] = {}

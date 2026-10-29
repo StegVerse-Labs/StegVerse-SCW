@@ -19,9 +19,7 @@ Output:
 import datetime
 import hashlib
 import json
-import os
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -51,8 +49,8 @@ def is_excluded(path: Path) -> bool:
     return any(p in EXCLUDED_DIRS for p in parts)
 
 
-def iter_files(root: Path) -> List[Path]:
-    files: List[Path] = []
+def iter_files(root: Path) -> list[Path]:
+    files: list[Path] = []
     for p in root.rglob("*"):
         if not p.is_file():
             continue
@@ -80,7 +78,7 @@ def sha256_of(path: Path, max_bytes: int = 5 * 1024 * 1024) -> str:
     return h.hexdigest()
 
 
-def try_parse_text_file(path: Path) -> Tuple[bool, str]:
+def try_parse_text_file(path: Path) -> tuple[bool, str]:
     """
     Try to parse well-known formats; return (ok, message).
     Does NOT raise, always returns something.
@@ -135,7 +133,7 @@ def try_parse_text_file(path: Path) -> Tuple[bool, str]:
     return True, "ok: unvalidated"
 
 
-def ledger_status() -> Dict[str, object]:
+def ledger_status() -> dict[str, object]:
     """
     Domain-specific check for StegVerse ledger.
 
@@ -198,10 +196,10 @@ def main() -> None:
 
     files = iter_files(ROOT)
 
-    stats_by_ext: Dict[str, int] = {}
-    duplicates_by_hash: Dict[str, List[Path]] = {}
-    parse_errors: List[Dict[str, str]] = []
-    oversized: List[Path] = []
+    stats_by_ext: dict[str, int] = {}
+    duplicates_by_hash: dict[str, list[Path]] = {}
+    parse_errors: list[dict[str, str]] = []
+    oversized: list[Path] = []
 
     for p in files:
         ext = p.suffix.lower() or "<no_ext>"
@@ -227,7 +225,7 @@ def main() -> None:
                 )
 
     # Build duplicate sets
-    duplicate_groups: List[List[Path]] = [
+    duplicate_groups: list[list[Path]] = [
         paths for paths in duplicates_by_hash.values() if len(paths) > 1
     ]
 
@@ -237,7 +235,7 @@ def main() -> None:
     ledger_info = ledger_status()
 
     # ---------- Build report ----------
-    report_lines: List[str] = []
+    report_lines: list[str] = []
     report_lines.append("# StegVerse Repo Hygiene Report")
     report_lines.append("")
     report_lines.append(f"- Generated at: `{now.isoformat()}Z`")

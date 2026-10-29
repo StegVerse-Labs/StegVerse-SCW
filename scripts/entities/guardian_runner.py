@@ -13,23 +13,22 @@ Designed to be called from a GitHub Actions job using PAT_WORKFLOW/GH_STEGVERSE_
 
 import json
 import os
-import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]  # scripts/entities -> scripts -> ROOT
 MANIFEST_PATH = ROOT / "scripts" / "entities" / "guardian_manifest.json"
 
 
-def load_manifest() -> Dict[str, Any]:
+def load_manifest() -> dict[str, Any]:
     if not MANIFEST_PATH.exists():
         raise SystemExit(f"Guardian manifest not found at {MANIFEST_PATH}")
     with MANIFEST_PATH.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def _call_task(module_name: str, func_name: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
+def _call_task(module_name: str, func_name: str, manifest: dict[str, Any]) -> dict[str, Any]:
     """
     Import and run a task function, returning a structured dict.
 
@@ -63,7 +62,7 @@ def main() -> None:
     run_id = os.getenv("GITHUB_RUN_ID", "local")
     ts = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    overall: Dict[str, Any] = {
+    overall: dict[str, Any] = {
         "run_id": run_id,
         "timestamp_utc": ts,
         "tasks": [],
@@ -100,7 +99,7 @@ def main() -> None:
     json_path.write_text(json.dumps(overall, indent=2), encoding="utf-8")
 
     md_path = reports_dir / f"guardian_run_{run_id}.md"
-    lines: List[str] = [
+    lines: list[str] = [
         "# StegVerse Guardian Run",
         f"- Run ID: `{run_id}`",
         f"- Time (UTC): `{ts}`",

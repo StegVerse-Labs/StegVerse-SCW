@@ -25,9 +25,8 @@ Notes:
 
 import argparse
 import json
-import os
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 try:
     import yaml
@@ -38,19 +37,23 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "self_healing_out"
 OUT.mkdir(parents=True, exist_ok=True)
 
-def load_yaml(p: Path) -> Dict[str, Any]:
+
+def load_yaml(p: Path) -> dict[str, Any]:
     if not p.exists():
         return {}
     with p.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
-def dump_yaml(p: Path, data: Dict[str, Any]) -> None:
+
+def dump_yaml(p: Path, data: dict[str, Any]) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, sort_keys=False)
 
+
 def read_text(p: Path) -> str:
     return p.read_text(encoding="utf-8", errors="ignore") if p.exists() else ""
+
 
 def write_text(p: Path, txt: str, dry_run: bool) -> None:
     if dry_run:
@@ -58,13 +61,15 @@ def write_text(p: Path, txt: str, dry_run: bool) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(txt, encoding="utf-8")
 
+
 def file_has_block(txt: str, begin_marker: str, end_marker: str) -> bool:
     return (begin_marker in txt) and (end_marker in txt)
 
-def unmet_preconditions(item: Dict[str, Any]) -> List[str]:
+
+def unmet_preconditions(item: dict[str, Any]) -> list[str]:
     msgs = []
     req_files = item.get("requires_files") or []
-    req_dirs  = item.get("requires_dirs") or []
+    req_dirs = item.get("requires_dirs") or []
     for rf in req_files:
         if not (ROOT / rf).exists():
             msgs.append(f"missing file: {rf}")
@@ -73,7 +78,8 @@ def unmet_preconditions(item: Dict[str, Any]) -> List[str]:
             msgs.append(f"missing dir:  {rd}")
     return msgs
 
-def apply_patch_item(item: Dict[str, Any], dry_run: bool) -> Tuple[str, str]:
+
+def apply_patch_item(item: dict[str, Any], dry_run: bool) -> tuple[str, str]:
     """
     Returns (status, message)
     status one of: 'applied', 'skipped', 'blocked', 'noop', 'error'
@@ -111,7 +117,8 @@ def apply_patch_item(item: Dict[str, Any], dry_run: bool) -> Tuple[str, str]:
 
         elif mode == "patch":
             current = read_text(abs_path) if exists else ""
-            begin = None; end = None
+            begin = None
+            end = None
             for line in patch_block.splitlines():
                 ls = line.strip()
                 if "BEGIN AUTOPATCH" in ls and begin is None:
@@ -120,13 +127,16 @@ def apply_patch_item(item: Dict[str, Any], dry_run: bool) -> Tuple[str, str]:
                     end = ls
             if not begin or not end:
                 if patch_block and patch_block not in current:
-                    new_txt = (current.rstrip() + "\n\n" + patch_block.strip() + "\n")
+                    new_txt = current.rstrip() + "\n\n" + patch_block.strip() + "\n"
                     write_text(abs_path, new_txt, dry_run)
-                    return ("applied", f"{pid}: appended block (no markers)" + (" (dry-run)" if dry_run else ""))
+                    return (
+                        "applied",
+                        f"{pid}: appended block (no markers)" + (" (dry-run)" if dry_run else ""),
+                    )
                 return ("noop", f"{pid}: block already present (no markers)")
             if file_has_block(current, begin, end):
                 return ("noop", f"{pid}: markers already present")
-            new_txt = (current.rstrip() + "\n\n" + patch_block.strip() + "\n")
+            new_txt = current.rstrip() + "\n\n" + patch_block.strip() + "\n"
             write_text(abs_path, new_txt, dry_run)
             return ("applied", f"{pid}: appended marker block" + (" (dry-run)" if dry_run else ""))
 
@@ -135,6 +145,7 @@ def apply_patch_item(item: Dict[str, Any], dry_run: bool) -> Tuple[str, str]:
 
     except Exception as e:
         return ("error", f"{pid}: exception {e}")
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -146,7 +157,7 @@ def main():
 
     manifest_path = ROOT / args.manifest
     manifest = load_yaml(manifest_path)
-    patches: List[Dict[str, Any]] = manifest.get("patches", []) or []
+    patches: list[dict[str, Any]] = manifest.get("patches", []) or []
 
     results = {
         "manifest": str(manifest_path),
@@ -157,19 +168,21 @@ def main():
         "items": [],
     }
 
-    deferred: List[Dict[str, Any]] = []
-    remaining: List[Dict[str, Any]] = []
+    deferred: list[dict[str, Any]] = []
+    remaining: list[dict[str, Any]] = []
 
     for item in patches:
         status, msg = apply_patch_item(item, dry_run=args.dry_run)
         results["summary"][status] = results["summary"].get(status, 0) + 1
-        results["items"].append({
-            "id": item.get("id"),
-            "path": item.get("path"),
-            "mode": item.get("mode"),
-            "status": status,
-            "message": msg
-        })
+        results["items"].append(
+            {
+                "id": item.get("id"),
+                "path": item.get("path"),
+                "mode": item.get("mode"),
+                "status": status,
+                "message": msg,
+            }
+        )
 
         if status in ("applied", "noop"):
             if not args.prune_success:
@@ -181,7 +194,7 @@ def main():
 
     # Write reports
     OUT_JSON = OUT / "AUTOPATCH_REPORT.json"
-    OUT_MD   = OUT / "AUTOPATCH_REPORT.md"
+    OUT_MD = OUT / "AUTOPATCH_REPORT.md"
     OUT_JSON.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
     lines = [
@@ -197,7 +210,9 @@ def main():
         "## Items",
     ]
     for it in results["items"]:
-        lines.append(f"- **{it['status'].upper():7}** — {it['id']} → `{it['path']}` — {it['message']}")
+        lines.append(
+            f"- **{it['status'].upper():7}** — {it['id']} → `{it['path']}` — {it['message']}"
+        )
     OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     # Handle prune + defer (only if not dry-run)
@@ -222,6 +237,7 @@ def main():
             changed = True
 
     print(json.dumps({"changed_manifests": changed, "deferred_count": len(deferred)}, indent=2))
+
 
 if __name__ == "__main__":
     main()

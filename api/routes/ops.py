@@ -2,7 +2,7 @@
 # api/routes/ops.py
 import os, json, time, urllib.request, urllib.error, secrets
 from hmac import compare_digest
-from typing import Optional, Dict, Any
+from typing import Any
 
 import redis
 from fastapi import APIRouter, Header, HTTPException
@@ -15,20 +15,20 @@ router = APIRouter(prefix="/v1/ops", tags=["ops"])
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 r = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
-def get_cfg(name: str, default: Optional[str] = None) -> Optional[str]:
+def get_cfg(name: str, default: str | None = None) -> str | None:
     v = r.get(f"config:{name}")
     if v is not None:
         return v
     return os.getenv(name, default)
 
-def set_cfg(name: str, value: Optional[str]):
+def set_cfg(name: str, value: str | None):
     key = f"config:{name}"
     if value is None or value == "":
         r.delete(key)
     else:
         r.set(key, value)
 
-def cfg_dict(*names: str) -> Dict[str, Optional[str]]:
+def cfg_dict(*names: str) -> dict[str, str | None]:
     return {n: get_cfg(n) for n in names}
 
 # All known config keys (add here if you introduce new ones)
@@ -42,14 +42,14 @@ CFG_KEYS = [
 def _admin_token() -> str:
     return get_cfg("ADMIN_TOKEN", "") or ""
 
-def _auth(token: Optional[str]):
+def _auth(token: str | None):
     admin = _admin_token()
     if not admin:
         raise HTTPException(status_code=501, detail="admin ops not configured")
     if not token or token != admin:
         raise HTTPException(status_code=403, detail="forbidden")
 
-_last_call_at: Dict[str, float] = {}
+_last_call_at: dict[str, float] = {}
 def _throttle(key: str):
     now = time.time()
     last = _last_call_at.get(key, 0)
@@ -58,7 +58,7 @@ def _throttle(key: str):
         raise HTTPException(status_code=429, detail=f"too many requests; retry after {int(gap - (now - last))}s")
     _last_call_at[key] = now
 
-def _post_json(url: str, data: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None):
+def _post_json(url: str, data: dict[str, Any] | None = None, headers: dict[str, str] | None = None):
     req = urllib.request.Request(url, method="POST")
     if headers:
         for k, v in (headers or {}).items():
@@ -96,7 +96,7 @@ def _release_lock(name: str, token: str):
 # Bootstrap (first run)
 # -----------------------------
 @router.post("/config/bootstrap")
-def config_bootstrap(payload: Dict[str, str]):
+def config_bootstrap(payload: dict[str, str]):
     """
     First-time setup ONLY:
     - If ADMIN_TOKEN is not configured (Redis/env), allow setting it once.
@@ -144,7 +144,7 @@ def snapshot():
 # Config management (auth)
 # -----------------------------
 @router.get("/config/list")
-def config_list(x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
+def config_list(x_admin_token: str | None = Header(default=None, alias="X-Admin-Token")):
     _auth(x_admin_token)
     out = {}
     for k in CFG_KEYS:
@@ -153,14 +153,14 @@ def config_list(x_admin_token: Optional[str] = Header(default=None, alias="X-Adm
     return {"ok": True, "keys": out}
 
 @router.get("/config/get/{name}")
-def config_get(name: str, x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
+def config_get(name: str, x_admin_token: str | None = Header(default=None, alias="X-Admin-Token")):
     _auth(x_admin_token)
     if name not in CFG_KEYS:
         raise HTTPException(status_code=400, detail="unknown key")
     return {"ok": True, "name": name, "value": get_cfg(name)}
 
 @router.post("/config/set")
-def config_set(payload: Dict[str, str], x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
+def config_set(payload: dict[str, str], x_admin_token: str | None = Header(default=None, alias="X-Admin-Token")):
     _auth(x_admin_token)
     changed = {}
     for k, v in (payload or {}).items():
@@ -175,7 +175,7 @@ def config_set(payload: Dict[str, str], x_admin_token: Optional[str] = Header(de
 # -----------------------------
 # Worker reset (Redis keys)
 @router.post("/worker/reset")
-def worker_reset(payload: Dict[str, Any] | None = None, x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
+def worker_reset(payload: dict[str, Any] | None = None, x_admin_token: str | None = Header(default=None, alias="X-Admin-Token")):
     """
     Safely reset worker state in Redis.
     - dry_run (bool): report-only
@@ -225,14 +225,14 @@ def worker_reset(payload: Dict[str, Any] | None = None, x_admin_token: Optional[
 # NEW: token rotation + recovery + one-click reset
 # -----------------------------
 @router.post("/admin/rotate_token")
-def admin_rotate_token(x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
+def admin_rotate_token(x_admin_token: str | None = Header(default=None, alias="X-Admin-Token")):
     _auth(x_admin_token)
     new_tok = _gen_token()
     set_cfg("ADMIN_TOKEN", new_tok)
     return {"ok": True, "new_admin_token": new_tok}
 
 @router.post("/admin/recover")
-def admin_recover(payload: Dict[str, str] | None = None):
+def admin_recover(payload: dict[str, str] | None = None):
     """
     Recovery path if ADMIN_TOKEN is lost.
     Requires ADMIN_RECOVERY_CODE (env) to match payload.recovery_code.

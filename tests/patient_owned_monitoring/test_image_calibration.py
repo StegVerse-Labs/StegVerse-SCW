@@ -4,7 +4,12 @@ import importlib.util
 import pathlib
 import unittest
 
-MODULE_PATH = pathlib.Path(__file__).parents[2] / "tools" / "patient_owned_monitoring" / "image_calibration.py"
+MODULE_PATH = (
+    pathlib.Path(__file__).parents[2]
+    / "tools"
+    / "patient_owned_monitoring"
+    / "image_calibration.py"
+)
 SPEC = importlib.util.spec_from_file_location("image_calibration", MODULE_PATH)
 MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -37,13 +42,15 @@ class ImageCalibrationTests(unittest.TestCase):
             MODULE.mean_region([[[1, 2, 3]]], [0, 0, 0, 1])
 
     def test_unknown_is_not_replaced_by_zero(self):
-        result = MODULE.calibrate_document({
-            "pixels": [[[10, 10, 10], [20, 20, 20]]],
-            "calibration_patches": [
-                {"patch_id": "a", "region": [0, 0, 1, 1], "reference_rgb": [20, 20, 20]},
-                {"patch_id": "b", "region": [1, 0, 2, 1], "reference_rgb": [40, 40, 40]},
-            ],
-        })
+        result = MODULE.calibrate_document(
+            {
+                "pixels": [[[10, 10, 10], [20, 20, 20]]],
+                "calibration_patches": [
+                    {"patch_id": "a", "region": [0, 0, 1, 1], "reference_rgb": [20, 20, 20]},
+                    {"patch_id": "b", "region": [1, 0, 2, 1], "reference_rgb": [40, 40, 40]},
+                ],
+            }
+        )
         self.assertEqual(result["samples"], [])
 
 

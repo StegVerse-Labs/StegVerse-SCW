@@ -2,25 +2,25 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import json
-import os
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts"))  # allow 'scripts.entities.*' imports
+# allow 'entities.*' imports from scripts/
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
 from entities.entity_models import get_entity  # type: ignore
+from entities.memory_store import append_memory  # type: ignore
 from entities.task_graph import default_task_graph  # type: ignore
 from entities.task_router import run_task  # type: ignore
-from entities.memory_store import append_memory  # type: ignore
+
+ROOT = Path(__file__).resolve().parents[2]
 
 REPORTS_DIR = ROOT / "reports" / "entities"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def main(argv: List[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Run a StegVerse AI entity (Phase 2).")
     ap.add_argument("--entity", required=False, default="stegverse-ai-001")
     ap.add_argument("--tasks", nargs="*", help="Override tasks for this run.")
@@ -41,7 +41,7 @@ def main(argv: List[str] | None = None) -> int:
     heading = f"Run {run_id} for {entity.id}"
     log_lines = [f"Entity: {entity.id}", f"Tasks: {', '.join(ordered)}", ""]
 
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
 
     print(f"=== Running entity {entity.id} ({entity.name}) ===")
     print(f"Tasks: {ordered}")
@@ -64,7 +64,7 @@ def main(argv: List[str] | None = None) -> int:
     # Write a run report
     report_path = REPORTS_DIR / f"{entity.id}-run-{run_id}.md"
     md = [
-        f"# Entity Run Report",
+        "# Entity Run Report",
         f"- entity: `{entity.id}`",
         f"- name: `{entity.name}`",
         f"- role: `{entity.role}`",

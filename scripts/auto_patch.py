@@ -11,9 +11,9 @@ StegVerse-SCW AutoPatch (workflow YAML fixer)
   plus per-file logging so you can see exactly what it touched.
 """
 
+import json
 import os
 import re
-import json
 import textwrap
 from pathlib import Path
 
@@ -33,6 +33,7 @@ TASK = os.getenv("TASK", "STEG-unknown")
 # ---------------------------------------------------------------------------
 # Manifest loading
 # ---------------------------------------------------------------------------
+
 
 def load_manifest():
     """Load patches/manifest.json if present, else return a sane default."""
@@ -62,17 +63,18 @@ def list_workflows():
 # Individual fix helpers
 # ---------------------------------------------------------------------------
 
+
 def ensure_permissions(txt, perms):
     """
     If there is no explicit 'permissions:' block, inject one using the
     provided perms list (e.g. ['contents: write', 'actions: write']).
     """
-    if re.search(r'^\s*permissions\s*:\s*$', txt, flags=re.M):
+    if re.search(r"^\s*permissions\s*:\s*$", txt, flags=re.M):
         return txt, False
 
     block = "permissions:\n" + "\n".join([f"  {p}" for p in perms]) + "\n"
     # Try to insert after 'on:' stanza
-    m = re.search(r'^\s*on\s*:(?:.|\n)*?\n\n', txt, flags=re.M)
+    m = re.search(r"^\s*on\s*:(?:.|\n)*?\n\n", txt, flags=re.M)
     if m:
         insert_at = m.end()
         new = txt[:insert_at] + block + txt[insert_at:]
@@ -83,7 +85,7 @@ def ensure_permissions(txt, perms):
 
 def ensure_concurrency(txt, group, cancel):
     """Ensure a concurrency block exists; if not, inject one."""
-    if re.search(r'^\s*concurrency\s*:', txt, flags=re.M):
+    if re.search(r"^\s*concurrency\s*:", txt, flags=re.M):
         return txt, False
 
     block = textwrap.dedent(f"""\
@@ -93,9 +95,9 @@ def ensure_concurrency(txt, group, cancel):
     """)
 
     # Insert after permissions if present else after on:
-    m = re.search(r'^\s*permissions\s*:(?:.|\n)*?\n\n', txt, flags=re.M)
+    m = re.search(r"^\s*permissions\s*:(?:.|\n)*?\n\n", txt, flags=re.M)
     if not m:
-        m = re.search(r'^\s*on\s*:(?:.|\n)*?\n\n', txt, flags=re.M)
+        m = re.search(r"^\s*on\s*:(?:.|\n)*?\n\n", txt, flags=re.M)
 
     if m:
         insert_at = m.end()
@@ -119,12 +121,12 @@ def ensure_push_triggers(txt, paths):
         block += f'      - "{p}"\n'
 
     # Naive: append under 'on:'; if no 'on:' create it
-    if re.search(r'^\s*on\s*:\s*$', txt, flags=re.M):
+    if re.search(r"^\s*on\s*:\s*$", txt, flags=re.M):
         return txt.replace("on:\n", "on:\n" + block), True
 
     if "on:" in txt:
         # Insert after first 'on:' line
-        new = re.sub(r'on:\s*\n', "on:\n" + block, txt, count=1)
+        new = re.sub(r"on:\s*\n", "on:\n" + block, txt, count=1)
         return new, True
 
     # prepend minimal on:
@@ -142,7 +144,8 @@ READ_INTENT_STEP = textwrap.dedent("""\
           TASK_IN=""
           if [ -n "$INTENT_FILE" ]; then
             RID_IN="$(grep -E '^(rid|RID):\\s*' "$INTENT_FILE" | head -n1 | sed 's/^[^:]*:\\s*//')"
-            TASK_IN="$(grep -E '^(task|TASK):\\s*' "$INTENT_FILE" | head -n1 | sed 's/^[^:]*:\\s*//')"
+            TASK_IN="$(grep -E '^(task|TASK):\\s*' "$INTENT_FILE" \\
+              | head -n1 | sed 's/^[^:]*:\\s*//')"
           fi
           echo "RID=${RID_IN:-%RID%}" >> $GITHUB_ENV
           echo "TASK=${TASK_IN:-%TASK%}" >> $GITHUB_ENV
@@ -154,7 +157,7 @@ def ensure_read_intent_step(txt):
     if "Read run intent (RID/TASK)" in txt:
         return txt, False
 
-    pat = r'(-\s+uses:\s+actions/checkout@v[0-9]+[\s\S]*?\n)'
+    pat = r"(-\s+uses:\s+actions/checkout@v[0-9]+[\s\S]*?\n)"
     m = re.search(pat, txt)
     if not m:
         return txt, False
@@ -183,7 +186,9 @@ def ensure_upload_sweep_step(txt):
     if "Upload Sweep (reusable)" in txt:
         return txt, False
 
-    m = re.search(r'-\s+name:\s+Upload\s+Supercheck\s+Bundle[\s\S]*?uses:\s+actions/upload-artifact@', txt)
+    m = re.search(
+        r"-\s+name:\s+Upload\s+Supercheck\s+Bundle[\s\S]*?uses:\s+actions/upload-artifact@", txt
+    )
     if m:
         insert_at = m.start()
         return txt[:insert_at] + UPLOAD_SWEEP_STEP + txt[insert_at:], True
@@ -216,6 +221,7 @@ def rewrite_printf_to_heredoc(txt):
 # ---------------------------------------------------------------------------
 # Apply fixes to a single workflow file
 # ---------------------------------------------------------------------------
+
 
 def apply_fixes(internal_name, yaml_text, manifest):
     """
@@ -279,15 +285,16 @@ def apply_fixes(internal_name, yaml_text, manifest):
 
 def detect_name(yaml_text, path):
     """Try to detect workflow name: from `name:` line, else from file stem."""
-    m = re.search(r'^\s*name\s*:\s*(.+)$', yaml_text, flags=re.M)
+    m = re.search(r"^\s*name\s*:\s*(.+)$", yaml_text, flags=re.M)
     if m:
-        return re.sub(r'#.*$', "", m.group(1)).strip()
+        return re.sub(r"#.*$", "", m.group(1)).strip()
     return Path(path).stem
 
 
 # ---------------------------------------------------------------------------
 # Main entry
 # ---------------------------------------------------------------------------
+
 
 def main():
     print("=== StegVerse-SCW AutoPatch (workflow YAML) ===")
@@ -317,13 +324,15 @@ def main():
         except Exception as e:
             print(f"[ERROR] Could not read {wf}: {e}")
             report["summary"]["errors"] += 1
-            report["results"].append({
-                "path": wf.as_posix(),
-                "name": "<read-error>",
-                "changed": False,
-                "fixes": [],
-                "error": str(e),
-            })
+            report["results"].append(
+                {
+                    "path": wf.as_posix(),
+                    "name": "<read-error>",
+                    "changed": False,
+                    "fixes": [],
+                    "error": str(e),
+                }
+            )
             continue
 
         name = detect_name(txt, wf)
@@ -348,12 +357,14 @@ def main():
             for f in fixes_applied:
                 report["summary"]["fixes"][f] = report["summary"]["fixes"].get(f, 0) + 1
 
-        report["results"].append({
-            "path": wf.as_posix(),
-            "name": name,
-            "changed": changed,
-            "fixes": fixes_applied,
-        })
+        report["results"].append(
+            {
+                "path": wf.as_posix(),
+                "name": name,
+                "changed": changed,
+                "fixes": fixes_applied,
+            }
+        )
 
     report["summary"]["files"] = len(report["results"])
     report["summary"]["changed_files"] = sum(1 for r in report["results"] if r["changed"])
@@ -384,9 +395,7 @@ def main():
     md.append("\n## Per-file results")
     for r in report["results"]:
         fixes = ", ".join(r["fixes"]) if r["fixes"] else "—"
-        md.append(
-            f"- `{r['path']}` — {'CHANGED' if r['changed'] else 'OK'} — fixes: {fixes}"
-        )
+        md.append(f"- `{r['path']}` — {'CHANGED' if r['changed'] else 'OK'} — fixes: {fixes}")
 
     (OUT / "AUTOPATCH_REPORT.md").write_text("\n".join(md), encoding="utf-8")
 

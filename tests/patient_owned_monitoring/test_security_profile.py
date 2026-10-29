@@ -4,10 +4,11 @@ import sys
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "tools" / "patient_owned_monitoring"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools" / "patient_owned_monitoring"))
 
 from validate_security_profile import validate
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 class SecurityProfileTests(unittest.TestCase):
