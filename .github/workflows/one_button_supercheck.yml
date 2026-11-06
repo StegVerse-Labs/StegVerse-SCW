@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       api_base:
-        description: "Optional API base URL, such as https://scw-api.onrender.com"
+        description: "Optional explicitly authorized API base URL (no default provider)"
         required: false
         default: ""
       include_api_checks:
