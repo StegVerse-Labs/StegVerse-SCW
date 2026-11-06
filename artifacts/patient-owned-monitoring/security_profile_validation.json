@@ -1,0 +1,11 @@
+{
+  "activation_state": "BLOCKED_PENDING_EVIDENCE",
+  "declared_activation_evidence_count": 14,
+  "errors": [],
+  "profile": "security/patient_owned_monitoring/security_profile.json",
+  "profile_id": "POM-SEC-ABOVE-FEDERAL-001",
+  "profile_sha256": "8b5964d73edf311a8a1a01adafc814664e829d8e02188cba8dff96dfa6df2fd9",
+  "required_control_family_count": 9,
+  "schema_version": "pom.security-profile-validation.v1",
+  "status": "COMPLETE"
+}

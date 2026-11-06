@@ -1,0 +1,19 @@
+{
+  "activation_state": "BLOCKED_PENDING_EVIDENCE",
+  "next_task": "Inspect CI result and complete operational activation evidence",
+  "receipt_sha256": "dfcd0380fa2cea06a65898152ec0829d4c4e28bf6216e571c61a2b3507c88161",
+  "risk_register": {
+    "path": "docs/patient-owned-monitoring/security/RISK_REGISTER.json",
+    "risk_count": 7,
+    "sha256": "321a4f7cd5e2b512de7b5eb1388047fdf15d6aa5c8d381a717dd6b065d97b263",
+    "validation_errors": []
+  },
+  "schema_version": "pom.security-gate-receipt.v1",
+  "secret_scan": {
+    "files_scanned": 1865,
+    "finding_count": 0,
+    "findings": [],
+    "root": "."
+  },
+  "status": "COMPLETE"
+}

@@ -23,17 +23,6 @@
   },
   "surfaces": [
     {
-      "path": ".github/workflows/validation-dispatcher.yml",
-      "classification": "KEEP_STABLE_DISPATCHER",
-      "triggers": [
-        "pull_request",
-        "push"
-      ],
-      "permissions": {
-        "contents": "read"
-      }
-    },
-    {
       "path": ".github/workflows/AutoPatch.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -1221,6 +1210,17 @@
       }
     },
     {
+      "path": ".github/workflows/validation-dispatcher.yml",
+      "classification": "KEEP_STABLE_DISPATCHER",
+      "triggers": [
+        "pull_request",
+        "push"
+      ],
+      "permissions": {
+        "contents": "read"
+      }
+    },
+    {
       "path": ".github/workflows/workflow-dispatch-guardian.yml",
       "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
       "triggers": [
@@ -1327,24 +1327,6 @@
       "exception": {
         "lifecycle": "pending later G17 batch",
         "justification": "KEEP_PENDING_LATER_BATCH: byte-unchanged. This surface has not yet been dispositioned and is handled in a later G17 validator batch PR for this repository; until then it runs exactly as on main.",
-        "within_exception_ceiling": true
-      }
-    },
-    {
-      "path": ".github/workflows/workflows-sanity-check.yml",
-      "classification": "KEEP_EXISTING_SURFACE_UNCHANGED",
-      "triggers": [
-        "push",
-        "workflow_dispatch"
-      ],
-      "permissions": {
-        "contents": "read"
-      },
-      "reason": "FAIL_CLOSED_KEEP: named by config/workflow-recovery-required.json and config/workflow-recovery-tasks.json and read by scripts/workflow_recovery_controller.py, which observe the workflow surface; folding it would change what the controller observes, which is a decision for the workflow-recovery goal. Its earlier DENY (six files under .github/workflows/_reusables that did not parse as YAML) is repaired by StegVerse-Labs/StegVerse-SCW#62, and its main run 40953773037 at 19114412 succeeded. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
-      "verbatim_sha256": "4e5b2009d74a31210a8362c9776f9acc3548c9f9c949a63fce30d49160c68b44",
-      "exception": {
-        "lifecycle": "FAIL_CLOSED keep",
-        "justification": "FAIL_CLOSED_KEEP: named by config/workflow-recovery-required.json and config/workflow-recovery-tasks.json and read by scripts/workflow_recovery_controller.py, which observe the workflow surface; folding it would change what the controller observes, which is a decision for the workflow-recovery goal. Its earlier DENY (six files under .github/workflows/_reusables that did not parse as YAML) is repaired by StegVerse-Labs/StegVerse-SCW#62, and its main run 40953773037 at 19114412 succeeded. Kept byte-unchanged; the per-repository ceiling is recorded in the registry.",
         "within_exception_ceiling": true
       }
     },
@@ -2243,16 +2225,31 @@
       ],
       "verbatim_record": "tools/tasks/folded/weekly_drift_report.yml",
       "verbatim_sha256": "2902e1e4f6cfe8bd9826dda7ece5e4a378997d713001bd9f18d5978bfe11c8ee"
+    },
+    {
+      "workflow": ".github/workflows/workflows-sanity-check.yml",
+      "name": "Workflows Sanity Check",
+      "triggers_before": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "classification": "CONSOLIDATE_INTO_STABLE_DISPATCHER",
+      "status": "DONE",
+      "catalog_groups": [
+        "workflows-sanity-check.check"
+      ],
+      "verbatim_record": "tools/tasks/folded/workflows-sanity-check.yml",
+      "verbatim_sha256": "4e5b2009d74a31210a8362c9776f9acc3548c9f9c949a63fce30d49160c68b44"
     }
   ],
   "ceiling_fail_closed": {
     "disposition": "FAIL_CLOSED",
-    "workflow_count": 76,
+    "workflow_count": 75,
     "failure_code": "G17_CONTRACT_FLOOR_ABOVE_EXCEPTION_CEILING",
     "failed_predicate": "workflow_count <= exception_repository_workflow_count_max (3)",
-    "required_evidence_or_repair": "this is batch 5 of the G17 surface reduction for this repository (workflow_count 76, down from 81). Batches 1 and 2 retired 26 dead surfaces and eliminated 30 contained or no-op workflow_dispatch-only files. Batch 3 folded 7 read-only validators into the validation dispatcher run_catalog. Batch 4 folded verify_ui and eliminated 5 workflow_dispatch-only files. Batch 5 drops the non-manifest schedule, push-path and workflow_dispatch triggers of four read-only evidence workflows (backup_triggers, nightly_snapshot, taskops-nightly, weekly_drift_report) and folds them into the run_catalog as pull_request and push groups, and eliminates the contained dispatch-only kick-autopatch (it prints a retirement notice and exits 1), each recorded under tools/tasks/folded with its sha256. Kept with a specific FAIL_CLOSED reason instead of a fold: ci and ci_governance (blocked by StegVerse-Labs/StegVerse-SCW#58); workflows-sanity-check (its DENY is repaired by StegVerse-Labs/StegVerse-SCW#62; it stays kept because config/workflow-recovery-required.json and the recovery controller name it); autopatch-inspect (real DENY: .github/autopatch/patches.yml is not valid YAML; the repair StegVerse-Labs/StegVerse-SCW#63 is held at FAIL_CLOSED because merging it triggers the AutoPatch prune-on-push writer); setup-common-python and validate-setup-common-python (local composite action `uses`, and named by ops-console and quickkick-sweep); workflow-recovery-controller and scw_orchestrator (named by recovery and stability-gate configuration); export-hcb (called by export-hcb-weekly); self-healing-scan (optional write path, 6 readers); validate-hcb and telemetry-reusable (reusable workflow_call interfaces); constitutional-audit-public (external fetch plus artifact upload); smoke-tests (needs a live API input). The remaining 70 surfaces beside the dispatcher stay byte-unchanged: writers, credential-bound surfaces, workflow_run chains and reusables, whose credentials belong only in the SKAP Vault inside KV and which need their own admitted repair to retire. Each later batch lowers workflow_count and replaces this record with its exact new count.",
+    "required_evidence_or_repair": "this is batch 6 of the G17 surface reduction for this repository (workflow_count 75, down from 76). Batch 6 folds workflows-sanity-check into the run_catalog dispatcher as a pull_request+push group (catalog: workflows-sanity-check.check), recorded under tools/tasks/folded with its sha256. patient-owned-monitoring-validation deferred: pre-existing deterministic test failure surfaces when path filters match the fold PR. Count remains above the three-file exception ceiling and stays FAIL_CLOSED on that contract. Credentials belong only in the SKAP Vault inside KV.",
     "retry_entrypoint": "tests/test_workflow_surface_registry.py",
     "owning_existing_goal": "G17-WORKFLOW-SURFACE-MINIMIZATION (StegVerse-Labs/.github#167/#168); StegVerse-org/.github#166",
-    "next_attempt": "the next pull request touching .github/workflows/ or those contracts"
+    "next_attempt": "the next pull request that folds another KEEP_PENDING read-only validator batch, or eliminates a contained dispatch-only surface"
   }
 }

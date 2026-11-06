@@ -1,0 +1,102 @@
+set -euo pipefail
+mkdir -p self_healing_out
+python - <<'PY'
+import json
+import pathlib
+import sys
+from collections import Counter
+
+import yaml
+
+root = pathlib.Path(".github/workflows")
+records = []
+
+for path in sorted(root.rglob("*.yml")) + sorted(root.rglob("*.yaml")):
+    relative = path.as_posix()
+    text = path.read_text(encoding="utf-8", errors="replace")
+    record = {
+        "path": relative,
+        "bytes": len(text.encode("utf-8")),
+        "lines": len(text.splitlines()),
+        "parse_valid": False,
+        "classification": "invalid_yaml",
+        "dispatchable": False,
+        "workflow_call": False,
+        "error": None,
+    }
+    try:
+        document = yaml.safe_load(text)
+        record["parse_valid"] = True
+        if not isinstance(document, dict):
+            record["classification"] = "invalid_workflow_shape"
+        else:
+            trigger = document.get("on", document.get(True))
+            jobs = document.get("jobs")
+            if path.parent != root:
+                record["classification"] = "nested_workflow_file"
+            elif not isinstance(jobs, dict) or not jobs:
+                record["classification"] = "missing_jobs"
+            else:
+                record["classification"] = "workflow"
+
+            if isinstance(trigger, str):
+                trigger_names = {trigger}
+            elif isinstance(trigger, list):
+                trigger_names = set(trigger)
+            elif isinstance(trigger, dict):
+                trigger_names = set(trigger)
+            else:
+                trigger_names = set()
+
+            record["dispatchable"] = "workflow_dispatch" in trigger_names
+            record["workflow_call"] = "workflow_call" in trigger_names
+    except Exception as exc:
+        record["error"] = f"{type(exc).__name__}: {str(exc).splitlines()[0]}"
+    records.append(record)
+
+counts = Counter(record["classification"] for record in records)
+summary = {
+    "files": len(records),
+    "parse_valid": sum(record["parse_valid"] for record in records),
+    "parse_invalid": sum(not record["parse_valid"] for record in records),
+    "dispatchable": sum(record["dispatchable"] for record in records),
+    "workflow_call": sum(record["workflow_call"] for record in records),
+    "classifications": dict(sorted(counts.items())),
+}
+
+output = pathlib.Path("self_healing_out")
+(output / "WORKFLOW_INVENTORY.json").write_text(
+    json.dumps({"summary": summary, "records": records}, indent=2) + "\n",
+    encoding="utf-8",
+)
+
+lines = [
+    "# Workflow Inventory",
+    "",
+    f"- Files scanned: **{summary['files']}**",
+    f"- Parse-valid: **{summary['parse_valid']}**",
+    f"- Parse-invalid: **{summary['parse_invalid']}**",
+    f"- Manually dispatchable: **{summary['dispatchable']}**",
+    f"- Reusable workflow callers: **{summary['workflow_call']}**",
+    "",
+    "## Classifications",
+    "",
+]
+lines.extend(f"- `{key}`: **{value}**" for key, value in summary["classifications"].items())
+
+invalid = [record for record in records if not record["parse_valid"]]
+if invalid:
+    lines.extend(["", "## Parse failures", ""])
+    lines.extend(f"- `{record['path']}` — {record['error']}" for record in invalid)
+
+nested = [record for record in records if record["classification"] == "nested_workflow_file"]
+if nested:
+    lines.extend(["", "## Nested workflow files", ""])
+    lines.extend(f"- `{record['path']}`" for record in nested)
+
+(output / "WORKFLOW_INVENTORY.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+print(json.dumps(summary, indent=2))
+
+if invalid:
+    sys.exit(1)
+PY
