@@ -22,7 +22,7 @@ def main():
     manifest = {
         "repo": os.getenv("GITHUB_REPOSITORY", ROOT.name),
         "branch": os.getenv("GITHUB_REF_NAME", ""),
-        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "generated_at": datetime.datetime.now(datetime.UTC).isoformat(),
         "measures": {
             "workflows": ls([".github/workflows/*.yml",".github/workflows/*.yaml"]),
             "scripts": ls(["scripts/*.py","scripts/*.sh"]),

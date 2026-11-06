@@ -20,12 +20,10 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import requests  # installed by guardians workflow
-
 
 ROOT = Path(__file__).resolve().parents[2]  # .../StegVerse-SCW
 REPORT_DIR = ROOT / "reports" / "guardians"
@@ -37,14 +35,15 @@ ISSUE_INDEX_JSON = REPORT_DIR / "guardian_issues_index.json"
 # Helpers
 # ---------------------------------------------------------------------------
 
-def load_latest_run() -> Dict[str, Any]:
+
+def load_latest_run() -> dict[str, Any]:
     if not LATEST_JSON.exists():
         raise SystemExit(f"Latest guardian JSON not found: {LATEST_JSON}")
     with LATEST_JSON.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def load_issue_index() -> Dict[str, Any]:
+def load_issue_index() -> dict[str, Any]:
     if not ISSUE_INDEX_JSON.exists():
         return {"version": 1, "issues": {}}
     with ISSUE_INDEX_JSON.open("r", encoding="utf-8") as f:
@@ -54,7 +53,7 @@ def load_issue_index() -> Dict[str, Any]:
     return data
 
 
-def save_issue_index(idx: Dict[str, Any]) -> None:
+def save_issue_index(idx: dict[str, Any]) -> None:
     ISSUE_INDEX_JSON.parent.mkdir(parents=True, exist_ok=True)
     with ISSUE_INDEX_JSON.open("w", encoding="utf-8") as f:
         json.dump(idx, f, indent=2, sort_keys=True)
@@ -76,7 +75,7 @@ def gh_api(
     method: str,
     path: str,
     token: str,
-    json_body: Optional[Dict[str, Any]] = None,
+    json_body: dict[str, Any] | None = None,
 ) -> requests.Response:
     url = f"https://api.github.com{path}"
     headers = {
@@ -95,12 +94,12 @@ def ensure_issue(
     key: str,
     title: str,
     body: str,
-    labels: List[str],
-    idx: Dict[str, Any],
+    labels: list[str],
+    idx: dict[str, Any],
     owner: str,
     repo: str,
     token: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Ensure there is a single GitHub issue associated with this logical "key".
     - If not present in index -> create new issue and record it.
@@ -156,7 +155,8 @@ def ensure_issue(
 # Issue generators for specific guardian tasks
 # ---------------------------------------------------------------------------
 
-def build_readme_missing_issue(run_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+
+def build_readme_missing_issue(run_data: dict[str, Any]) -> dict[str, Any] | None:
     """
     From the readme_refresh task, construct a single issue if there are
     missing README directories.
@@ -173,7 +173,7 @@ def build_readme_missing_issue(run_data: Dict[str, Any]) -> Optional[Dict[str, A
             run_id = run_data.get("run_id", "unknown")
             generated_at = run_data.get("generated_at", "unknown")
 
-            lines: List[str] = []
+            lines: list[str] = []
             lines.append("Guardian task `readme_refresh` detected directories missing `README.md`.")
             lines.append("")
             lines.append(f"- Guardian run ID: `{run_id}`")
@@ -194,7 +194,9 @@ def build_readme_missing_issue(run_data: Dict[str, Any]) -> Optional[Dict[str, A
             lines.append("  - Key files / scripts")
             lines.append("  - How to run or use them (if applicable)")
             lines.append("")
-            lines.append("_This issue is managed by StegVerse guardians; editing the list above is safe._")
+            lines.append(
+                "_This issue is managed by StegVerse guardians; editing the list above is safe._"
+            )
 
             return {
                 "key": "readme_refresh_missing",
@@ -205,7 +207,7 @@ def build_readme_missing_issue(run_data: Dict[str, Any]) -> Optional[Dict[str, A
     return None
 
 
-def build_workflow_health_issue(run_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def build_workflow_health_issue(run_data: dict[str, Any]) -> dict[str, Any] | None:
     """
     From the workflow_health task, open a tracking issue if there are warnings.
     """
@@ -222,8 +224,10 @@ def build_workflow_health_issue(run_data: Dict[str, Any]) -> Optional[Dict[str, 
             run_id = run_data.get("run_id", "unknown")
             generated_at = run_data.get("generated_at", "unknown")
 
-            lines: List[str] = []
-            lines.append("Guardian task `workflow_health` reported warnings about GitHub workflows.")
+            lines: list[str] = []
+            lines.append(
+                "Guardian task `workflow_health` reported warnings about GitHub workflows."
+            )
             lines.append("")
             lines.append(f"- Guardian run ID: `{run_id}`")
             lines.append(f"- Generated at: `{generated_at}`")
@@ -238,11 +242,16 @@ def build_workflow_health_issue(run_data: Dict[str, Any]) -> Optional[Dict[str, 
             lines.append("")
             lines.append("## Suggested actions")
             lines.append("")
-            lines.append("- [ ] Confirm each workflow has at least one trigger (`workflow_dispatch`, `schedule`, or `push`).")
+            lines.append(
+                "- [ ] Confirm each workflow has at least one trigger "
+                "(`workflow_dispatch`, `schedule`, or `push`)."
+            )
             lines.append("- [ ] Mark high-priority workflows that should be guarded for uptime.")
             lines.append("- [ ] Retire or archive workflows that are obsolete or unused.")
             lines.append("")
-            lines.append("_This issue is managed by StegVerse guardians; it may be updated automatically._")
+            lines.append(
+                "_This issue is managed by StegVerse guardians; it may be updated automatically._"
+            )
 
             return {
                 "key": "workflow_health_warning",
@@ -257,6 +266,7 @@ def build_workflow_health_issue(run_data: Dict[str, Any]) -> Optional[Dict[str, 
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> int:
     print("=== StegVerse Guardian Issues (Genesis v0.2) ===")
 
@@ -265,7 +275,7 @@ def main() -> int:
     owner, repo, token = get_repo_and_token()
 
     # Collect desired issues from current guardian run
-    issue_specs: List[Dict[str, Any]] = []
+    issue_specs: list[dict[str, Any]] = []
 
     readme_issue = build_readme_missing_issue(run_data)
     if readme_issue:

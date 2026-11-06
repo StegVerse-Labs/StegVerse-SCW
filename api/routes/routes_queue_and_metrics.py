@@ -1,5 +1,9 @@
+import json
+import os
+import time
+
+import redis
 from fastapi import APIRouter
-import os, json, time, redis
 
 router = APIRouter()
 

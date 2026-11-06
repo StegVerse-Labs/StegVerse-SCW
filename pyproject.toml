@@ -1,5 +1,9 @@
 [tool.ruff]
 line-length = 100
+# CI (ci.yml) runs Python 3.11.
+target-version = "py311"
+
+[tool.ruff.lint]
 select = ["E","F","I","UP"]
 
 [tool.ruff.lint.per-file-ignores]
@@ -10,3 +14,10 @@ select = ["E","F","I","UP"]
 "tools/tasks/run_catalog.py" = ["E501"]
 "tools/tasks/run_plain_tests.py" = ["E501"]
 "tests/test_workflow_surface_registry.py" = ["E501"]
+
+[tool.pytest.ini_options]
+# scripts/ holds runnable helpers (for example scripts/enqueue_test.py, a Redis job producer), not tests.
+testpaths = ["tests"]
+# Tests import repo packages (engine, scripts, tools) from the repository root; make it
+# importable for the plain `pytest` entry point used by ci.yml and ci_governance.yml.
+pythonpath = ["."]

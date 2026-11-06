@@ -15,10 +15,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional, List
-
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -34,7 +32,7 @@ class WalletSnapshot:
   body: str
 
 
-def latest_by_prefix(folder: Path, prefix: str) -> Optional[Path]:
+def latest_by_prefix(folder: Path, prefix: str) -> Path | None:
     if not folder.exists():
         return None
     candidates = sorted(
@@ -44,7 +42,7 @@ def latest_by_prefix(folder: Path, prefix: str) -> Optional[Path]:
     return candidates[-1] if candidates else None
 
 
-def load_wallet() -> Optional[WalletSnapshot]:
+def load_wallet() -> WalletSnapshot | None:
     p = latest_by_prefix(WALLET_DIR, "wallet_snapshot_")
     if not p:
         return None
@@ -54,22 +52,22 @@ def load_wallet() -> Optional[WalletSnapshot]:
     return WalletSnapshot(path=p, generated_at=ts, body=text)
 
 
-def load_latest_file(folder: Path, prefix: str) -> Optional[Path]:
+def load_latest_file(folder: Path, prefix: str) -> Path | None:
     return latest_by_prefix(folder, prefix)
 
 
 def main() -> None:
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     FIN_REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     out = FIN_REPORT_DIR / f"daily_rollup_{today}.md"
 
     wallet = load_wallet()
     fin_report = load_latest_file(FIN_REPORT_DIR, "daily_")
     ledger_report = load_latest_file(LEDGER_REPORT_DIR, "ledger_integrity_")
 
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append("# StegVerse Daily Financial Rollup")
     lines.append("")
     lines.append(f"- Generated at: `{now}`")

@@ -3,7 +3,6 @@ from pathlib import Path
 from finance.coinbase_handler import load_config as load_coinbase
 from finance.stripe_handler import load_config as load_stripe
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

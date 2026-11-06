@@ -1,4 +1,5 @@
-# add after imports
+import os
+
 NS = os.getenv("LEGAL_NS", "v1")
 
 # replace old constants

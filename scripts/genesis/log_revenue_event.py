@@ -22,7 +22,7 @@ Prints the event JSON to stdout and path where it was written.
 import json
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,7 +49,7 @@ def main() -> None:
     stream = env("STEG_STREAM", "stegcore")
     dry_run = env("STEG_DRY_RUN", "false").lower() == "true"
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     ts = now.isoformat().replace("+00:00", "Z")
     day = now.date().isoformat()
     event_id = str(uuid.uuid4())

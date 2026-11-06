@@ -1,13 +1,13 @@
 # api/routes/ops.py
-import os, json, urllib.request
-from fastapi import APIRouter, Header, HTTPException
-from typing import Optional
+import os
+
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/v1/ops", tags=["ops"])
 
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
 
-def _auth(token: Optional[str]):
+def _auth(token: str | None):
     if not ADMIN_TOKEN:
         raise HTTPException(status_code=501, detail="admin ops not configured")
     if not token or token != ADMIN_TOKEN:

@@ -1,6 +1,7 @@
 # api/routes/routes_cfp.py
-from fastapi import APIRouter
 from datetime import datetime
+
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/v1/sports", tags=["sports"])
 

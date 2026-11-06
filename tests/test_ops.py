@@ -1,7 +1,8 @@
+import json
 import os
 import time
+import urllib.request
 
-import httpx
 import pytest
 
 API_BASE = os.environ.get("API_BASE")  # e.g. https://your-api.example
@@ -11,16 +12,19 @@ POLL_EVERY = float(os.environ.get("E2E_POLL_SEC", "3"))
 pytestmark = pytest.mark.skipif(not API_BASE, reason="Set API_BASE env var to live API URL")
 
 def _get(url):
-    with httpx.Client(timeout=30.0) as client:
-        r = client.get(url)
-        r.raise_for_status()
-        return r.json()
+    # urlopen raises HTTPError on any 4xx/5xx status, like raise_for_status().
+    with urllib.request.urlopen(url, timeout=30.0) as r:
+        return json.loads(r.read().decode("utf-8"))
 
 def _post(url, payload=None):
-    with httpx.Client(timeout=30.0) as client:
-        r = client.post(url, json=payload or {})
-        r.raise_for_status()
-        return r.json()
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload or {}).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=30.0) as r:
+        return json.loads(r.read().decode("utf-8"))
 
 def test_health():
     data = _get(f"{API_BASE}/v1/ops/health")

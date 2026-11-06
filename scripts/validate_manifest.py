@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
-import sys, os, json, re, yaml, pathlib
+import json
+import pathlib
+import re
+import sys
+
+import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 MANIFEST = pathlib.Path(".github/autopatch/patches.yml")
 
-def log(msg): print(msg, flush=True)
+
+def log(msg):
+    print(msg, flush=True)
+
 
 def safe_load_yaml(path: pathlib.Path):
     text = path.read_text(encoding="utf-8")
@@ -21,6 +29,7 @@ def safe_load_yaml(path: pathlib.Path):
     except (ParserError, ScannerError) as e:
         log(f"::error title=YAML parse error::{e}")
         sys.exit(2)
+
 
 def validate_schema(data):
     ok, errors, warnings = True, [], []
@@ -53,6 +62,7 @@ def validate_schema(data):
 
     return ok and not errors, errors, warnings
 
+
 def main():
     log("🧩 Running manifest validator…")
 
@@ -67,7 +77,10 @@ def main():
         "ok": ok,
         "errors": errors,
         "warnings": warnings,
-        "summary": f"✅ OK: {0 if not ok else len(data.get('patches',[]))} | ⚠️ {len(warnings)} | ❌ {len(errors)}"
+        "summary": (
+            f"✅ OK: {0 if not ok else len(data.get('patches', []))} | "
+            f"⚠️ {len(warnings)} | ❌ {len(errors)}"
+        ),
     }
 
     print(json.dumps(summary, indent=2))
@@ -78,6 +91,7 @@ def main():
         sys.exit(1)
     else:
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

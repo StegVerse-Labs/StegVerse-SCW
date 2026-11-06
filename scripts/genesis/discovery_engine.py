@@ -12,9 +12,8 @@ Does NOT move, rename, or delete any files (read-only).
 """
 
 import os
-from pathlib import Path
 from datetime import datetime
-from typing import List, Dict
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS_DIR = ROOT / "reports" / "genesis"
@@ -27,7 +26,7 @@ EXPECTED_CONNECTIVITY_FILES = [
 ]
 
 
-def scan_repo() -> Dict[str, List[str]]:
+def scan_repo() -> dict[str, list[str]]:
     found = []
     for dirpath, _, filenames in os.walk(ROOT):
         for fname in filenames:
@@ -37,7 +36,7 @@ def scan_repo() -> Dict[str, List[str]]:
     return {"all_files": found}
 
 
-def classify_connectivity(found: List[str]) -> Dict[str, List[str]]:
+def classify_connectivity(found: list[str]) -> dict[str, list[str]]:
     present = []
     missing = []
     suspects = []
@@ -62,7 +61,7 @@ def classify_connectivity(found: List[str]) -> Dict[str, List[str]]:
     }
 
 
-def write_discovery_report(index: Dict[str, List[str]], connectivity_info: Dict[str, List[str]]):
+def write_discovery_report(index: dict[str, list[str]], connectivity_info: dict[str, list[str]]):
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     path = REPORTS_DIR / f"discovery_{ts}.md"

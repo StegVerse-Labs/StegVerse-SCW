@@ -8,7 +8,7 @@ import hmac
 import hashlib
 import json
 import time
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
@@ -22,11 +22,11 @@ except ModuleNotFoundError:
 
 
 USE_MEMORY_ONLY: bool = False
-_mem_kv: Dict[str, str] = {}
-_mem_lists: Dict[str, List[str]] = {}
+_mem_kv: dict[str, str] = {}
+_mem_lists: dict[str, list[str]] = {}
 
 
-def _mem_get(key: str) -> Optional[str]:
+def _mem_get(key: str) -> str | None:
     return _mem_kv.get(key)
 
 
@@ -44,7 +44,7 @@ def _mem_hset(name: str, key: str, val: str) -> None:
     _mem_kv[f"{name}:{key}"] = val
 
 
-def _mem_hgetall(name: str) -> Dict[str, str]:
+def _mem_hgetall(name: str) -> dict[str, str]:
     prefix = f"{name}:"
     return {k[len(prefix):]: v for k, v in _mem_kv.items() if k.startswith(prefix)}
 
@@ -61,7 +61,7 @@ else:
     USE_MEMORY_ONLY = True
 
 
-def _get(key: str) -> Optional[str]:
+def _get(key: str) -> str | None:
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_get(key)
     try:
@@ -100,7 +100,7 @@ def _hset(name: str, key: str, val: str) -> None:
         _mem_hset(name, key, val)
 
 
-def _hgetall(name: str) -> Dict[str, str]:
+def _hgetall(name: str) -> dict[str, str]:
     if USE_MEMORY_ONLY or not redis_client:
         return _mem_hgetall(name)
     try:
@@ -113,7 +113,7 @@ def now_ts() -> int:
     return int(time.time())
 
 
-def audit(event: str, payload: Dict[str, Any]) -> None:
+def audit(event: str, payload: dict[str, Any]) -> None:
     entry = {"ts": now_ts(), "event": event, "payload": payload}
     _lpush("scw:audit", json.dumps(entry))
 
@@ -139,7 +139,7 @@ def sig(body: bytes) -> str:
     return hmac.new(HMAC_SECRET.encode(), body, hashlib.sha256).hexdigest()
 
 
-def require_admin(x_admin_token: Optional[str]) -> None:
+def require_admin(x_admin_token: str | None) -> None:
     stored = _get(K_ADMIN)
     if not stored:
         raise HTTPException(status_code=403, detail="Admin token not set. Bootstrap required.")
@@ -153,21 +153,21 @@ class BootstrapBody(BaseModel):
 
 class RotateBody(BaseModel):
     new_admin_token: str = Field(min_length=16)
-    reset_secret: Optional[str] = None
+    reset_secret: str | None = None
 
 
 class BrandWebhooks(BaseModel):
-    hooks: List[str] = Field(default_factory=list)
+    hooks: list[str] = Field(default_factory=list)
 
 
 class BrandManifest(BaseModel):
     brand_id: str
     app_name: str
-    package_id: Optional[str] = None
+    package_id: str | None = None
     primary_hex: str
     logo_url: str
     domain: str = ""
-    env_overrides: Dict[str, str] = Field(default_factory=dict)
+    env_overrides: dict[str, str] = Field(default_factory=dict)
     webhooks: BrandWebhooks = Field(default_factory=BrandWebhooks)
 
 
@@ -186,7 +186,7 @@ class DeployReport(BaseModel):
     branch: str
     status: str
     health_code: int
-    health_body: Dict[str, Any] = Field(default_factory=dict)
+    health_body: dict[str, Any] = Field(default_factory=dict)
     ts: int
 
 
@@ -201,15 +201,15 @@ class ExternalResult(BaseModel):
     status: int
     ok: bool
     latency_ms: float
-    body: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    body: dict[str, Any] | None = None
+    error: str | None = None
 
 
 class HookResult(BaseModel):
     url: str
     status: int
-    body: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    body: dict[str, Any] | None = None
+    error: str | None = None
 
 
 app = FastAPI(
@@ -231,7 +231,7 @@ app.include_router(demo.router)
 
 
 @app.get("/v1/ops/health")
-def health() -> Dict[str, Any]:
+def health() -> dict[str, Any]:
     return {
         "ok": True,
         "env": ENV_NAME,
@@ -242,7 +242,7 @@ def health() -> Dict[str, Any]:
 
 
 @app.get("/v1/ops/config/status")
-def status() -> Dict[str, Any]:
+def status() -> dict[str, Any]:
     return {
         "admin_set": bool(_get(K_ADMIN)),
         "bootstrapped_at": _get(K_BOOTSTRAP_TS),
@@ -252,14 +252,14 @@ def status() -> Dict[str, Any]:
 
 
 @app.get("/v1/ops/env/required")
-def env_required() -> Dict[str, Any]:
+def env_required() -> dict[str, Any]:
     keys = ["ENV_NAME", "ALLOW_ORIGINS", "HMAC_SECRET", "DEPLOY_REPORT_TOKEN", "REDIS_URL"]
     present = {k: bool(os.getenv(k)) for k in keys}
     return {"ok": True, "present": present}
 
 
 @app.post("/v1/ops/config/bootstrap")
-def bootstrap(body: BootstrapBody) -> Dict[str, Any]:
+def bootstrap(body: BootstrapBody) -> dict[str, Any]:
     if _get(K_ADMIN):
         raise HTTPException(status_code=409, detail="Admin token already set. Use rotate.")
     _set(K_ADMIN, body.admin_token)
@@ -271,8 +271,8 @@ def bootstrap(body: BootstrapBody) -> Dict[str, Any]:
 @app.post("/v1/ops/config/rotate")
 def rotate(
     body: RotateBody,
-    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
-) -> Dict[str, Any]:
+    x_admin_token: str | None = Header(None, convert_underscores=False),
+) -> dict[str, Any]:
     stored = _get(K_ADMIN)
     if not stored:
         raise HTTPException(status_code=403, detail="Admin token not set. Bootstrap required.")
@@ -290,17 +290,17 @@ def rotate(
 @app.post("/v1/ops/service/register")
 def svc_register(
     body: ServiceRegistration,
-    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
-) -> Dict[str, Any]:
+    x_admin_token: str | None = Header(None, convert_underscores=False),
+) -> dict[str, Any]:
     require_admin(x_admin_token)
     _hset(K_SERVICE_REG, body.name, json.dumps(body.dict()))
     audit("service_register", {"name": body.name})
     return {"ok": True, "message": "Service registered."}
 
 
-def _build_external_targets() -> List[ExternalTarget]:
+def _build_external_targets() -> list[ExternalTarget]:
     raw_services = _hgetall(K_SERVICE_REG)
-    targets: List[ExternalTarget] = []
+    targets: list[ExternalTarget] = []
 
     for name, raw in raw_services.items():
         try:
@@ -319,9 +319,9 @@ def _build_external_targets() -> List[ExternalTarget]:
     return targets
 
 
-async def _run_external_checks() -> List[ExternalResult]:
+async def _run_external_checks() -> list[ExternalResult]:
     targets = _build_external_targets()
-    results: List[ExternalResult] = []
+    results: list[ExternalResult] = []
 
     if not targets:
         return results
@@ -364,7 +364,7 @@ async def _run_external_checks() -> List[ExternalResult]:
 
 
 @app.get("/v1/ops/health/external")
-async def external_health() -> Dict[str, Any]:
+async def external_health() -> dict[str, Any]:
     results = await _run_external_checks()
     return {
         "ok": all(r.ok for r in results) if results else True,
@@ -373,7 +373,7 @@ async def external_health() -> Dict[str, Any]:
 
 
 @app.get("/v1/ops/health/full")
-async def full_health() -> Dict[str, Any]:
+async def full_health() -> dict[str, Any]:
     internal = health()
     ext = await external_health()
     return {
@@ -386,8 +386,8 @@ async def full_health() -> Dict[str, Any]:
 @app.post("/v1/ops/build/trigger")
 async def build_trigger(
     manifest: BrandManifest,
-    x_admin_token: Optional[str] = Header(None, convert_underscores=False),
-) -> Dict[str, Any]:
+    x_admin_token: str | None = Header(None, convert_underscores=False),
+) -> dict[str, Any]:
     import asyncio
 
     require_admin(x_admin_token)
@@ -423,8 +423,8 @@ async def build_trigger(
 @app.post("/v1/ops/deploy/report")
 def deploy_report(
     report: DeployReport,
-    authorization: Optional[str] = Header(None),
-) -> Dict[str, Any]:
+    authorization: str | None = Header(None),
+) -> dict[str, Any]:
     if not DEPLOY_REPORT_TOKEN:
         raise HTTPException(status_code=503, detail="DEPLOY_REPORT_TOKEN not configured.")
     if not authorization or not authorization.startswith("Bearer "):
@@ -447,7 +447,7 @@ def deploy_report(
 
 
 @app.get("/v1/ops/deploy/summary")
-def deploy_summary(limit: int = 10) -> Dict[str, Any]:
+def deploy_summary(limit: int = 10) -> dict[str, Any]:
     limit = max(1, min(limit, MAX_DEPLOY_LOG))
 
     try:
@@ -458,7 +458,7 @@ def deploy_summary(limit: int = 10) -> Dict[str, Any]:
     except Exception:
         raw = _mem_lists.get(K_DEPLOY_LOG, [])[:limit]
 
-    items: List[Dict[str, Any]] = []
+    items: list[dict[str, Any]] = []
     for line in raw:
         try:
             items.append(json.loads(line))

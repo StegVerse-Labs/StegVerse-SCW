@@ -49,7 +49,7 @@
 |-- scripts
 |   |-- README.md
 |   |-- apply_canonical_fixes.py
-|   |-- apply_patches.py
+|   |-- apply_patches.options.yml
 |   |-- auto_fix_known_issues.py
 |   |-- auto_patch.py
 |   |-- auto_triage.py
