@@ -2248,9 +2248,9 @@
     "workflow_count": 75,
     "failure_code": "G17_CONTRACT_FLOOR_ABOVE_EXCEPTION_CEILING",
     "failed_predicate": "workflow_count <= exception_repository_workflow_count_max (3)",
-    "required_evidence_or_repair": "this is batch 6 of the G17 surface reduction for this repository (workflow_count 75, down from 76). Batch 6 folds finance-credential-boundary-validation into the run_catalog. Prior keep reasons for ci/ci_governance (#58), workflows-sanity-check (recovery-named), autopatch-inspect (#63 hold), setup-common-python pair, workflow-recovery-controller, scw_orchestrator, export-hcb, self-healing-scan, validate-hcb, telemetry-reusable, constitutional-audit-public, and smoke-tests remain. Remaining surfaces beside the dispatcher stay byte-unchanged: writers, credential-bound surfaces, workflow_run chains and reusables, whose credentials belong only in the SKAP Vault inside KV.",
+    "required_evidence_or_repair": "G17 batch 6 (SCW#72) folded finance-credential-boundary-validation (76\u219275). Safe KEEP_PENDING / anonymous-checkout / contents:read pull_request fold inventory is now empty. Remaining 74 non-dispatcher surfaces are writers, credential/token-bound, dispatch-only or schedule gates, workflow_run chains, local composite actions, reusable workflow_call interfaces, recovery-named keeps (workflows-sanity-check, scw_orchestrator, workflow-recovery-controller), ci/ci_governance (#58), autopatch-inspect (#63 hold), constitutional-audit-public (external fetch), smoke-tests (live API input), export-hcb (called by weekly), self-healing-scan (optional write), setup-common-python pair, and CodeQL. No secrets/deps/dispatch/cron folds remain under the Site/stegfin pattern. Credentials belong only in the SKAP Vault inside KV.",
     "retry_entrypoint": "tests/test_workflow_surface_registry.py",
     "owning_existing_goal": "G17-WORKFLOW-SURFACE-MINIMIZATION (StegVerse-Labs/.github#167/#168); StegVerse-org/.github#166",
-    "next_attempt": "the next pull request touching .github/workflows/ or those contracts"
+    "next_attempt": "admitted design for writers/credential/dispatch-only/recovery-named surfaces, or land SCW#58/#69 to unblock ci surfaces; until then SCW stays at progress ceiling 75"
   }
 }
