@@ -13,15 +13,14 @@ This is the orchestration layer for "guardian" style AI entities.
 
 from __future__ import annotations
 
+import datetime as _dt
 import json
 import os
 import sys
-import datetime as _dt
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import yaml  # Requires PyYAML (already used elsewhere in SCW)
-
 
 # ---------------------------------------------------------------------------
 # Paths & helpers
@@ -50,7 +49,7 @@ def _get_run_id() -> str:
 # Task implementations (lightweight for Genesis v0.1)
 # ---------------------------------------------------------------------------
 
-def task_workflow_health(root: Path) -> Dict[str, Any]:
+def task_workflow_health(root: Path) -> dict[str, Any]:
     """
     Scan .github/workflows for obvious issues:
       - Count workflows
@@ -58,7 +57,7 @@ def task_workflow_health(root: Path) -> Dict[str, Any]:
       - Flag if the directory is missing
     """
     workflows_dir = root / ".github" / "workflows"
-    result: Dict[str, Any] = {
+    result: dict[str, Any] = {
         "id": "workflow_health",
         "status": "ok",
         "summary": "",
@@ -87,13 +86,13 @@ def task_workflow_health(root: Path) -> Dict[str, Any]:
     return result
 
 
-def task_readme_refresh(root: Path) -> Dict[str, Any]:
+def task_readme_refresh(root: Path) -> dict[str, Any]:
     """
     Scan a shallow set of directories for missing/weak README.md files.
     This is *analysis only* for now – actual AI README rewrites will
     come in a later phase.
     """
-    result: Dict[str, Any] = {
+    result: dict[str, Any] = {
         "id": "readme_refresh",
         "status": "ok",
         "summary": "",
@@ -110,8 +109,8 @@ def task_readme_refresh(root: Path) -> Dict[str, Any]:
         root / "reports",
     ]
 
-    missing: List[str] = []
-    present: List[str] = []
+    missing: list[str] = []
+    present: list[str] = []
 
     for d in candidate_dirs:
         if not d.exists() or not d.is_dir():
@@ -135,7 +134,7 @@ def task_readme_refresh(root: Path) -> Dict[str, Any]:
 
 
 # Placeholder tasks for future expansion
-def task_placeholder(task_id: str) -> Dict[str, Any]:
+def task_placeholder(task_id: str) -> dict[str, Any]:
     return {
         "id": task_id,
         "status": "skipped",
@@ -157,7 +156,7 @@ TASK_IMPLS = {
 # Registry loading
 # ---------------------------------------------------------------------------
 
-def load_registry(path: Path) -> Dict[str, Any]:
+def load_registry(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise SystemExit(f"Guardian registry not found: {path}")
 
@@ -177,8 +176,8 @@ def load_registry(path: Path) -> Dict[str, Any]:
 def write_reports(
     run_id: str,
     generated_at: str,
-    registry: Dict[str, Any],
-    task_results: List[Dict[str, Any]],
+    registry: dict[str, Any],
+    task_results: list[dict[str, Any]],
 ) -> None:
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -186,7 +185,7 @@ def write_reports(
     md_path = REPORT_DIR / f"guardian_run_{run_id}.md"
     latest_json_path = REPORT_DIR / "guardian_run_latest.json"
 
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append("# StegVerse Guardian Run Report")
     lines.append("")
     lines.append(f"- Run ID: `{run_id}`")
@@ -232,7 +231,7 @@ def write_reports(
 # Main entrypoint
 # ---------------------------------------------------------------------------
 
-def main(argv: List[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     print("=== StegVerse Guardian Runner (Genesis v0.1) ===")
     print(f"ROOT: {ROOT}")
     print(f"Registry: {REGISTRY_PATH}")
@@ -254,7 +253,7 @@ def main(argv: List[str] | None = None) -> int:
     run_id = _get_run_id()
     generated_at = _now_iso()
 
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
 
     for task in enabled_tasks:
         tid = task.get("id")

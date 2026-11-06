@@ -4,7 +4,11 @@ Quick producer to push one test job into the queue
 Run with: python3 enqueue_test.py
 """
 
-import os, json, redis, time
+import json
+import os
+import time
+
+import redis
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 QUEUE_KEY = os.getenv("RUNS_QUEUE_KEY", "queue:runs")

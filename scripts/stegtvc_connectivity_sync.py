@@ -25,7 +25,7 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / "work" / "stegtvc_connectivity"

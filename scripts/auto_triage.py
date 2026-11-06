@@ -6,20 +6,25 @@ Auto-Triage
 - If APPLY=1 (or --apply), performs actions and writes headers in ATTIC files
 Outputs: AUTO_TRIAGE_PLAN.json, AUTO_TRIAGE_REPORT.md
 """
-import os, json, time, sys
+import json
+import os
+import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "self_healing_out"; OUT.mkdir(parents=True, exist_ok=True)
+OUT = ROOT / "self_healing_out"
+OUT.mkdir(parents=True, exist_ok=True)
 
 def load_json(p):
     p = ROOT / p
-    if not p.exists(): return {}
+    if not p.exists():
+        return {}
     return json.loads(p.read_text(encoding="utf-8"))
 
 def attic_header(rel, why="Parked by auto-triage"):
     ts = time.strftime("%Y-%m-%d", time.gmtime())
-    return f"# @attic\n# when: {ts}\n# why: {why}\n# how-to-restore: move file out of ATTIC/, re-link imports if needed\n\n"
+    return f"# @attic\n# when: {ts}\n# why: {why}\n# how-to-restore: move file out of ATTIC/, re-link imports if needed\n\n"  # noqa: E501
 
 def main():
     apply = ("--apply" in sys.argv) or (os.getenv("APPLY","0") == "1")
@@ -31,7 +36,7 @@ def main():
 
     plan = {
         "remove_forbidden": sorted(forb),
-        "move_to_attic": sorted([e for e in extras if not e.startswith(("ATTIC/","docs/","tests/"))]),
+        "move_to_attic": sorted([e for e in extras if not e.startswith(("ATTIC/","docs/","tests/"))]),  # noqa: E501
         "scaffold_dirs": sorted(dir_missing),
         "scaffold_files": sorted(required_missing),
         "keep": []
@@ -40,8 +45,8 @@ def main():
 
     md = ["# Auto-Triage Plan"]
     def sec(t, lst):
-        md.append(f"\n## {t} ({len(lst)})")
-        md += ([f"- `{p}`" for p in lst] or ["- ✅ None"])
+        md.append(f"\n## {t} ({len(lst)})")  # noqa: F823
+        md += ([f"- `{p}`" for p in lst] or ["- ✅ None"])  # noqa: F841
     sec("To Remove (forbidden)", plan["remove_forbidden"])
     sec("To ATTIC (extras)", plan["move_to_attic"])
     sec("Scaffold Dirs", plan["scaffold_dirs"])
@@ -49,7 +54,8 @@ def main():
     (OUT/"AUTO_TRIAGE_REPORT.md").write_text("\n".join(md) + "\n", encoding="utf-8")
 
     if not apply:
-        print("DRY RUN"); return
+        print("DRY RUN")
+        return
 
     # Apply
     for d in plan["scaffold_dirs"]:
@@ -57,20 +63,27 @@ def main():
         (ROOT/d/".gitkeep").write_text("", encoding="utf-8")
 
     for f in plan["scaffold_files"]:
-        p = ROOT/f; p.parent.mkdir(parents=True, exist_ok=True)
-        if not p.exists(): p.write_text(f"# TODO: add content for {f}\n", encoding="utf-8")
+        p = ROOT/f
+        p.parent.mkdir(parents=True, exist_ok=True)
+        if not p.exists():
+            p.write_text(f"# TODO: add content for {f}\n", encoding="utf-8")
 
     for f in plan["remove_forbidden"]:
-        try: (ROOT/f).unlink(missing_ok=True)
-        except Exception: pass
+        try:
+            (ROOT/f).unlink(missing_ok=True)
+        except Exception:
+            pass
 
     for f in plan["move_to_attic"]:
         src = ROOT/f
-        if not src.exists(): continue
+        if not src.exists():
+            continue
         dst = ROOT/("ATTIC/"+f)
         dst.parent.mkdir(parents=True, exist_ok=True)
-        try: body = src.read_text(encoding="utf-8", errors="ignore")
-        except Exception: body = ""
+        try:
+            body = src.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            body = ""
         dst.write_text(attic_header(f) + body, encoding="utf-8")
         src.unlink(missing_ok=True)
 

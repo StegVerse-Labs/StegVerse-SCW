@@ -1,7 +1,10 @@
-import os, json, time
-from typing import Dict, Any, Optional
-from fastapi import APIRouter, HTTPException
+import json
+import os
+import time
+from typing import Any, Dict, Optional
+
 import httpx
+from fastapi import APIRouter, HTTPException
 
 # -----------------------------------------------------
 # CFP MODULE (SCW-API)
@@ -49,7 +52,7 @@ def _get(k: str) -> Optional[str]:
         return _mem_get(k)
     try:
         return redis_client.get(k)
-    except:
+    except BaseException:
         return _mem_get(k)
 
 def _set(k: str, v: str):
@@ -58,7 +61,7 @@ def _set(k: str, v: str):
         return
     try:
         redis_client.set(k, v)
-    except:
+    except BaseException:
         _mem_set(k, v)
 
 # -----------------------------------------------------
@@ -96,7 +99,7 @@ def normalize_cfp(teams: Dict[str, Any], ncaa: Dict[str, Any]):
                 "record": t.get("record"),
                 "logo": t.get("logo"),
             })
-    except:
+    except BaseException:
         pass
 
     # Games
@@ -115,7 +118,7 @@ def normalize_cfp(teams: Dict[str, Any], ncaa: Dict[str, Any]):
                 "home_score": g.get("home", {}).get("score"),
                 "away_score": g.get("away", {}).get("score"),
             })
-    except:
+    except BaseException:
         pass
 
     return out
@@ -173,7 +176,7 @@ async def tickets():
             r = await client.get(CFP_SOURCE_TICKETS)
             try:
                 return r.json()
-            except:
+            except BaseException:
                 return {"text": r.text[:2000]}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Ticket fetch error: {e}")

@@ -7,8 +7,8 @@ import os
 import time
 import urllib.error
 import urllib.request
-from dataclasses import dataclass, asdict
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import asdict, dataclass
+from typing import Any
 
 GITHUB_API = "https://api.github.com"
 
@@ -16,9 +16,9 @@ GITHUB_API = "https://api.github.com"
 @dataclass
 class RepoStatus:
     ok: bool
-    missing_files: List[str]
-    missing_workflows: List[str]
-    notes: List[str]
+    missing_files: list[str]
+    missing_workflows: list[str]
+    notes: list[str]
 
 
 @dataclass
@@ -36,13 +36,13 @@ class RepoRow:
     archived: bool
     default_branch: str
     head_sha: str
-    classification: Dict[str, Any]
-    requirements: Dict[str, Any]
+    classification: dict[str, Any]
+    requirements: dict[str, Any]
     status: RepoStatus
     scan: RepoScan
 
 
-def _http_get_json(url: str, token: Optional[str] = None) -> Any:
+def _http_get_json(url: str, token: str | None = None) -> Any:
     req = urllib.request.Request(url)
     req.add_header("Accept", "application/vnd.github+json")
     req.add_header("User-Agent", "stegverse-scw-constitutional-audit")
@@ -56,7 +56,7 @@ def _sha256_text(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 
-def _file_exists(repo_full: str, path: str, token: Optional[str]) -> bool:
+def _file_exists(repo_full: str, path: str, token: str | None) -> bool:
     # For public repos, unauthenticated is fine.
     url = f"{GITHUB_API}/repos/{repo_full}/contents/{path}"
     try:
@@ -68,8 +68,8 @@ def _file_exists(repo_full: str, path: str, token: Optional[str]) -> bool:
         raise
 
 
-def _list_org_repos(org: str, token: Optional[str]) -> List[Dict[str, Any]]:
-    repos: List[Dict[str, Any]] = []
+def _list_org_repos(org: str, token: str | None) -> list[dict[str, Any]]:
+    repos: list[dict[str, Any]] = []
     page = 1
     while True:
         url = f"{GITHUB_API}/orgs/{org}/repos?per_page=100&page={page}&type=public"
@@ -83,14 +83,14 @@ def _list_org_repos(org: str, token: Optional[str]) -> List[Dict[str, Any]]:
     return repos
 
 
-def _get_head_sha(repo_full: str, branch: str, token: Optional[str]) -> str:
+def _get_head_sha(repo_full: str, branch: str, token: str | None) -> str:
     url = f"{GITHUB_API}/repos/{repo_full}/commits/{branch}"
     j = _http_get_json(url, token)
     return j.get("sha", "")
 
 
-def _has_any_signal(repo_full: str, signals: Dict[str, Any], token: Optional[str]) -> Tuple[bool, List[str]]:
-    hits: List[str] = []
+def _has_any_signal(repo_full: str, signals: dict[str, Any], token: str | None) -> tuple[bool, list[str]]:  # noqa: E501
+    hits: list[str] = []
     for p in signals.get("paths_any", []):
         if _file_exists(repo_full, p, token):
             hits.append(p)
@@ -101,12 +101,12 @@ def _has_any_signal(repo_full: str, signals: Dict[str, Any], token: Optional[str
     return (len(hits) > 0), hits
 
 
-def _classify(repo_name: str, signal_hits: List[str]) -> Dict[str, Any]:
+def _classify(repo_name: str, signal_hits: list[str]) -> dict[str, Any]:
     lname = repo_name.lower()
 
-    # Deterministic rule: if signals indicate policy/schema/verification surfaces, flag as constitutional-candidate.
+    # Deterministic rule: if signals indicate policy/schema/verification surfaces, flag as constitutional-candidate.  # noqa: E501
     constitutional_candidate = any(
-        h.startswith("schemas/") or h.startswith("docs/governance/") or "resolver" in h or "tv_manifest" in h or "roles_templates" in h
+        h.startswith("schemas/") or h.startswith("docs/governance/") or "resolver" in h or "tv_manifest" in h or "roles_templates" in h  # noqa: E501
         for h in signal_hits
     )
 
@@ -140,7 +140,8 @@ def main() -> int:
     """
     org = os.environ.get("ORG", "StegVerse-Labs")
     # Optional: if StegDB becomes private later, set a token here.
-    token = os.environ.get("SV_SCAN_TOKEN")  # unused for public unless you want higher rate limits
+    # unused for public unless you want higher rate limits
+    token = os.environ.get("SV_SCAN_TOKEN")  # noqa: F841
 
     requirements_url = os.environ.get(
         "REQUIREMENTS_URL",
@@ -157,7 +158,7 @@ def main() -> int:
 
     repos = _list_org_repos(org, token=None)
 
-    rows: List[RepoRow] = []
+    rows: list[RepoRow] = []
     started = time.time()
 
     for r in repos:
@@ -174,7 +175,7 @@ def main() -> int:
         head_sha = _get_head_sha(repo_full, default_branch, token=None)
 
         # fingerprint used later for skip logic (once you persist last_scan in StegDB)
-        scan_fingerprint = _sha256_text(f"{repo_full}|{default_branch}|{head_sha}|{requirements_hash}|{kit_version}")
+        scan_fingerprint = _sha256_text(f"{repo_full}|{default_branch}|{head_sha}|{requirements_hash}|{kit_version}")  # noqa: E501
 
         # Classification signals (cheap file probes)
         has_signals, hits = _has_any_signal(repo_full, signals, token=None)
@@ -182,11 +183,11 @@ def main() -> int:
 
         # Requirements checks
         missing_files = [p for p in required_files if not _file_exists(repo_full, p, token=None)]
-        missing_workflows = [p for p in required_workflows if not _file_exists(repo_full, p, token=None)]
+        missing_workflows = [p for p in required_workflows if not _file_exists(repo_full, p, token=None)]  # noqa: E501
 
         ok = (len(missing_files) == 0 and len(missing_workflows) == 0)
 
-        notes: List[str] = []
+        notes: list[str] = []
         if archived:
             notes.append("archived=true")
         if not has_signals:
@@ -236,8 +237,8 @@ def main() -> int:
             "total_public_repos": len(rows),
             "ok": sum(1 for x in rows if x.status.ok),
             "fail": sum(1 for x in rows if not x.status.ok),
-            "constitutional_required_guess": sum(1 for x in rows if x.classification.get("tier_guess") == "constitutional-required"),
-            "constitutional_recommended_guess": sum(1 for x in rows if x.classification.get("tier_guess") == "constitutional-recommended")
+            "constitutional_required_guess": sum(1 for x in rows if x.classification.get("tier_guess") == "constitutional-required"),  # noqa: E501
+            "constitutional_recommended_guess": sum(1 for x in rows if x.classification.get("tier_guess") == "constitutional-recommended")  # noqa: E501
         },
         "repos": [
             {
@@ -253,10 +254,10 @@ def main() -> int:
         json.dump(matrix, f, indent=2)
 
     # Human-readable summary
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append(f"# Repo Compliance Matrix (Public Only) — {org}")
     lines.append("")
-    lines.append(f"- Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(matrix['generated_at_unix']))}")
+    lines.append(f"- Generated: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(matrix['generated_at_unix']))}")  # noqa: E501
     lines.append(f"- Kit: `{kit_version}`")
     lines.append(f"- Total public repos: **{matrix['summary']['total_public_repos']}**")
     lines.append(f"- OK: **{matrix['summary']['ok']}** | Fail: **{matrix['summary']['fail']}**")

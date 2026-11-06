@@ -1,4 +1,4 @@
-from engine.stability_gate.provenance import provenance_from_dict
+from engine.stability_gate.provenance import METRIC_NAMES, DerivationClass, provenance_from_dict
 from engine.stability_gate.provenance_policy import (
     MetricAuthorityRule,
     ProvenanceDecision,
@@ -6,7 +6,6 @@ from engine.stability_gate.provenance_policy import (
     default_dry_run_policy,
     evaluate_provenance,
 )
-from engine.stability_gate.provenance import DerivationClass, METRIC_NAMES
 
 
 def payload(derivation_class, producer="scw", method="fixture", refs=None):
