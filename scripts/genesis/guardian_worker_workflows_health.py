@@ -17,12 +17,11 @@ it does not modify any workflows.
 from __future__ import annotations
 
 import datetime as _dt
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
 
 import yaml  # type: ignore
-
 
 ROOT = Path(".")
 WORKFLOW_DIR = ROOT / ".github" / "workflows"
@@ -42,14 +41,14 @@ class WorkflowHealthSummary:
     parse_errors: int = 0
     missing_name: int = 0
     missing_on: int = 0
-    issues: List[WorkflowIssue] = None  # type: ignore[assignment]
+    issues: list[WorkflowIssue] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         if self.issues is None:
             self.issues = []
 
 
-def _load_yaml(path: Path) -> Dict[str, Any]:
+def _load_yaml(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
@@ -108,7 +107,7 @@ def _ensure_report_dir() -> None:
 
 def _format_markdown(summary: WorkflowHealthSummary, run_id: str) -> str:
     now = _dt.datetime.utcnow().isoformat() + "Z"
-    lines: List[str] = []
+    lines: list[str] = []
 
     lines.append("# StegVerse Workflow Health Report")
     lines.append("")

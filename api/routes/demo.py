@@ -1,15 +1,14 @@
 from __future__ import annotations
 
+import json
+import uuid
 from datetime import datetime, timezone
 from hashlib import sha256
 from math import sqrt
-from typing import Any, Dict, List, Optional
-import json
-import uuid
+from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
-
 
 router = APIRouter()
 
@@ -17,12 +16,12 @@ router = APIRouter()
 class DemoRun(BaseModel):
     source: str = Field(default="unknown")
     demo_id: str = Field(default_factory=lambda: f"demo_{uuid.uuid4().hex[:12]}")
-    commit_states: List[List[float]]
-    proposed_state: List[float]
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    commit_states: list[list[float]]
+    proposed_state: list[float]
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-def model_to_dict(model: BaseModel) -> Dict[str, Any]:
+def model_to_dict(model: BaseModel) -> dict[str, Any]:
     if hasattr(model, "model_dump"):
         return model.model_dump()  # type: ignore[attr-defined]
     return model.dict()
@@ -40,7 +39,7 @@ def hash_obj(obj: Any) -> str:
     return sha256(canonical_json(obj).encode("utf-8")).hexdigest()
 
 
-def distance(a: List[float], b: List[float]) -> float:
+def distance(a: list[float], b: list[float]) -> float:
     return sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
 
 
@@ -48,9 +47,9 @@ def build_receipt(
     *,
     version: int,
     kind: str,
-    body: Dict[str, Any],
-    previous_receipt_hash: Optional[str] = None,
-) -> Dict[str, Any]:
+    body: dict[str, Any],
+    previous_receipt_hash: str | None = None,
+) -> dict[str, Any]:
     envelope = {
         "schema": "stegverse.receipt",
         "version": version,
@@ -65,7 +64,7 @@ def build_receipt(
     }
 
 
-def evaluate_boundary(payload: DemoRun) -> Dict[str, Any]:
+def evaluate_boundary(payload: DemoRun) -> dict[str, Any]:
     states = payload.commit_states
     proposed = payload.proposed_state
 
@@ -134,10 +133,10 @@ def evaluate_boundary(payload: DemoRun) -> Dict[str, Any]:
 
 def local_test_runner(
     *,
-    payload_dict: Dict[str, Any],
+    payload_dict: dict[str, Any],
     decision_hash: str,
     decision_receipt_hash: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     executed_at = utc_now()
     execution_id = f"exec_{uuid.uuid4().hex}"
 
@@ -177,7 +176,7 @@ def local_test_runner(
 
 
 @router.get("/v1/demo/health")
-def demo_health() -> Dict[str, Any]:
+def demo_health() -> dict[str, Any]:
     return {
         "ok": True,
         "service": "stegverse-demo-tier1-tier2-local",
@@ -188,7 +187,7 @@ def demo_health() -> Dict[str, Any]:
 
 
 @router.post("/v1/demo/run")
-def run_demo(payload: DemoRun) -> Dict[str, Any]:
+def run_demo(payload: DemoRun) -> dict[str, Any]:
     evaluated_at = utc_now()
     payload_dict = model_to_dict(payload)
     input_hash = hash_obj(payload_dict)

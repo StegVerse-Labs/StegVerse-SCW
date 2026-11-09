@@ -24,11 +24,9 @@ Safety:
 from __future__ import annotations
 
 import json
-import os
 import re
-import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 try:
     import yaml  # Used only to confirm file is valid YAML; we modify as text.
@@ -44,7 +42,7 @@ WF_DIR = ROOT / ".github" / "workflows"
 
 # ---------------- ASL helpers ----------------
 
-def load_asl_config() -> Dict[str, Any]:
+def load_asl_config() -> dict[str, Any]:
     if not ASL_CONFIG.exists():
         print(f"[ASL] Config not found at {ASL_CONFIG}; refusing to change workflows.")
         return {}
@@ -55,7 +53,7 @@ def load_asl_config() -> Dict[str, Any]:
         return yaml.safe_load(f) or {}
 
 
-def get_task_asl(cfg: Dict[str, Any], task_id: str) -> str:
+def get_task_asl(cfg: dict[str, Any], task_id: str) -> str:
     tasks = (cfg.get("tasks") or {})
     t = tasks.get(task_id) or {}
     return t.get("level") or ""
@@ -70,7 +68,7 @@ def is_asl_at_most(asl: str, limit: str) -> bool:
 
 # ---------------- Utility helpers ----------------
 
-def load_latest_run() -> Dict[str, Any]:
+def load_latest_run() -> dict[str, Any]:
     if not LATEST_JSON.exists():
         print("[Guardians] No latest guardian run file; proceeding with generic hygiene.")
         return {}
@@ -82,11 +80,11 @@ def load_latest_run() -> Dict[str, Any]:
         return {}
 
 
-def list_workflow_files() -> List[Path]:
+def list_workflow_files() -> list[Path]:
     if not WF_DIR.exists():
         print(f"[WF] No workflows directory at {WF_DIR}")
         return []
-    files: List[Path] = []
+    files: list[Path] = []
     for p in sorted(WF_DIR.glob("*.yml")) + sorted(WF_DIR.glob("*.yaml")):
         if p.is_file():
             files.append(p)
@@ -98,7 +96,7 @@ def has_workflow_dispatch(txt: str) -> bool:
     return bool(re.search(r'^\s*workflow_dispatch\s*:', txt, flags=re.M))
 
 
-def ensure_workflow_dispatch(txt: str) -> Tuple[str, bool]:
+def ensure_workflow_dispatch(txt: str) -> tuple[str, bool]:
     """
     Make sure there is a `workflow_dispatch` trigger under `on:`.
     Returns (new_text, changed?).

@@ -28,11 +28,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import requests
 
@@ -46,9 +45,9 @@ REPORT_DIR = ROOT / "reports" / "pat_audit"
 class ProbeResult:
     ok: bool
     status: int
-    message: Optional[str] = None
-    url: Optional[str] = None
-    detail: Optional[Any] = None
+    message: str | None = None
+    url: str | None = None
+    detail: Any | None = None
 
 
 @dataclass
@@ -56,15 +55,15 @@ class PatAudit:
     label: str
     token_present: bool
     auth_ok: bool
-    auth_login: Optional[str]
-    auth_type: Optional[str]
-    auth_scopes: List[str]
+    auth_login: str | None
+    auth_type: str | None
+    auth_scopes: list[str]
 
     org_primary: str
     org_secondary: str
 
-    primary_repo_sample: Optional[str]
-    secondary_repo_sample: Optional[str]
+    primary_repo_sample: str | None
+    secondary_repo_sample: str | None
 
     can_list_primary_repos: bool
     can_list_secondary_repos: bool
@@ -75,12 +74,12 @@ class PatAudit:
     can_write_workflows_primary: bool
     can_write_workflows_secondary: bool
 
-    errors: List[str]
+    errors: list[str]
 
 
 # ---------------- GitHub helpers ----------------
 
-def gh_headers(token: str) -> Dict[str, str]:
+def gh_headers(token: str) -> dict[str, str]:
     return {
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
@@ -129,7 +128,7 @@ def gh_post(token: str, url: str, json_body: Any) -> ProbeResult:
     return summarize_response(r)
 
 
-def whoami(token: str) -> Tuple[bool, Optional[str], Optional[str], List[str], Optional[str]]:
+def whoami(token: str) -> tuple[bool, str | None, str | None, list[str], str | None]:
     r = requests.get("https://api.github.com/user", headers=gh_headers(token), timeout=20)
     scopes_hdr = r.headers.get("x-oauth-scopes", "") or ""
     scopes = [s.strip() for s in scopes_hdr.split(",") if s.strip()]
@@ -144,7 +143,7 @@ def whoami(token: str) -> Tuple[bool, Optional[str], Optional[str], List[str], O
     return True, login, typ, scopes, None
 
 
-def list_repos_in_org(token: str, org: str) -> Tuple[bool, Optional[str], int, Optional[str]]:
+def list_repos_in_org(token: str, org: str) -> tuple[bool, str | None, int, str | None]:
     url = f"https://api.github.com/orgs/{org}/repos?per_page=1&type=all"
     pr = gh_get(token, url)
     if not pr.ok:
@@ -198,13 +197,13 @@ def probe_workflow_write(token: str, org: str, repo: str) -> bool:
 
 # ---------------- PAT discovery ----------------
 
-def discover_pats_from_env() -> List[Tuple[str, str]]:
+def discover_pats_from_env() -> list[tuple[str, str]]:
     """
     Finds env pairs <KEY>_NAME and <KEY>_PAT.
     Returns list of (label, token).
     """
     env = dict(os.environ)
-    labels_tokens: List[Tuple[str, str]] = []
+    labels_tokens: list[tuple[str, str]] = []
 
     # Find all *_PAT keys
     pat_keys = [k for k in env.keys() if k.endswith("_PAT")]
@@ -225,7 +224,7 @@ def now_utc_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def write_reports(audits: List[PatAudit], org_primary: str, org_secondary: str) -> Tuple[Path, Path]:
+def write_reports(audits: list[PatAudit], org_primary: str, org_secondary: str) -> tuple[Path, Path]:  # noqa: E501
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
@@ -253,7 +252,7 @@ def write_reports(audits: List[PatAudit], org_primary: str, org_secondary: str) 
     lines.append("")
 
     for a in audits:
-        status = "✅ PASS" if (a.auth_ok and (a.can_list_primary_repos or a.can_list_secondary_repos)) else "❌ FAIL"
+        status = "✅ PASS" if (a.auth_ok and (a.can_list_primary_repos or a.can_list_secondary_repos)) else "❌ FAIL"  # noqa: E501
         lines.append(f"## {a.label} — {status}")
         lines.append("")
         lines.append(f"- Token present: `{a.token_present}`")
@@ -262,7 +261,7 @@ def write_reports(audits: List[PatAudit], org_primary: str, org_secondary: str) 
             lines.append(f"- Auth login: `{a.auth_login}` ({a.auth_type})")
         lines.append(f"- Scopes: `{', '.join(a.auth_scopes) or 'none reported'}`")
         lines.append("")
-        lines.append(f"### Org Access")
+        lines.append("### Org Access")
         lines.append(f"- Can list repos in `{org_primary}`: `{a.can_list_primary_repos}`")
         lines.append(f"- Sample repo: `{a.primary_repo_sample or 'n/a'}`")
         lines.append(f"- Can push sample: `{a.can_push_primary_sample}`")
@@ -288,7 +287,7 @@ def write_reports(audits: List[PatAudit], org_primary: str, org_secondary: str) 
 # ---------------- Main ----------------
 
 def audit_one(label: str, token: str, org_primary: str, org_secondary: str) -> PatAudit:
-    errors: List[str] = []
+    errors: list[str] = []
 
     token_present = bool(token.strip())
 
@@ -302,7 +301,7 @@ def audit_one(label: str, token: str, org_primary: str, org_secondary: str) -> P
         errors.append(f"Cannot list repos in {org_primary}: {prim_err or prim_status}")
 
     can_push_primary = probe_push(token, org_primary, prim_sample) if prim_sample else False
-    can_write_wf_primary = probe_workflow_write(token, org_primary, prim_sample) if prim_sample else False
+    can_write_wf_primary = probe_workflow_write(token, org_primary, prim_sample) if prim_sample else False  # noqa: E501
 
     # Secondary org
     can_list_secondary, sec_sample, sec_status, sec_err = list_repos_in_org(token, org_secondary)
@@ -310,7 +309,7 @@ def audit_one(label: str, token: str, org_primary: str, org_secondary: str) -> P
         errors.append(f"Cannot list repos in {org_secondary}: {sec_err or sec_status}")
 
     can_push_secondary = probe_push(token, org_secondary, sec_sample) if sec_sample else False
-    can_write_wf_secondary = probe_workflow_write(token, org_secondary, sec_sample) if sec_sample else False
+    can_write_wf_secondary = probe_workflow_write(token, org_secondary, sec_sample) if sec_sample else False  # noqa: E501
 
     return PatAudit(
         label=label,
@@ -356,7 +355,7 @@ def main() -> int:
         print("Example: PAT_WORKFLOW_FG_NAME / PAT_WORKFLOW_FG_PAT")
         return 1
 
-    audits: List[PatAudit] = []
+    audits: list[PatAudit] = []
     any_fail = False
 
     for label, token in pats:
@@ -367,7 +366,7 @@ def main() -> int:
         passed = a.auth_ok and (a.can_list_primary_repos or a.can_list_secondary_repos)
         any_fail = any_fail or (not passed)
 
-        print(f"Auth OK: {a.auth_ok} | {org_primary} list: {a.can_list_primary_repos} | {org_secondary} list: {a.can_list_secondary_repos}")
+        print(f"Auth OK: {a.auth_ok} | {org_primary} list: {a.can_list_primary_repos} | {org_secondary} list: {a.can_list_secondary_repos}")  # noqa: E501
 
     md_path, json_path = write_reports(audits, org_primary, org_secondary)
 

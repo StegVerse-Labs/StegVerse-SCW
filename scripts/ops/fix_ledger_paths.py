@@ -7,9 +7,9 @@ Detect stray event files and relocate them safely.
 """
 
 import json
-from pathlib import Path
-from datetime import datetime
 import shutil
+from datetime import datetime
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 LEDGER = ROOT / "ledger"

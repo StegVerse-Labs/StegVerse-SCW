@@ -62,19 +62,19 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
     findings: list[dict[str, object]] = []
     tasks = registry.get("tasks")
     if not isinstance(tasks, list) or not tasks:
-        return [{"severity": "FAILED", "code": "NO_TASKS", "detail": "tasks must be a non-empty array"}]
+        return [{"severity": "FAILED", "code": "NO_TASKS", "detail": "tasks must be a non-empty array"}]  # noqa: E501
 
     seen_ids: set[str] = set()
     seen_collisions: dict[str, str] = {}
 
     for index, task in enumerate(tasks):
         if not isinstance(task, dict):
-            findings.append({"severity": "FAILED", "code": "INVALID_TASK", "detail": f"tasks[{index}] must be an object"})
+            findings.append({"severity": "FAILED", "code": "INVALID_TASK", "detail": f"tasks[{index}] must be an object"})  # noqa: E501
             continue
 
         missing = sorted(REQUIRED_FIELDS - set(task))
         if missing:
-            findings.append({"severity": "FAILED", "code": "MISSING_FIELDS", "task_id": task.get("task_id"), "detail": missing})
+            findings.append({"severity": "FAILED", "code": "MISSING_FIELDS", "task_id": task.get("task_id"), "detail": missing})  # noqa: E501
             continue
 
         task_id = str(task["task_id"])
@@ -84,7 +84,7 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
 
         state = task["claim_state"]
         if state not in ALLOWED_STATES:
-            findings.append({"severity": "FAILED", "code": "INVALID_STATE", "task_id": task_id, "detail": state})
+            findings.append({"severity": "FAILED", "code": "INVALID_STATE", "task_id": task_id, "detail": state})  # noqa: E501
 
         claimant = task["claimant"]
         if state not in {"COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM"} and (
@@ -94,7 +94,7 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
 
         release_condition = task["release_condition"]
         if not isinstance(release_condition, str) or not release_condition.strip():
-            findings.append({"severity": "FAILED", "code": "NO_RELEASE_CONDITION", "task_id": task_id})
+            findings.append({"severity": "FAILED", "code": "NO_RELEASE_CONDITION", "task_id": task_id})  # noqa: E501
 
         next_action = task["next_executable_action"]
         if state not in {"COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM"} and (
@@ -104,19 +104,19 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
 
         expires = parse_time(task.get("claim_expires_at"))
         if state in ACTIVE_STATES and expires is not None and expires <= now:
-            findings.append({"severity": "REVIEW_REQUIRED", "code": "STALE_CLAIM", "task_id": task_id, "detail": task.get("claim_expires_at")})
+            findings.append({"severity": "REVIEW_REQUIRED", "code": "STALE_CLAIM", "task_id": task_id, "detail": task.get("claim_expires_at")})  # noqa: E501
 
         boundaries = task["collision_boundaries"]
         if not isinstance(boundaries, list) or not boundaries:
-            findings.append({"severity": "FAILED", "code": "NO_COLLISION_BOUNDARY", "task_id": task_id})
+            findings.append({"severity": "FAILED", "code": "NO_COLLISION_BOUNDARY", "task_id": task_id})  # noqa: E501
         else:
             for boundary in boundaries:
                 if not isinstance(boundary, str) or not boundary.strip():
-                    findings.append({"severity": "FAILED", "code": "INVALID_COLLISION_BOUNDARY", "task_id": task_id})
+                    findings.append({"severity": "FAILED", "code": "INVALID_COLLISION_BOUNDARY", "task_id": task_id})  # noqa: E501
                     continue
                 prior = seen_collisions.get(boundary)
                 if prior and prior != task_id and state in ACTIVE_STATES:
-                    findings.append({"severity": "FAILED", "code": "ACTIVE_COLLISION", "task_id": task_id, "detail": {"boundary": boundary, "other_task": prior}})
+                    findings.append({"severity": "FAILED", "code": "ACTIVE_COLLISION", "task_id": task_id, "detail": {"boundary": boundary, "other_task": prior}})  # noqa: E501
                 elif state in ACTIVE_STATES:
                     seen_collisions[boundary] = task_id
 
@@ -126,7 +126,7 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--registry", default="config/stability-gate-tasks.json")
-    parser.add_argument("--output", default="artifacts/reports/stability_gate/STABILITY_GATE_TASK_RECEIPT.json")
+    parser.add_argument("--output", default="artifacts/reports/stability_gate/STABILITY_GATE_TASK_RECEIPT.json")  # noqa: E501
     parser.add_argument("--now", default=None, help="ISO-8601 UTC time for deterministic tests")
     args = parser.parse_args()
 
@@ -163,12 +163,12 @@ def main() -> int:
         "claim_state_counts": counts,
         "findings": findings,
         "next_executable_tasks": [
-            {"task_id": task["task_id"], "claim_state": task["claim_state"], "next_executable_action": task["next_executable_action"]}
+            {"task_id": task["task_id"], "claim_state": task["claim_state"], "next_executable_action": task["next_executable_action"]}  # noqa: E501
             for task in tasks
-            if task["claim_state"] not in {"COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM"}
+            if task["claim_state"] not in {"COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM"}  # noqa: E501
         ],
     }
-    receipt = {**unsigned, "receipt_hash": hashlib.sha256(canonical_json(unsigned).encode("utf-8")).hexdigest()}
+    receipt = {**unsigned, "receipt_hash": hashlib.sha256(canonical_json(unsigned).encode("utf-8")).hexdigest()}  # noqa: E501
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(receipt, indent=2, sort_keys=True))
