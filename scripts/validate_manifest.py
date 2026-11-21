@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-import sys, os, json, re, yaml, pathlib
+import json
+import pathlib
+import re
+import sys
+
+import yaml
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
@@ -67,7 +72,7 @@ def main():
         "ok": ok,
         "errors": errors,
         "warnings": warnings,
-        "summary": f"✅ OK: {0 if not ok else len(data.get('patches',[]))} | ⚠️ {len(warnings)} | ❌ {len(errors)}"
+        "summary": f"✅ OK: {0 if not ok else len(data.get('patches',[]))} | ⚠️ {len(warnings)} | ❌ {len(errors)}"  # noqa: E501
     }
 
     print(json.dumps(summary, indent=2))

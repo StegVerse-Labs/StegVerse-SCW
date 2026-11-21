@@ -18,7 +18,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
-
 ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -69,7 +68,7 @@ def run(*, manifest: Dict[str, Any]) -> Dict[str, Any]:
                 continue
 
             # Very simple heuristic: check for key sections
-            needed_sections = ["Quick Start", "For Developers", "For AI Entities", "Troubleshooting"]
+            needed_sections = ["Quick Start", "For Developers", "For AI Entities", "Troubleshooting"]  # noqa: E501
             missing_sections = [s for s in needed_sections if s.lower() not in content.lower()]
 
             status = "ok" if not missing_sections else "needs_improvement"

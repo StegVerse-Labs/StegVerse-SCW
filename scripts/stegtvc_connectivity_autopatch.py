@@ -13,7 +13,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / "work"
@@ -197,7 +197,7 @@ def main() -> None:
                 run(["git", "config", "user.name", "StegVerse-Autopatch"], cwd=dest_dir)
                 run(["git", "config", "user.email", "autopatch@stegverse.local"], cwd=dest_dir)
                 run(["git", "add", "."], cwd=dest_dir)
-                run(["git", "commit", "-m", "Autopatch: sync StegTVC connectivity files"], cwd=dest_dir)
+                run(["git", "commit", "-m", "Autopatch: sync StegTVC connectivity files"], cwd=dest_dir)  # noqa: E501
                 run(["git", "push", "origin", "HEAD"], cwd=dest_dir)
                 summary["updated"] += 1
                 report_items.append({

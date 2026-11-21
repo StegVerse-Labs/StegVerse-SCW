@@ -79,13 +79,13 @@ def inspect_yaml(path: pathlib.Path) -> dict[str, Any]:
 def choose_next(required: list[dict[str, Any]], invalid: list[dict[str, Any]]) -> dict[str, str]:
     missing = [item for item in required if not item["exists"]]
     if missing:
-        return {"status": "BLOCKED", "task": "install_missing_required_component", "target": missing[0]["path"]}
+        return {"status": "BLOCKED", "task": "install_missing_required_component", "target": missing[0]["path"]}  # noqa: E501
     required_invalid = [item for item in required if item.get("parse_valid") is False]
     if required_invalid:
-        return {"status": "REVIEW_REQUIRED", "task": "repair_required_workflow", "target": required_invalid[0]["path"]}
+        return {"status": "REVIEW_REQUIRED", "task": "repair_required_workflow", "target": required_invalid[0]["path"]}  # noqa: E501
     if invalid:
-        return {"status": "REVIEW_REQUIRED", "task": "review_invalid_workflow", "target": invalid[0]["path"]}
-    return {"status": "COMPLETE", "task": "inspect_hosted_validation_receipts", "target": ".github/workflows/workflows-sanity-check.yml"}
+        return {"status": "REVIEW_REQUIRED", "task": "review_invalid_workflow", "target": invalid[0]["path"]}  # noqa: E501
+    return {"status": "COMPLETE", "task": "inspect_hosted_validation_receipts", "target": ".github/workflows/workflows-sanity-check.yml"}  # noqa: E501
 
 
 def main() -> int:
@@ -177,7 +177,7 @@ def main() -> int:
     ]
     lines.extend([f"- `{item['path']}` — {item['error']}" for item in invalid] or ["- None"])
     lines += ["", "## Duplicate content groups"]
-    lines.extend(["- " + ", ".join(f"`{path}`" for path in group) for group in duplicates] or ["- None"])
+    lines.extend(["- " + ", ".join(f"`{path}`" for path in group) for group in duplicates] or ["- None"])  # noqa: E501
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print(json.dumps(receipt["summary"], sort_keys=True))

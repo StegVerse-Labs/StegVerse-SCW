@@ -25,11 +25,13 @@ Env:
 
 from __future__ import annotations
 
-import json, os, re, sys, textwrap, subprocess
+import json
+import os
+import re
+import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT_DIR = ROOT / "reports" / "guardians"
@@ -50,10 +52,10 @@ class RepoResult:
     name: str
     url: str
     pass_ok: bool
-    checks: Dict[str, bool]
-    notes: List[str]
+    checks: dict[str, bool]
+    notes: list[str]
 
-def run(cmd: List[str], cwd: Optional[Path]=None, check: bool=True) -> subprocess.CompletedProcess:
+def run(cmd: list[str], cwd: Path | None=None, check: bool=True) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=check)
 
@@ -65,18 +67,18 @@ def gh_api(path: str) -> dict:
         raise RuntimeError("No GH token in env (STEG_TOKEN/GH_TOKEN/GITHUB_TOKEN).")
 
     url = f"https://api.github.com{path}"
-    cmd = ["curl", "-sS", "-H", f"Authorization: token {TOKEN}", "-H", "Accept: application/vnd.github+json", url]
+    cmd = ["curl", "-sS", "-H", f"Authorization: token {TOKEN}", "-H", "Accept: application/vnd.github+json", url]  # noqa: E501
     cp = run(cmd, check=True)
     try:
         return json.loads(cp.stdout)
     except Exception as e:
         raise RuntimeError(f"GitHub API parse failed on {url}: {e}\n{cp.stdout}")
 
-def discover_repos(org: str) -> List[str]:
+def discover_repos(org: str) -> list[str]:
     """
     Discover up to 100 repos in org (paging if needed).
     """
-    repos: List[str] = []
+    repos: list[str] = []
     page = 1
     while True:
         data = gh_api(f"/orgs/{org}/repos?per_page=100&page={page}")
@@ -91,7 +93,7 @@ def discover_repos(org: str) -> List[str]:
             break
     return sorted(set(repos))
 
-def clone_repo(full_name: str, workdir: Path) -> Tuple[bool, str]:
+def clone_repo(full_name: str, workdir: Path) -> tuple[bool, str]:
     """
     Shallow clone. Returns (ok, log).
     """
@@ -126,13 +128,13 @@ def has_workflow_dispatch_in_any(repo_root: Path) -> bool:
     return False
 
 def check_repo(full_name: str, repo_root: Path) -> RepoResult:
-    checks: Dict[str, bool] = {}
-    notes: List[str] = []
+    checks: dict[str, bool] = {}
+    notes: list[str] = []
     org, repo = full_name.split("/", 1)
 
     # Core alignment signals
     checks["has_root_readme"] = file_exists(repo_root, "README.md")
-    checks["has_asl_config"] = file_exists(repo_root, "docs/governance/automation_safety_levels.yaml")
+    checks["has_asl_config"] = file_exists(repo_root, "docs/governance/automation_safety_levels.yaml")  # noqa: E501
     checks["has_steglink"] = (
         file_exists(repo_root, "docs/stegverse/.steglink.json")
         or file_exists(repo_root, "docs/stegverse/.steglink.yaml")
@@ -175,7 +177,7 @@ def main() -> int:
     workdir = ROOT / ".tmp_alignment"
     workdir.mkdir(parents=True, exist_ok=True)
 
-    results: List[RepoResult] = []
+    results: list[RepoResult] = []
     scanned = 0
     for full in repos:
         scanned += 1
@@ -225,7 +227,7 @@ def main() -> int:
 
     # Markdown
     lines = []
-    lines.append(f"# StegVerse Repo Alignment Report")
+    lines.append("# StegVerse Repo Alignment Report")
     lines.append("")
     lines.append(f"- Generated: `{ts}`")
     lines.append(f"- Org: `{DEFAULT_ORG}`")

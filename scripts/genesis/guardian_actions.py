@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]  # .../StegVerse-SCW
 REPORT_DIR = ROOT / "reports" / "guardians"
@@ -25,15 +25,15 @@ LATEST_JSON = REPORT_DIR / "guardian_run_latest.json"
 ACTIONS_MD = REPORT_DIR / "guardian_actions.md"
 
 
-def load_latest_run() -> Dict[str, Any]:
+def load_latest_run() -> dict[str, Any]:
     if not LATEST_JSON.exists():
         raise SystemExit(f"Latest guardian JSON not found: {LATEST_JSON}")
     with LATEST_JSON.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def summarize_readme_refresh(task: Dict[str, Any]) -> List[str]:
-    lines: List[str] = []
+def summarize_readme_refresh(task: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
     details = task.get("details") or {}
     present = details.get("readme_present") or []
     missing = details.get("readme_missing") or []
@@ -56,14 +56,14 @@ def summarize_readme_refresh(task: Dict[str, Any]) -> List[str]:
         lines.append("")
         lines.append("Suggested next actions:")
         lines.append("- [ ] Create minimal README.md in each missing directory.")
-        lines.append("- [ ] For key folders (e.g., `scripts/genesis`, `ledger/telemetry`), add purpose, key scripts, and how to run checks.")
+        lines.append("- [ ] For key folders (e.g., `scripts/genesis`, `ledger/telemetry`), add purpose, key scripts, and how to run checks.")  # noqa: E501
         lines.append("")
 
     return lines
 
 
-def summarize_workflow_health(task: Dict[str, Any]) -> List[str]:
-    lines: List[str] = []
+def summarize_workflow_health(task: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
     details = task.get("details") or {}
     wf_files = details.get("workflow_files") or []
     count = details.get("count", len(wf_files))
@@ -78,8 +78,8 @@ def summarize_workflow_health(task: Dict[str, Any]) -> List[str]:
     lines.append("")
 
     lines.append("Suggested next actions:")
-    lines.append("- [ ] Confirm each workflow is visible in GitHub Actions UI and has a trigger (`workflow_dispatch`, `schedule`, or `push`).")
-    lines.append("- [ ] Mark the highest-priority workflows for 24/7 uptime (to be guarded by future AI workers).")
+    lines.append("- [ ] Confirm each workflow is visible in GitHub Actions UI and has a trigger (`workflow_dispatch`, `schedule`, or `push`).")  # noqa: E501
+    lines.append("- [ ] Mark the highest-priority workflows for 24/7 uptime (to be guarded by future AI workers).")  # noqa: E501
     lines.append("")
     return lines
 
@@ -94,7 +94,7 @@ def main() -> int:
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append("# StegVerse Guardian Action Plan")
     lines.append("")
     lines.append(f"- Based on guardian run: `{run_id}`")
@@ -108,9 +108,9 @@ def main() -> int:
         lines.append("_No tasks found in latest guardian run._")
     else:
         # Group tasks: warnings first, then ok, then others
-        warnings: List[Dict[str, Any]] = []
-        oks: List[Dict[str, Any]] = []
-        others: List[Dict[str, Any]] = []
+        warnings: list[dict[str, Any]] = []
+        oks: list[dict[str, Any]] = []
+        others: list[dict[str, Any]] = []
 
         for t in tasks:
             status = (t.get("status") or "").lower()
@@ -141,14 +141,14 @@ def main() -> int:
             lines.append("## Healthy guardian checks")
             lines.append("")
             for t in oks:
-                lines.append(f"- `{t.get('id', 'unknown')}` — **ok** — {t.get('summary', '').strip() or '(no summary)'}")
+                lines.append(f"- `{t.get('id', 'unknown')}` — **ok** — {t.get('summary', '').strip() or '(no summary)'}")  # noqa: E501
             lines.append("")
 
         if others:
             lines.append("## Other guardian results")
             lines.append("")
             for t in others:
-                lines.append(f"- `{t.get('id', 'unknown')}` — status: **{t.get('status', 'unknown')}** — {t.get('summary', '').strip() or '(no summary)'}")
+                lines.append(f"- `{t.get('id', 'unknown')}` — status: **{t.get('status', 'unknown')}** — {t.get('summary', '').strip() or '(no summary)'}")  # noqa: E501
             lines.append("")
 
     ACTIONS_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")

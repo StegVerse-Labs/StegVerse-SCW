@@ -1,7 +1,8 @@
 # api/routes/ops.py
-import os, json, urllib.request
-from fastapi import APIRouter, Header, HTTPException
+import os
 from typing import Optional
+
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/v1/ops", tags=["ops"])
 

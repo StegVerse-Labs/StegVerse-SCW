@@ -26,9 +26,13 @@ Safety:
 
 from __future__ import annotations
 
-import json, os, time, shutil, subprocess
+import json
+import os
+import shutil
+import subprocess
+import time
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any
 
 import requests
 import yaml
@@ -47,15 +51,15 @@ WORKDIR.mkdir(parents=True, exist_ok=True)
 # How many times to retry the SAME missing-path fix before giving up.
 MAX_RETRIES_PER_ITEM = 2
 
-def sh(cmd: List[str], cwd: Optional[Path]=None, check: bool=True) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True, capture_output=True, check=check)
+def sh(cmd: list[str], cwd: Path | None=None, check: bool=True) -> subprocess.CompletedProcess:
+    return subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True, capture_output=True, check=check)  # noqa: E501
 
-def load_yaml(p: Path) -> Dict[str, Any]:
+def load_yaml(p: Path) -> dict[str, Any]:
     if not p.exists():
         return {}
     return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
 
-def load_json(p: Path) -> Dict[str, Any]:
+def load_json(p: Path) -> dict[str, Any]:
     if not p.exists():
         return {}
     try:
@@ -63,11 +67,11 @@ def load_json(p: Path) -> Dict[str, Any]:
     except Exception:
         return {}
 
-def save_json(p: Path, data: Dict[str, Any]) -> None:
+def save_json(p: Path, data: dict[str, Any]) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
-def gh_headers(token: str) -> Dict[str, str]:
+def gh_headers(token: str) -> dict[str, str]:
     return {
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
@@ -78,7 +82,7 @@ def gh_headers(token: str) -> Dict[str, str]:
 def api_get(url: str, token: str) -> requests.Response:
     return requests.get(url, headers=gh_headers(token), timeout=30)
 
-def fetch_raw_from_repo(owner: str, repo: str, path: str, token: str) -> Tuple[str, str]:
+def fetch_raw_from_repo(owner: str, repo: str, path: str, token: str) -> tuple[str, str]:
     url = f"{API}/repos/{owner}/{repo}/contents/{path}"
     r = api_get(url, token)
     if r.status_code != 200:
@@ -102,13 +106,13 @@ def write_text(p: Path, txt: str):
 def history_key(repo_full: str, path: str) -> str:
     return f"{repo_full}::{path}"
 
-def should_skip_item(hist: Dict[str, Any], repo_full: str, path: str) -> bool:
+def should_skip_item(hist: dict[str, Any], repo_full: str, path: str) -> bool:
     key = history_key(repo_full, path)
     entry = hist.get(key) or {}
     fails = int(entry.get("fails", 0))
     return fails >= MAX_RETRIES_PER_ITEM
 
-def mark_item(hist: Dict[str, Any], repo_full: str, path: str, ok: bool, msg: str):
+def mark_item(hist: dict[str, Any], repo_full: str, path: str, ok: bool, msg: str):
     key = history_key(repo_full, path)
     entry = hist.get(key) or {"fails": 0, "last_msg": ""}
     if ok:
@@ -119,7 +123,7 @@ def mark_item(hist: Dict[str, Any], repo_full: str, path: str, ok: bool, msg: st
     entry["last_ts"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     hist[key] = entry
 
-def clone_repo(repo_full: str, dest: Path) -> Tuple[bool, str]:
+def clone_repo(repo_full: str, dest: Path) -> tuple[bool, str]:
     if dest.exists():
         shutil.rmtree(dest)
     try:
@@ -128,7 +132,7 @@ def clone_repo(repo_full: str, dest: Path) -> Tuple[bool, str]:
     except subprocess.CalledProcessError as e:
         return False, f"clone_failed: {e.stderr.strip() or e.stdout.strip()}"
 
-def git_commit_push(dest: Path, message: str) -> Tuple[bool, str]:
+def git_commit_push(dest: Path, message: str) -> tuple[bool, str]:
     try:
         sh(["git", "config", "user.name", "StegVerse Alignment Fixer"], cwd=dest)
         sh(["git", "config", "user.email", "alignment-fixer@stegverse.local"], cwd=dest)
@@ -188,7 +192,7 @@ def main() -> int:
         dest = WORKDIR / repo_full.replace("/", "__")
         ok, msg = clone_repo(repo_full, dest)
         if not ok:
-            fixer_results["attempted"].append({"repo": repo_full, "status": "clone_failed", "message": msg})
+            fixer_results["attempted"].append({"repo": repo_full, "status": "clone_failed", "message": msg})  # noqa: E501
             fixer_results["summary"]["repos_failed"] += 1
             continue
 
@@ -266,16 +270,16 @@ jobs:
                 repo_notes.append(f"fixed:{wf}:placeholder")
 
         if changed_any:
-            ok2, msg2 = git_commit_push(dest, "Alignment Fixer: restore required StegVerse files/workflows")
+            ok2, msg2 = git_commit_push(dest, "Alignment Fixer: restore required StegVerse files/workflows")  # noqa: E501
             if ok2:
                 fixer_results["summary"]["repos_fixed"] += 1
-                fixer_results["attempted"].append({"repo": repo_full, "status": "fixed", "message": msg2, "notes": repo_notes})
+                fixer_results["attempted"].append({"repo": repo_full, "status": "fixed", "message": msg2, "notes": repo_notes})  # noqa: E501
             else:
                 fixer_results["summary"]["repos_failed"] += 1
-                fixer_results["attempted"].append({"repo": repo_full, "status": "push_failed", "message": msg2, "notes": repo_notes})
+                fixer_results["attempted"].append({"repo": repo_full, "status": "push_failed", "message": msg2, "notes": repo_notes})  # noqa: E501
         else:
             fixer_results["summary"]["repos_skipped"] += 1
-            fixer_results["attempted"].append({"repo": repo_full, "status": "nothing_to_fix", "notes": repo_notes})
+            fixer_results["attempted"].append({"repo": repo_full, "status": "nothing_to_fix", "notes": repo_notes})  # noqa: E501
 
     save_json(HIST_PATH, hist)
 

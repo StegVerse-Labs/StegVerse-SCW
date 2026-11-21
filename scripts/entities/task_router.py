@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -13,7 +12,7 @@ ENTITY_REPORTS_DIR = ROOT / "reports" / "entities"
 ENTITY_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _run_cmd(cmd: str) -> Tuple[int, str]:
+def _run_cmd(cmd: str) -> tuple[int, str]:
     proc = subprocess.Popen(
         cmd,
         shell=True,
@@ -26,7 +25,7 @@ def _run_cmd(cmd: str) -> Tuple[int, str]:
     return proc.returncode, out
 
 
-def run_economic_snapshot() -> Dict[str, Any]:
+def run_economic_snapshot() -> dict[str, Any]:
     """
     Calls your existing Economic Snapshot workflow logic (Python module).
     """
@@ -38,7 +37,7 @@ def run_economic_snapshot() -> Dict[str, Any]:
     }
 
 
-def run_repo_hygiene() -> Dict[str, Any]:
+def run_repo_hygiene() -> dict[str, Any]:
     """
     Calls your existing repo hygiene / audit script if present.
     """
@@ -62,8 +61,8 @@ def _call_github_models(prompt: str, *, system: str = "") -> str:
     Very small wrapper to GitHub Models chat.completions.
     Uses GH_TOKEN or GITHUB_TOKEN from the environment.
     """
-    import urllib.request
     import json as _json
+    import urllib.request
 
     token = os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     if not token:
@@ -98,7 +97,7 @@ def _call_github_models(prompt: str, *, system: str = "") -> str:
         return f"GitHub Models call failed: {e!r}"
 
 
-def run_status_digest() -> Dict[str, Any]:
+def run_status_digest() -> dict[str, Any]:
     """
     Reads wallet telemetry + ledger integrity reports (if present),
     synthesizes a short status digest via GitHub Models.
@@ -142,7 +141,7 @@ def run_status_digest() -> Dict[str, Any]:
     }
 
 
-def run_task(task_id: str) -> Dict[str, Any]:
+def run_task(task_id: str) -> dict[str, Any]:
     """
     Main router entry point.
     """

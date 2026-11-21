@@ -6,7 +6,11 @@ Repo Audit
 - Flags forbidden globs, missing required files/dirs, extras
 Safe, stdlib-only.
 """
-import json, fnmatch, hashlib, time, os
+import fnmatch
+import hashlib
+import json
+import os
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,8 +49,10 @@ def sha256_file(p: Path, cap=2_000_000):
     n = 0
     with p.open("rb") as f:
         for chunk in iter(lambda: f.read(65536), b""):
-            h.update(chunk); n += len(chunk)
-            if n >= cap: break
+            h.update(chunk)
+            n += len(chunk)
+            if n >= cap:
+                break
     return h.hexdigest(), n
 
 def main():
@@ -55,9 +61,11 @@ def main():
 
     files = []
     for p in ROOT.rglob("*"):
-        if not p.is_file(): continue
+        if not p.is_file():
+            continue
         rel = p.relative_to(ROOT).as_posix()
-        if match_any(rel, ignore): continue
+        if match_any(rel, ignore):
+            continue
         files.append(rel)
     files.sort()
 
@@ -107,8 +115,11 @@ def main():
     # Markdown
     def sec(title, lst):
         md.append(f"## {title} ({len(lst)})")
-        if not lst: md.append("- ✅ None"); return
-        for i in lst[:300]: md.append(f"- `{i}`")
+        if not lst:
+            md.append("- ✅ None")
+            return
+        for i in lst[:300]:
+            md.append(f"- `{i}`")
 
     md = [f"# Repo Inventory & Diff — {inv_json['repo']}",
           f"- Files scanned: **{len(files)}**",

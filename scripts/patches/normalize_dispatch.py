@@ -8,13 +8,12 @@ Normalize all workflow files so GitHub shows the 'Run workflow' button:
 - Preserve key order (sort_keys=False).
 - Write a markdown report to self_healing_out/NORMALIZE_REPORT.md.
 - If any file changed, create self_healing_out/NORMALIZE_CHANGED as a marker.
-"""
+"""  # noqa: E501
 
 import argparse
 import io
-import os
 import pathlib
-from typing import Any, Dict, Tuple, List
+from typing import Any, Dict, List, Tuple
 
 import yaml
 

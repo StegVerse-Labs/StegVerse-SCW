@@ -11,9 +11,9 @@ StegVerse-SCW AutoPatch (workflow YAML fixer)
   plus per-file logging so you can see exactly what it touched.
 """
 
+import json
 import os
 import re
-import json
 import textwrap
 from pathlib import Path
 
@@ -146,7 +146,7 @@ READ_INTENT_STEP = textwrap.dedent("""\
           fi
           echo "RID=${RID_IN:-%RID%}" >> $GITHUB_ENV
           echo "TASK=${TASK_IN:-%TASK%}" >> $GITHUB_ENV
-""")
+""")  # noqa: E501
 
 
 def ensure_read_intent_step(txt):
@@ -183,7 +183,7 @@ def ensure_upload_sweep_step(txt):
     if "Upload Sweep (reusable)" in txt:
         return txt, False
 
-    m = re.search(r'-\s+name:\s+Upload\s+Supercheck\s+Bundle[\s\S]*?uses:\s+actions/upload-artifact@', txt)
+    m = re.search(r'-\s+name:\s+Upload\s+Supercheck\s+Bundle[\s\S]*?uses:\s+actions/upload-artifact@', txt)  # noqa: E501
     if m:
         insert_at = m.start()
         return txt[:insert_at] + UPLOAD_SWEEP_STEP + txt[insert_at:], True
