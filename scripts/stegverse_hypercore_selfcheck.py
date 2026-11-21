@@ -11,10 +11,9 @@ It verifies:
 Output is printed as Markdown so it can be pasted into issues if needed.
 """
 
-import os
-from pathlib import Path
 import json
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 

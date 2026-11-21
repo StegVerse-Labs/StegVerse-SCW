@@ -16,13 +16,12 @@ import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
-
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def _run(cmd: str, env: Dict[str, str]) -> str:
+def _run(cmd: str, env: dict[str, str]) -> str:
     proc = subprocess.run(
         cmd,
         shell=True,
@@ -34,7 +33,7 @@ def _run(cmd: str, env: Dict[str, str]) -> str:
     return proc.stdout
 
 
-def _fetch_file(repo: str, path: str, env: Dict[str, str]) -> str:
+def _fetch_file(repo: str, path: str, env: dict[str, str]) -> str:
     # Use gh api to fetch a file's contents (raw)
     cmd = f'gh api repos/{repo}/contents/{path} --jq ".content"'
     out = _run(cmd, env).strip()
@@ -42,44 +41,54 @@ def _fetch_file(repo: str, path: str, env: Dict[str, str]) -> str:
         return ""
     # content is base64; decode via Python
     import base64
+
     try:
         return base64.b64decode(out).decode("utf-8", errors="ignore")
     except Exception:
         return ""
 
 
-def run(*, manifest: Dict[str, Any]) -> Dict[str, Any]:
+def run(*, manifest: dict[str, Any]) -> dict[str, Any]:
     gh_token = os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     env = os.environ.copy()
     if gh_token:
         env["GH_TOKEN"] = gh_token
 
-    readme_targets: Dict[str, List[str]] = manifest.get("readme_targets", {})
-    results: List[Dict[str, Any]] = []
+    readme_targets: dict[str, list[str]] = manifest.get("readme_targets", {})
+    results: list[dict[str, Any]] = []
 
     for repo, paths in sorted(readme_targets.items()):
         for path in paths:
             content = _fetch_file(repo, path, env)
             if not content:
-                results.append({
-                    "repo": repo,
-                    "path": path,
-                    "status": "missing_or_inaccessible",
-                })
+                results.append(
+                    {
+                        "repo": repo,
+                        "path": path,
+                        "status": "missing_or_inaccessible",
+                    }
+                )
                 continue
 
             # Very simple heuristic: check for key sections
-            needed_sections = ["Quick Start", "For Developers", "For AI Entities", "Troubleshooting"]
+            needed_sections = [
+                "Quick Start",
+                "For Developers",
+                "For AI Entities",
+                "Troubleshooting",
+            ]
             missing_sections = [s for s in needed_sections if s.lower() not in content.lower()]
 
             status = "ok" if not missing_sections else "needs_improvement"
 
-            results.append({
-                "repo": repo,
-                "path": path,
-                "status": status,
-                "missing_sections": missing_sections,
-            })
+            results.append(
+                {
+                    "repo": repo,
+                    "path": path,
+                    "status": status,
+                    "missing_sections": missing_sections,
+                }
+            )
 
     # Summarize
     total = len(results)

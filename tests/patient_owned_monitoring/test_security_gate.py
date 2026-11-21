@@ -3,7 +3,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tools.patient_owned_monitoring.security_gate import build_receipt, scan_secrets, validate_risk_register
+from tools.patient_owned_monitoring.security_gate import (
+    build_receipt,
+    scan_secrets,
+    validate_risk_register,
+)
 
 
 class SecurityGateTests(unittest.TestCase):

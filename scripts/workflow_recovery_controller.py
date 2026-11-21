@@ -5,6 +5,7 @@ Produces deterministic JSON and Markdown receipts, classifies workflow files,
 checks required components, detects duplicate content, and selects the next
 executable task. It never mutates repository files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,7 +14,7 @@ import json
 import pathlib
 import sys
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import yaml
@@ -79,13 +80,29 @@ def inspect_yaml(path: pathlib.Path) -> dict[str, Any]:
 def choose_next(required: list[dict[str, Any]], invalid: list[dict[str, Any]]) -> dict[str, str]:
     missing = [item for item in required if not item["exists"]]
     if missing:
-        return {"status": "BLOCKED", "task": "install_missing_required_component", "target": missing[0]["path"]}
+        return {
+            "status": "BLOCKED",
+            "task": "install_missing_required_component",
+            "target": missing[0]["path"],
+        }
     required_invalid = [item for item in required if item.get("parse_valid") is False]
     if required_invalid:
-        return {"status": "REVIEW_REQUIRED", "task": "repair_required_workflow", "target": required_invalid[0]["path"]}
+        return {
+            "status": "REVIEW_REQUIRED",
+            "task": "repair_required_workflow",
+            "target": required_invalid[0]["path"],
+        }
     if invalid:
-        return {"status": "REVIEW_REQUIRED", "task": "review_invalid_workflow", "target": invalid[0]["path"]}
-    return {"status": "COMPLETE", "task": "inspect_hosted_validation_receipts", "target": ".github/workflows/workflows-sanity-check.yml"}
+        return {
+            "status": "REVIEW_REQUIRED",
+            "task": "review_invalid_workflow",
+            "target": invalid[0]["path"],
+        }
+    return {
+        "status": "COMPLETE",
+        "task": "inspect_hosted_validation_receipts",
+        "target": ".github/workflows/workflows-sanity-check.yml",
+    }
 
 
 def main() -> int:
@@ -136,7 +153,7 @@ def main() -> int:
         "schema_version": "1.0",
         "goal_id": config["goal_id"],
         "owner_repository": config["owner_repository"],
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "status": overall,
         "summary": {
             "workflow_files": len(records),
@@ -177,7 +194,9 @@ def main() -> int:
     ]
     lines.extend([f"- `{item['path']}` — {item['error']}" for item in invalid] or ["- None"])
     lines += ["", "## Duplicate content groups"]
-    lines.extend(["- " + ", ".join(f"`{path}`" for path in group) for group in duplicates] or ["- None"])
+    lines.extend(
+        ["- " + ", ".join(f"`{path}`" for path in group) for group in duplicates] or ["- None"]
+    )
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print(json.dumps(receipt["summary"], sort_keys=True))

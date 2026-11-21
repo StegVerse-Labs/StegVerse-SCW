@@ -13,13 +13,12 @@ import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
-
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[3]  # tasks -> entities -> scripts -> ROOT
 
 
-def _run(cmd: str, env: Dict[str, str]) -> str:
+def _run(cmd: str, env: dict[str, str]) -> str:
     proc = subprocess.run(
         cmd,
         shell=True,
@@ -31,16 +30,16 @@ def _run(cmd: str, env: Dict[str, str]) -> str:
     return proc.stdout
 
 
-def run(*, manifest: Dict[str, Any]) -> Dict[str, Any]:
+def run(*, manifest: dict[str, Any]) -> dict[str, Any]:
     gh_token = os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     env = os.environ.copy()
     if gh_token:
         env["GH_TOKEN"] = gh_token
 
     critical = manifest.get("critical_workflows", {})
-    repos: List[str] = sorted(critical.keys())
+    repos: list[str] = sorted(critical.keys())
 
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
 
     for repo in repos:
         workflows = critical.get(repo, [])

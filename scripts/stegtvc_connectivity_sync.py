@@ -25,7 +25,7 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / "work" / "stegtvc_connectivity"
@@ -48,7 +48,7 @@ def env_or_default(name: str, default: str) -> str:
     return val if val else default
 
 
-def run_cmd(cmd: List[str], cwd: Path | None = None) -> None:
+def run_cmd(cmd: list[str], cwd: Path | None = None) -> None:
     print(f"[cmd] {' '.join(cmd)}")
     result = subprocess.run(
         cmd,
@@ -70,14 +70,14 @@ def clone_repo(full_name: str, dest: Path) -> None:
     run_cmd(["git", "clone", "--depth", "1", url, str(dest)])
 
 
-def discover_source_layout(source_dir: Path) -> Dict[str, Path]:
+def discover_source_layout(source_dir: Path) -> dict[str, Path]:
     """
     Auto-discover where the connectivity files actually live in TVC.
     Returns a mapping of logical key -> relative source path.
     Raises RuntimeError if required pieces are missing.
     """
     # Candidates for each logical piece
-    candidates: Dict[str, List[Path]] = {
+    candidates: dict[str, list[Path]] = {
         "config": [
             Path("stegtv_config.json"),
             Path("data/tv_config.json"),
@@ -97,8 +97,8 @@ def discover_source_layout(source_dir: Path) -> Dict[str, Path]:
         ],
     }
 
-    found: Dict[str, Path] = {}
-    missing_required: List[str] = []
+    found: dict[str, Path] = {}
+    missing_required: list[str] = []
 
     for key, rel_list in candidates.items():
         for rel in rel_list:
@@ -161,17 +161,17 @@ def find_anomalies(
     repo_dir: Path,
     logical_key: str,
     canonical_rel: Path,
-) -> List[Path]:
+) -> list[Path]:
     """
     Look for files that look like this logical piece but are NOT
     at the canonical path. We scan by name patterns.
     """
-    patterns: Dict[str, List[str]] = {
+    patterns: dict[str, list[str]] = {
         "config": ["**/stegtv_config.json", "**/tv_config.json"],
         "resolver": ["**/resolver.py"],
         "client": ["**/stegtvc_*.py"],
     }
-    results: List[Path] = []
+    results: list[Path] = []
     for pattern in patterns.get(logical_key, []):
         for p in repo_dir.glob(pattern):
             rel = p.relative_to(repo_dir)
@@ -182,11 +182,11 @@ def find_anomalies(
 
 def sync_repo(
     source_dir: Path,
-    source_layout: Dict[str, Path],
-    source_hashes: Dict[str, str],
+    source_layout: dict[str, Path],
+    source_hashes: dict[str, str],
     target_full_name: str,
     work_root: Path,
-) -> Tuple[str, str, List[Dict[str, Any]]]:
+) -> tuple[str, str, list[dict[str, Any]]]:
     """
     Clone target repo, sync connectivity files into standard layout,
     detect anomalies, commit + push if changed.
@@ -207,7 +207,7 @@ def sync_repo(
     ensure_dest_dirs(local_dir)
 
     changed_any = False
-    anomalies: List[Dict[str, Any]] = []
+    anomalies: list[dict[str, Any]] = []
 
     # For each logical piece, copy canonical from TVC
     for key in ("config", "resolver", "client"):
@@ -295,7 +295,7 @@ def main() -> None:
     source_layout = discover_source_layout(source_dir)
 
     # Pre-compute hashes of TVC files for anomaly comparison
-    source_hashes: Dict[str, str] = {}
+    source_hashes: dict[str, str] = {}
     for key, rel in source_layout.items():
         full = source_dir / rel
         if full.exists():
@@ -308,7 +308,7 @@ def main() -> None:
         "no_changes": 0,
         "error": 0,
     }
-    per_repo: List[Dict[str, Any]] = []
+    per_repo: list[dict[str, Any]] = []
 
     for repo in targets:
         print(f"[step] Processing target repo: {repo}")
@@ -333,7 +333,7 @@ def main() -> None:
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     run_id = os.getenv("GITHUB_RUN_ID", "local")
 
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append("# StegTVC Connectivity Autopatch Report")
     lines.append("")
     lines.append(f"- Run: {now}")

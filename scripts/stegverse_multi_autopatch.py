@@ -18,7 +18,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK_ROOT = ROOT / "work" / "multi_autopatch"
@@ -28,7 +28,7 @@ MANIFEST_PATH = ROOT / "scripts" / "stegverse_autopatch_manifest.json"
 GIT_ENV = os.environ.copy()
 
 
-def run_cmd(cmd: List[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
+def run_cmd(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
     """Run a shell command and return the CompletedProcess, never raising."""
     print(f"[cmd] {' '.join(cmd)} (cwd={cwd or ROOT})")
     return subprocess.run(
@@ -41,7 +41,7 @@ def run_cmd(cmd: List[str], cwd: Path | None = None) -> subprocess.CompletedProc
     )
 
 
-def load_manifest() -> Dict[str, Any]:
+def load_manifest() -> dict[str, Any]:
     if not MANIFEST_PATH.exists():
         raise SystemExit(f"Manifest not found: {MANIFEST_PATH}")
     try:
@@ -53,9 +53,9 @@ def load_manifest() -> Dict[str, Any]:
     return data
 
 
-def ensure_source_files(default_files: List[str]) -> None:
+def ensure_source_files(default_files: list[str]) -> None:
     """Fail fast if any source file is missing in StegVerse-SCW."""
-    missing: List[str] = []
+    missing: list[str] = []
     for rel in default_files:
         src = ROOT / rel
         if not src.exists():
@@ -104,7 +104,7 @@ def clone_repo(repo: str, dest: Path) -> bool:
 def sync_files_into_repo(
     repo: str,
     repo_dir: Path,
-    default_files: List[str],
+    default_files: list[str],
 ) -> str:
     """
     Copy default_files from ROOT into repo_dir.
@@ -163,15 +163,15 @@ def sync_files_into_repo(
 
 def main() -> None:
     manifest = load_manifest()
-    default_files: List[str] = manifest.get("default_files", [])
-    targets: List[Dict[str, Any]] = manifest.get("targets", [])
+    default_files: list[str] = manifest.get("default_files", [])
+    targets: list[dict[str, Any]] = manifest.get("targets", [])
 
     ensure_source_files(default_files)
 
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = REPORTS_DIR / "stegverse_multi_autopatch_report.md"
 
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
     summary = {"total": 0, "updated": 0, "no_changes": 0, "clone_failed": 0, "error": 0}
 
     for t in targets:
@@ -207,7 +207,7 @@ def main() -> None:
         results.append({"repo": repo, "status": status})
 
     # Write markdown report
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append("# StegVerse Multi-Repo Autopatch Report")
     lines.append("")
     lines.append(f"- Run: {os.environ.get('GITHUB_RUN_ID', 'local')} ")

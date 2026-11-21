@@ -10,10 +10,8 @@ This is a lightweight, dry-run worker engine:
 
 import json
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List
 from datetime import datetime
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = ROOT / "config"
@@ -36,9 +34,9 @@ class WorkerPlan:
     enabled: bool
 
 
-def build_worker_plan(genesis_cfg: Dict) -> List[WorkerPlan]:
+def build_worker_plan(genesis_cfg: dict) -> list[WorkerPlan]:
     lanes = genesis_cfg.get("lanes", {})
-    plan: List[WorkerPlan] = []
+    plan: list[WorkerPlan] = []
 
     for lane_name, lane_cfg in lanes.items():
         if not lane_cfg.get("enabled", True):
@@ -60,7 +58,7 @@ def build_worker_plan(genesis_cfg: Dict) -> List[WorkerPlan]:
     return plan
 
 
-def write_plan_report(plan: List[WorkerPlan]):
+def write_plan_report(plan: list[WorkerPlan]):
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     path = REPORTS_DIR / f"worker_plan_{ts}.md"

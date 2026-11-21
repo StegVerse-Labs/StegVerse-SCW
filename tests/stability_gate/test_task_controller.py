@@ -1,8 +1,8 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from scripts.stability_gate_task_controller import validate_registry
 
-NOW = datetime(2026, 8, 3, 3, 32, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 3, 3, 32, tzinfo=UTC)
 
 
 def task(**overrides):

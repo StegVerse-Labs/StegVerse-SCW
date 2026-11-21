@@ -7,7 +7,11 @@ rectangular region and axis. Proposed coordinates never replace reviewed
 coordinates; both are retained in the output.
 """
 from __future__ import annotations
-import argparse, hashlib, json, math
+
+import argparse
+import hashlib
+import json
+import math
 from pathlib import Path
 
 
@@ -16,7 +20,7 @@ def _sha256(path: str) -> str:
 
 
 def _rgb(v):
-    if not isinstance(v, (list, tuple)) or len(v) != 3:
+    if not isinstance(v, list | tuple) or len(v) != 3:
         raise ValueError("RGB sample must contain three channels")
     out = tuple(float(x) for x in v)
     if any(not math.isfinite(x) for x in out):
@@ -73,7 +77,17 @@ def propose(profile):
     # The score is transparent and deliberately produces a proposal only.
     score = _smooth([(r - (g+b)/2.0) - 0.35*(r+g+b)/3.0 for r, g, b in profile], 1)
     gradients = [score[i+1] - score[i] for i in range(len(score)-1)]
-    transition = min(range(1, len(score)-1), key=lambda i: gradients[i-1])
+    candidates = range(1, len(score)-1)
+    steepest = min(gradients[i-1] for i in candidates)
+    # Smoothing with radius r spreads a sharp edge over 2r+1 equal gradient
+    # samples. Take the centre of the contiguous run of steepest samples, so the
+    # proposal is not biased toward the leading edge (one sample early for r=1).
+    tol = 1e-9 * max(1.0, abs(steepest))
+    first = next(i for i in candidates if gradients[i-1] <= steepest + tol)
+    run = [first]
+    while run[-1] + 1 < len(score)-1 and gradients[run[-1]] <= steepest + tol:
+        run.append(run[-1] + 1)
+    transition = run[len(run)//2]
 
     # Tube end is proposed from the first sustained non-background intensity.
     intensity = _smooth([sum(rgb)/3.0 for rgb in profile], 1)

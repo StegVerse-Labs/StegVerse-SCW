@@ -13,7 +13,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / "work"
@@ -44,7 +44,7 @@ def safe_name(repo: str) -> str:
     return repo.replace("/", "__").replace(".", "_")
 
 
-def load_manifest(path: Path) -> Dict[str, Any]:
+def load_manifest(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise SystemExit(f"Manifest not found: {path}")
     with path.open("r", encoding="utf-8") as f:
@@ -57,7 +57,7 @@ def ensure_clean_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def write_report(task: str, summary: Dict[str, Any], items: list) -> None:
+def write_report(task: str, summary: dict[str, Any], items: list) -> None:
     """Write a markdown report to reports/stegtvc_connectivity_autopatch_report.md"""
     report_path = REPORTS / "stegtvc_connectivity_autopatch_report.md"
     lines = []
@@ -96,8 +96,8 @@ def main() -> None:
     manifest = load_manifest(manifest_path)
 
     source_repo = manifest.get("source_repo")
-    source_paths: Dict[str, str] = manifest.get("source_paths") or {}
-    targets: List[Dict[str, Any]] = manifest.get("targets") or []
+    source_paths: dict[str, str] = manifest.get("source_paths") or {}
+    targets: list[dict[str, Any]] = manifest.get("targets") or []
 
     if not source_repo:
         raise SystemExit("Manifest is missing 'source_repo'.")
@@ -130,11 +130,13 @@ def main() -> None:
         msg = f"ERROR: Failed to clone source repo {source_repo}: {e}"
         print(msg)
         for t in targets:
-            report_items.append({
-                "repo": t.get("repo"),
-                "status": "error",
-                "message": msg,
-            })
+            report_items.append(
+                {
+                    "repo": t.get("repo"),
+                    "status": "error",
+                    "message": msg,
+                }
+            )
         write_report(args.task, summary, report_items)
         raise SystemExit(1)
 
@@ -164,11 +166,13 @@ def main() -> None:
             msg = f"Clone failed: {e}"
             print(msg)
             summary["clone_failed"] += 1
-            report_items.append({
-                "repo": repo,
-                "status": "clone_failed",
-                "message": msg,
-            })
+            report_items.append(
+                {
+                    "repo": repo,
+                    "status": "clone_failed",
+                    "message": msg,
+                }
+            )
             continue
 
         # Copy files
@@ -183,11 +187,13 @@ def main() -> None:
             msg = f"Copy error: {e}"
             print(msg)
             summary["error"] += 1
-            report_items.append({
-                "repo": repo,
-                "status": "error",
-                "message": msg,
-            })
+            report_items.append(
+                {
+                    "repo": repo,
+                    "status": "error",
+                    "message": msg,
+                }
+            )
             continue
 
         # Check for changes
@@ -197,30 +203,39 @@ def main() -> None:
                 run(["git", "config", "user.name", "StegVerse-Autopatch"], cwd=dest_dir)
                 run(["git", "config", "user.email", "autopatch@stegverse.local"], cwd=dest_dir)
                 run(["git", "add", "."], cwd=dest_dir)
-                run(["git", "commit", "-m", "Autopatch: sync StegTVC connectivity files"], cwd=dest_dir)
+                run(
+                    ["git", "commit", "-m", "Autopatch: sync StegTVC connectivity files"],
+                    cwd=dest_dir,
+                )
                 run(["git", "push", "origin", "HEAD"], cwd=dest_dir)
                 summary["updated"] += 1
-                report_items.append({
-                    "repo": repo,
-                    "status": "updated",
-                    "message": "Updated & pushed connectivity files.",
-                })
+                report_items.append(
+                    {
+                        "repo": repo,
+                        "status": "updated",
+                        "message": "Updated & pushed connectivity files.",
+                    }
+                )
             except Exception as e:
                 msg = f"Commit/push error: {e}"
                 print(msg)
                 summary["error"] += 1
-                report_items.append({
-                    "repo": repo,
-                    "status": "error",
-                    "message": msg,
-                })
+                report_items.append(
+                    {
+                        "repo": repo,
+                        "status": "error",
+                        "message": msg,
+                    }
+                )
         else:
             summary["no_changes"] += 1
-            report_items.append({
-                "repo": repo,
-                "status": "no_changes",
-                "message": "Already up to date.",
-            })
+            report_items.append(
+                {
+                    "repo": repo,
+                    "status": "no_changes",
+                    "message": "Already up to date.",
+                }
+            )
 
     write_report(args.task, summary, report_items)
 

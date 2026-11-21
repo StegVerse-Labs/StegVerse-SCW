@@ -1,6 +1,7 @@
 # api/routes_admin.py
-import os
 import json
+import os
+
 import requests
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
@@ -13,11 +14,13 @@ GH_REPO = os.getenv("GITHUB_REPO", "")
 GH_WORKFLOW = os.getenv("GITHUB_WORKFLOW_FILE", "one_button_supercheck.yml")
 GH_TOKEN = os.getenv("GITHUB_TOKEN_REPO", "")  # fine-grained PAT: Actions read/write
 
+
 def _require_admin(x_admin_token: str | None):
     if not ADMIN_TOKEN:
         raise HTTPException(status_code=500, detail="ADMIN_TOKEN not configured")
     if not x_admin_token or x_admin_token != ADMIN_TOKEN:
         raise HTTPException(status_code=401, detail="invalid X-Admin-Token")
+
 
 @router.post("/supercheck/run")
 def run_supercheck(
@@ -25,7 +28,9 @@ def run_supercheck(
     auto_apply: bool = True,
     auto_commit: bool = False,
     queue_key: str = "queue:runs",
-    x_admin_token: str | None = Header(default=None, convert_underscores=False, alias="X-Admin-Token"),
+    x_admin_token: str | None = Header(
+        default=None, convert_underscores=False, alias="X-Admin-Token"
+    ),
 ):
     _require_admin(x_admin_token)
 
@@ -51,6 +56,10 @@ def run_supercheck(
     }
     r = requests.post(url, headers=headers, data=json.dumps(payload), timeout=30)
     if r.status_code not in (201, 204):
-        raise HTTPException(status_code=502, detail=f"GitHub dispatch failed: {r.status_code} {r.text}")
+        raise HTTPException(
+            status_code=502, detail=f"GitHub dispatch failed: {r.status_code} {r.text}"
+        )
 
-    return JSONResponse({"status": "queued", "workflow": GH_WORKFLOW, "repo": f"{GH_OWNER}/{GH_REPO}"})
+    return JSONResponse(
+        {"status": "queued", "workflow": GH_WORKFLOW, "repo": f"{GH_OWNER}/{GH_REPO}"}
+    )

@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Dict, Any, Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = ROOT / "entities" / "registry.json"
@@ -13,11 +12,11 @@ PERMISSIONS_DIR = ROOT / "entities" / "permissions"
 @dataclass
 class PermissionsProfile:
     id: str
-    allowed_actions: List[str] = field(default_factory=list)
-    forbidden_actions: List[str] = field(default_factory=list)
+    allowed_actions: list[str] = field(default_factory=list)
+    forbidden_actions: list[str] = field(default_factory=list)
 
     @classmethod
-    def load(cls, profile_id: str) -> "PermissionsProfile":
+    def load(cls, profile_id: str) -> PermissionsProfile:
         path = PERMISSIONS_DIR / f"{profile_id}.json"
         if not path.exists():
             return cls(id=profile_id, allowed_actions=[], forbidden_actions=[])
@@ -35,8 +34,8 @@ class Entity:
     name: str
     role: str
     enabled: bool
-    repos: List[str]
-    tasks: List[str]
+    repos: list[str]
+    tasks: list[str]
     memory_file: str
     permissions_profile: str
 
@@ -50,11 +49,11 @@ class Entity:
         return ROOT / self.memory_file
 
 
-def load_registry() -> Dict[str, Entity]:
+def load_registry() -> dict[str, Entity]:
     if not REGISTRY_PATH.exists():
         raise RuntimeError(f"Entity registry not found at {REGISTRY_PATH}")
     raw = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-    ent_dict: Dict[str, Entity] = {}
+    ent_dict: dict[str, Entity] = {}
     for e in raw.get("entities", []):
         entity = Entity(
             id=e["id"],

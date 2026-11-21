@@ -18,10 +18,9 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import List
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT_DIR = ROOT / "reports" / "pat_audit"
@@ -32,9 +31,9 @@ class SecretCheck:
     present: bool
 
 def now_utc_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
-def parse_expected() -> List[str]:
+def parse_expected() -> list[str]:
     raw = os.environ.get("EXPECTED_PATS", "").strip()
     if not raw:
         return []
@@ -47,7 +46,7 @@ def main() -> int:
         print("No EXPECTED_PATS env set. Nothing to check.")
         return 0
 
-    checks: List[SecretCheck] = []
+    checks: list[SecretCheck] = []
     missing = 0
     for name in expected:
         present = bool(os.environ.get(name, "").strip())

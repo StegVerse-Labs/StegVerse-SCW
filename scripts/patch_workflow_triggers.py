@@ -8,9 +8,10 @@ Patches all workflows in .github/workflows:
 
 Skips files starting with '_' (reusables).
 """
-from ruamel.yaml import YAML
-from pathlib import Path
 import sys
+from pathlib import Path
+
+from ruamel.yaml import YAML
 
 ROOT = Path(__file__).resolve().parents[1]
 WF_DIR = ROOT / ".github" / "workflows"
@@ -20,7 +21,7 @@ yaml.preserve_quotes = True
 yaml.indent(mapping=2, sequence=2, offset=2)
 
 def patch_on_block(data, wf_stem):
-    onb = data.get('on') or data.get(u'on')
+    onb = data.get('on') or data.get('on')
     if onb is None:
         onb = {}
         data['on'] = onb
@@ -70,7 +71,6 @@ def main():
             print(f"[warn] cannot parse {p}: {e}", file=sys.stderr)
             continue
         wf_stem = p.stem
-        before = yaml.dump(data, sys.stdout) if False else None  # noop
 
         patch_on_block(data, wf_stem)
         patch_env_kill_switch(data)

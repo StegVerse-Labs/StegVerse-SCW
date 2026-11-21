@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ALLOWED_STATES = {
@@ -55,26 +55,41 @@ def canonical_json(value: object) -> str:
 def parse_time(value: str | None) -> datetime | None:
     if value is None:
         return None
-    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
 
 
 def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[str, object]]:
     findings: list[dict[str, object]] = []
     tasks = registry.get("tasks")
     if not isinstance(tasks, list) or not tasks:
-        return [{"severity": "FAILED", "code": "NO_TASKS", "detail": "tasks must be a non-empty array"}]
+        return [
+            {"severity": "FAILED", "code": "NO_TASKS", "detail": "tasks must be a non-empty array"}
+        ]
 
     seen_ids: set[str] = set()
     seen_collisions: dict[str, str] = {}
 
     for index, task in enumerate(tasks):
         if not isinstance(task, dict):
-            findings.append({"severity": "FAILED", "code": "INVALID_TASK", "detail": f"tasks[{index}] must be an object"})
+            findings.append(
+                {
+                    "severity": "FAILED",
+                    "code": "INVALID_TASK",
+                    "detail": f"tasks[{index}] must be an object",
+                }
+            )
             continue
 
         missing = sorted(REQUIRED_FIELDS - set(task))
         if missing:
-            findings.append({"severity": "FAILED", "code": "MISSING_FIELDS", "task_id": task.get("task_id"), "detail": missing})
+            findings.append(
+                {
+                    "severity": "FAILED",
+                    "code": "MISSING_FIELDS",
+                    "task_id": task.get("task_id"),
+                    "detail": missing,
+                }
+            )
             continue
 
         task_id = str(task["task_id"])
@@ -84,7 +99,9 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
 
         state = task["claim_state"]
         if state not in ALLOWED_STATES:
-            findings.append({"severity": "FAILED", "code": "INVALID_STATE", "task_id": task_id, "detail": state})
+            findings.append(
+                {"severity": "FAILED", "code": "INVALID_STATE", "task_id": task_id, "detail": state}
+            )
 
         claimant = task["claimant"]
         if state not in {"COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM"} and (
@@ -94,7 +111,9 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
 
         release_condition = task["release_condition"]
         if not isinstance(release_condition, str) or not release_condition.strip():
-            findings.append({"severity": "FAILED", "code": "NO_RELEASE_CONDITION", "task_id": task_id})
+            findings.append(
+                {"severity": "FAILED", "code": "NO_RELEASE_CONDITION", "task_id": task_id}
+            )
 
         next_action = task["next_executable_action"]
         if state not in {"COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM"} and (
@@ -104,19 +123,41 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
 
         expires = parse_time(task.get("claim_expires_at"))
         if state in ACTIVE_STATES and expires is not None and expires <= now:
-            findings.append({"severity": "REVIEW_REQUIRED", "code": "STALE_CLAIM", "task_id": task_id, "detail": task.get("claim_expires_at")})
+            findings.append(
+                {
+                    "severity": "REVIEW_REQUIRED",
+                    "code": "STALE_CLAIM",
+                    "task_id": task_id,
+                    "detail": task.get("claim_expires_at"),
+                }
+            )
 
         boundaries = task["collision_boundaries"]
         if not isinstance(boundaries, list) or not boundaries:
-            findings.append({"severity": "FAILED", "code": "NO_COLLISION_BOUNDARY", "task_id": task_id})
+            findings.append(
+                {"severity": "FAILED", "code": "NO_COLLISION_BOUNDARY", "task_id": task_id}
+            )
         else:
             for boundary in boundaries:
                 if not isinstance(boundary, str) or not boundary.strip():
-                    findings.append({"severity": "FAILED", "code": "INVALID_COLLISION_BOUNDARY", "task_id": task_id})
+                    findings.append(
+                        {
+                            "severity": "FAILED",
+                            "code": "INVALID_COLLISION_BOUNDARY",
+                            "task_id": task_id,
+                        }
+                    )
                     continue
                 prior = seen_collisions.get(boundary)
                 if prior and prior != task_id and state in ACTIVE_STATES:
-                    findings.append({"severity": "FAILED", "code": "ACTIVE_COLLISION", "task_id": task_id, "detail": {"boundary": boundary, "other_task": prior}})
+                    findings.append(
+                        {
+                            "severity": "FAILED",
+                            "code": "ACTIVE_COLLISION",
+                            "task_id": task_id,
+                            "detail": {"boundary": boundary, "other_task": prior},
+                        }
+                    )
                 elif state in ACTIVE_STATES:
                     seen_collisions[boundary] = task_id
 
@@ -126,14 +167,16 @@ def validate_registry(registry: dict[str, object], now: datetime) -> list[dict[s
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--registry", default="config/stability-gate-tasks.json")
-    parser.add_argument("--output", default="artifacts/reports/stability_gate/STABILITY_GATE_TASK_RECEIPT.json")
+    parser.add_argument(
+        "--output", default="artifacts/reports/stability_gate/STABILITY_GATE_TASK_RECEIPT.json"
+    )
     parser.add_argument("--now", default=None, help="ISO-8601 UTC time for deterministic tests")
     args = parser.parse_args()
 
     registry_path = Path(args.registry)
     output_path = Path(args.output)
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
-    now = parse_time(args.now) if args.now else datetime.now(timezone.utc)
+    now = parse_time(args.now) if args.now else datetime.now(UTC)
     assert now is not None
 
     findings = validate_registry(registry, now)
@@ -163,12 +206,20 @@ def main() -> int:
         "claim_state_counts": counts,
         "findings": findings,
         "next_executable_tasks": [
-            {"task_id": task["task_id"], "claim_state": task["claim_state"], "next_executable_action": task["next_executable_action"]}
+            {
+                "task_id": task["task_id"],
+                "claim_state": task["claim_state"],
+                "next_executable_action": task["next_executable_action"],
+            }
             for task in tasks
-            if task["claim_state"] not in {"COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM"}
+            if task["claim_state"]
+            not in {"COMPLETE", "SUPERSEDED", "MERGED_INTO_CANONICAL_WORKSTREAM"}
         ],
     }
-    receipt = {**unsigned, "receipt_hash": hashlib.sha256(canonical_json(unsigned).encode("utf-8")).hexdigest()}
+    receipt = {
+        **unsigned,
+        "receipt_hash": hashlib.sha256(canonical_json(unsigned).encode("utf-8")).hexdigest(),
+    }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(receipt, indent=2, sort_keys=True))

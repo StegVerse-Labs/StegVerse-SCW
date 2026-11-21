@@ -24,10 +24,11 @@ Env:
 
 from __future__ import annotations
 
-import json, os, subprocess, sys, re
-from datetime import datetime, timezone
+import json
+import os
+import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any
 
 try:
     import yaml
@@ -40,33 +41,41 @@ LATEST = ROOT / "reports" / "guardians" / "repo_alignment_latest.json"
 
 DEFAULT_ORG = os.getenv("STEGVERSE_ORG", "StegVerse-Labs")
 TOKEN = (
-    os.getenv("STEG_TOKEN")
-    or os.getenv("GH_TOKEN")
-    or os.getenv("GITHUB_TOKEN")
-    or ""
+    os.getenv("STEG_TOKEN") or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN") or ""
 ).strip()
 
 TMP = ROOT / ".tmp_alignment_fix"
 TMP.mkdir(parents=True, exist_ok=True)
 
-def run(cmd: List[str], cwd: Optional[Path]=None, check: bool=True) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True,
-                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=check)
 
-def load_asl() -> Dict[str, Any]:
+def run(cmd: list[str], cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        cmd,
+        cwd=str(cwd) if cwd else None,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=check,
+    )
+
+
+def load_asl() -> dict[str, Any]:
     if not ASL_CONFIG.exists() or yaml is None:
         return {}
     return yaml.safe_load(ASL_CONFIG.read_text("utf-8")) or {}
 
-def get_task_asl(cfg: Dict[str, Any], task_id: str) -> str:
+
+def get_task_asl(cfg: dict[str, Any], task_id: str) -> str:
     tasks = cfg.get("tasks") or {}
     return (tasks.get(task_id) or {}).get("level") or ""
 
+
 def is_asl_at_most(asl: str, limit: str) -> bool:
-    order = ["ASL-1","ASL-2","ASL-3","ASL-4","ASL-5"]
+    order = ["ASL-1", "ASL-2", "ASL-3", "ASL-4", "ASL-5"]
     if asl not in order or limit not in order:
         return False
     return order.index(asl) <= order.index(limit)
+
 
 def workflows_permission_available() -> bool:
     """
@@ -75,25 +84,32 @@ def workflows_permission_available() -> bool:
       - If using classic PAT => assume yes.
       - If fine-grained => assume NO unless user set STEGVERSE_WORKFLOWS_WRITE=1
     """
-    if os.getenv("STEGVERSE_WORKFLOWS_WRITE","").strip() == "1":
+    if os.getenv("STEGVERSE_WORKFLOWS_WRITE", "").strip() == "1":
         return True
-    pat_type = os.getenv("STEGVERSE_PAT_TYPE","fine-grained").lower()
+    pat_type = os.getenv("STEGVERSE_PAT_TYPE", "fine-grained").lower()
     return pat_type == "classic"
 
-def clone_repo(full_name: str) -> Tuple[bool, Path, str]:
+
+def clone_repo(full_name: str) -> tuple[bool, Path, str]:
     org, repo = full_name.split("/", 1)
-    url = f"https://x-access-token:{TOKEN}@github.com/{org}/{repo}.git" if TOKEN else f"https://github.com/{org}/{repo}.git"
+    url = (
+        f"https://x-access-token:{TOKEN}@github.com/{org}/{repo}.git"
+        if TOKEN
+        else f"https://github.com/{org}/{repo}.git"
+    )
     dest = TMP / repo
     if dest.exists():
-        run(["rm","-rf",str(dest)], check=False)
+        run(["rm", "-rf", str(dest)], check=False)
     try:
-        cp = run(["git","clone",url,str(dest)], check=True)
+        cp = run(["git", "clone", url, str(dest)], check=True)
         return True, dest, cp.stdout
     except subprocess.CalledProcessError as e:
         return False, dest, e.stdout
 
+
 def ensure_dir(p: Path):
     p.mkdir(parents=True, exist_ok=True)
+
 
 def write_if_missing(path: Path, content: str) -> bool:
     if path.exists():
@@ -102,6 +118,7 @@ def write_if_missing(path: Path, content: str) -> bool:
     path.write_text(content, encoding="utf-8")
     return True
 
+
 def add_gitkeep(dir_path: Path) -> bool:
     ensure_dir(dir_path)
     keep = dir_path / ".gitkeep"
@@ -109,6 +126,7 @@ def add_gitkeep(dir_path: Path) -> bool:
         return False
     keep.write_text("", encoding="utf-8")
     return True
+
 
 def minimal_asl_yaml() -> str:
     return """# StegVerse Automation Safety Levels
@@ -124,29 +142,35 @@ tasks:
     notes: "Only adds workflow_dispatch when allowed."
 """
 
+
 def default_steglink_json(full_name: str) -> str:
-    org, repo = full_name.split("/",1)
-    return json.dumps({
-        "schema": "stegverse.steglink.v1",
-        "repo": {
-            "org": org,
-            "name": repo,
-            "full_name": full_name,
-            "url": f"https://github.com/{full_name}"
-        },
-        "module": {
-            "slug": repo.lower(),
-            "kind": "module",
-            "status": "genesis",
-            "owners": ["stegverse-core"]
-        },
-        "contracts": {
-            "cross_repo": True
-        }
-    }, indent=2) + "\n"
+    org, repo = full_name.split("/", 1)
+    return (
+        json.dumps(
+            {
+                "schema": "stegverse.steglink.v1",
+                "repo": {
+                    "org": org,
+                    "name": repo,
+                    "full_name": full_name,
+                    "url": f"https://github.com/{full_name}",
+                },
+                "module": {
+                    "slug": repo.lower(),
+                    "kind": "module",
+                    "status": "genesis",
+                    "owners": ["stegverse-core"],
+                },
+                "contracts": {"cross_repo": True},
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
 
 def default_root_readme(full_name: str) -> str:
-    org, repo = full_name.split("/",1)
+    org, repo = full_name.split("/", 1)
     return f"""# {repo}
 
 This repo is part of the **StegVerse** ecosystem.
@@ -172,23 +196,30 @@ If those files are missing, StegVerse Guardian may re-add them.
 Generated/maintained by StegVerse Guardian (ASL-3 safe-mode).
 """
 
+
 def changed_files(repo_root: Path) -> str:
-    cp = run(["git","status","--porcelain"], cwd=repo_root, check=False)
+    cp = run(["git", "status", "--porcelain"], cwd=repo_root, check=False)
     return cp.stdout.strip()
 
-def commit_and_push(repo_root: Path, msg: str) -> Tuple[bool,str]:
-    run(["git","config","user.name","StegVerse Guardian Worker"], cwd=repo_root, check=False)
-    run(["git","config","user.email","guardian-worker@stegverse.local"], cwd=repo_root, check=False)
-    run(["git","add","-A"], cwd=repo_root, check=False)
+
+def commit_and_push(repo_root: Path, msg: str) -> tuple[bool, str]:
+    run(["git", "config", "user.name", "StegVerse Guardian Worker"], cwd=repo_root, check=False)
+    run(
+        ["git", "config", "user.email", "guardian-worker@stegverse.local"],
+        cwd=repo_root,
+        check=False,
+    )
+    run(["git", "add", "-A"], cwd=repo_root, check=False)
 
     if not changed_files(repo_root):
         return True, "No changes."
     try:
-        run(["git","commit","-m",msg], cwd=repo_root, check=True)
-        cp = run(["git","push","origin","main"], cwd=repo_root, check=True)
+        run(["git", "commit", "-m", msg], cwd=repo_root, check=True)
+        cp = run(["git", "push", "origin", "main"], cwd=repo_root, check=True)
         return True, cp.stdout
     except subprocess.CalledProcessError as e:
         return False, e.stdout
+
 
 def main() -> int:
     print("=== StegVerse Guardian Worker: Repo Alignment Auto-Fixer (ASL-3) ===")
@@ -214,7 +245,10 @@ def main() -> int:
 
     wf_write_ok = workflows_permission_available()
     if not wf_write_ok:
-        print("[Fixer] Workflows write NOT enabled for this token. Will not touch .github/workflows anywhere.")
+        print(
+            "[Fixer] Workflows write NOT enabled for this token. "
+            "Will not touch .github/workflows anywhere."
+        )
 
     fixed_count = 0
     for r in failing:
@@ -233,10 +267,18 @@ def main() -> int:
         changes += int(write_if_missing(repo_root / "README.md", default_root_readme(full_name)))
 
         # steglink
-        changes += int(write_if_missing(repo_root / "docs/stegverse/.steglink.json", default_steglink_json(full_name)))
+        changes += int(
+            write_if_missing(
+                repo_root / "docs/stegverse/.steglink.json", default_steglink_json(full_name)
+            )
+        )
 
         # ASL yaml
-        changes += int(write_if_missing(repo_root / "docs/governance/automation_safety_levels.yaml", minimal_asl_yaml()))
+        changes += int(
+            write_if_missing(
+                repo_root / "docs/governance/automation_safety_levels.yaml", minimal_asl_yaml()
+            )
+        )
 
         # Placeholder dirs
         changes += int(add_gitkeep(repo_root / "docs"))
@@ -260,6 +302,7 @@ def main() -> int:
     print(f"Summary: repos_fixed={fixed_count} of {len(failing)} failing repos")
     print("=== Repo Alignment Auto-Fixer complete. ===")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
